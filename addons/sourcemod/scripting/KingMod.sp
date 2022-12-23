@@ -202,7 +202,7 @@ public Action Event_PlayerDeath(Handle event, const char[] name, bool dontBroadc
 		return Plugin_Continue;
 	}
 
-	// If there is a king currently then execute this section
+	// If there is the king currently then execute this section
 	if(IsThereACurrentKing())
 	{
 		// If the client is the current king then execute this section
@@ -341,6 +341,13 @@ public Action Event_RoundEnd(Handle event, const char[] name, bool dontBroadcast
 			continue;
 		}
 
+		// If the client is the king then execute this section
+		if(isPlayerKing[client])
+		{
+			// Changes the killed player's king status to false
+			isPlayerKing[client] = false;
+		}
+
 		// If the Terrorist team have more points than the Counter-Terrorist team then execute this section
 		if(pointCounterT > pointCounterCT)
 		{
@@ -366,10 +373,6 @@ public Action Event_RoundEnd(Handle event, const char[] name, bool dontBroadcast
 			PrintToChat(client, "Round Draw - T: %i CT: %i", pointCounterT, pointCounterCT);
 		}
 	}
-
-
-
-	PrintToChatAll("Debug: A new round has started, kill an enemy to become the first King");
 
 	return Plugin_Continue;
 }
@@ -549,7 +552,7 @@ public bool IsThereACurrentKing()
 			continue;
 		}
 
-		// If the client is not a king then execute this section
+		// If the client is not the king then execute this section
 		if(!isPlayerKing[client])
 		{
 			continue;

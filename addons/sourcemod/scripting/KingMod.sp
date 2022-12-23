@@ -138,17 +138,17 @@ public Action Event_PlayerSpawn(Handle event, const char[] name, bool dontBroadc
 // This happens when a player dies
 public Action Event_PlayerDeath(Handle event, const char[] name, bool dontBroadcast)
 {
-	// If the game is not currently in progress then execute this section	
-	if(!gameInProgress)
-	{
-		return Plugin_Continue;
-	}
-
 	// Obtains the client's userid and converts it to an index and store it within our client variable
 	int client = GetClientOfUserId(GetEventInt(event, "userid"));
 
 	// If the client does not meet our validation criteria then execute this section
 	if(!IsValidClient(client))
+	{
+		return Plugin_Continue;
+	}
+
+	// If the game is not currently in progress then execute this section	
+	if(!gameInProgress)
 	{
 		return Plugin_Continue;
 	}
@@ -204,6 +204,7 @@ public Action Event_PlayerDeath(Handle event, const char[] name, bool dontBroadc
 				// Adds the value of cvar_PointsKingKill to the pointCounterT variable's value
 				pointCounterT += cvar_PointsKingKill;
 			}
+
 			// If the attacker is on the Coutner-Terrorist team then execute this section
 			if(GetClientTeam(attacker) == 3)
 			{
@@ -223,14 +224,21 @@ public Action Event_PlayerDeath(Handle event, const char[] name, bool dontBroadc
 			// If the attacker is on the Terrorist team then execute this section
 			if(GetClientTeam(attacker) == 2)
 			{
-				// Adds the value of cvar_PointsNormalKill to the pointCounterT variable's value
-				pointCounterT += cvar_PointsNormalKill;
+				if(kingIsOnTeam == 2)
+				{
+					// Adds the value of cvar_PointsNormalKill to the pointCounterT variable's value
+					pointCounterT += cvar_PointsNormalKill;
+				}
 			}
+			
 			// If the attacker is on the Coutner-Terrorist team then execute this section
 			if(GetClientTeam(attacker) == 3)
 			{
-				// Adds the value of cvar_PointsNormalKill to the pointCounterCT variable's value
-				pointCounterCT += cvar_PointsNormalKill;
+				if(kingIsOnTeam == 3)
+				{
+					// Adds the value of cvar_PointsNormalKill to the pointCounterCT variable's value
+					pointCounterCT += cvar_PointsNormalKill;
+				}
 			}
 
 			return Plugin_Continue;
@@ -354,7 +362,6 @@ public void LateLoadSupport()
 	// Changes the kingName variable's value to just be None
 	kingName = "None";
 }
-
 
 
 

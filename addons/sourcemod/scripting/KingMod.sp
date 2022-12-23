@@ -72,6 +72,9 @@ public void OnPluginStart()
 	// Creates a timer that will update the team score hud every 1 second
 	CreateTimer(1.0, UpdateTeamScoreHud, _, TIMER_REPEAT);
 
+	// Allows the modification to be loaded while the server is running, without causing gameplay issues
+	LateLoadSupport();
+
 	// Loads the translaltion file which we intend to use
 	LoadTranslations("manifest_kingmod.phrases");
 }
@@ -344,6 +347,15 @@ public Action Event_RoundEnd(Handle event, const char[] name, bool dontBroadcast
 ///////////////////////////
 // - Regular Functions - //
 ///////////////////////////
+
+
+public void LateLoadSupport()
+{
+	// Changes the kingName variable's value to just be None
+	kingName = "None";
+}
+
+
 
 
 

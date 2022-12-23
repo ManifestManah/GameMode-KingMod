@@ -4,6 +4,7 @@
 
 // List of Includes
 #include <sourcemod>
+#include <cstrike>
 #include <multicolors>
 
 // The code formatting rules we wish to follow
@@ -68,6 +69,10 @@ public void OnPluginStart()
 	HookEvent("player_death", Event_PlayerDeath, EventHookMode_Post);
 	HookEvent("round_start", Event_RoundStart, EventHookMode_Post);
 	HookEvent("round_end", Event_RoundEnd, EventHookMode_Post);
+	HookEvent("player_team", Event_PlayerTeam, EventHookMode_Post);
+
+	// Calls upon our CommandListenerJoinTeam function whenever a player changes team
+	AddCommandListener(CommandListenerJoinTeam, "jointeam");
 
 	// Creates a timer that will update the team score hud every 1 second
 	CreateTimer(1.0, UpdateTeamScoreHud, _, TIMER_REPEAT);
@@ -110,6 +115,22 @@ public void OnClientDisconnect(int client)
 }
 
 
+// This happens when a player joins or changes team 
+public Action CommandListenerJoinTeam(int client, const char[] command, int numArgs)
+{
+	// If the client does not meet our validation criteria then execute this section
+	if(!IsValidClient(client))
+	{
+		return Plugin_Continue;
+	}
+
+	// Calls upon the Timer_RespawnPlayer function after (1.5 default) seconds
+	CreateTimer(cvar_RespawnTime, Timer_RespawnPlayer, client, TIMER_FLAG_NO_MAPCHANGE);
+
+	return Plugin_Continue;
+}
+
+
 
 ////////////////
 // - Events - //
@@ -146,6 +167,9 @@ public Action Event_PlayerDeath(Handle event, const char[] name, bool dontBroadc
 	{
 		return Plugin_Continue;
 	}
+
+	// Calls upon the Timer_RespawnPlayer function after (1.5 default) seconds
+	CreateTimer(cvar_RespawnTime, Timer_RespawnPlayer, client, TIMER_FLAG_NO_MAPCHANGE);
 
 	// If the game is not currently in progress then execute this section	
 	if(!gameInProgress)
@@ -230,7 +254,7 @@ public Action Event_PlayerDeath(Handle event, const char[] name, bool dontBroadc
 					pointCounterT += cvar_PointsNormalKill;
 				}
 			}
-			
+
 			// If the attacker is on the Coutner-Terrorist team then execute this section
 			if(GetClientTeam(attacker) == 3)
 			{
@@ -351,6 +375,46 @@ public Action Event_RoundEnd(Handle event, const char[] name, bool dontBroadcast
 }
 
 
+// This happens every time a player changes team (NOTE: This is required in order to make late-joining bots respawn)
+public Action Event_PlayerTeam(Handle event, const char[] name, bool dontBroadcast)
+{
+	// Obtains the client's userid and converts it to an index and store it within our client variable
+	int client = GetClientOfUserId(GetEventInt(event, "userid"));
+
+	// If the client does not meet our validation criteria then execute this section
+	if(!IsValidClient(client))
+	{
+		return Plugin_Continue;
+	}
+
+	// If the client is not a bot then execute this section
+	if(!IsFakeClient(client))
+	{
+		return Plugin_Continue;
+	}
+
+	// If the client is alive then execute this section
+	if(IsPlayerAlive(client))
+	{
+		return Plugin_Continue;
+	}
+
+	// Obtains the team which the player changed to
+	int team = GetEventInt(event, "team");
+
+	// If the team is the observer or spectator team execute this section
+	if(team <= 1)
+	{
+		return Plugin_Continue;
+	}
+
+	// Calls upon the Timer_RespawnPlayer function after (1.5 default) seconds
+	CreateTimer(cvar_RespawnTime, Timer_RespawnPlayer, client, TIMER_FLAG_NO_MAPCHANGE);
+
+	return Plugin_Continue;
+}
+
+
 
 ///////////////////////////
 // - Regular Functions - //
@@ -422,6 +486,34 @@ public Action UpdateTeamScoreHud(Handle timer, any unused)
 		// Displays the contents of our hudMessage variable for the client to see in the hint text area of their screen 
 		PrintHintText(client, hudMessage);
 	}
+
+	return Plugin_Continue;
+}
+
+
+// This function is called upon briefly after a player changes team or dies
+public Action Timer_RespawnPlayer(Handle timer, int client)
+{
+	// If the client does not meet our validation criteria then execute this section
+	if(!IsValidClient(client))
+	{
+		return Plugin_Continue;
+	}
+
+	// If the client is on the spectator or observer team then execute this section
+	if(GetClientTeam(client) <= 1)
+	{
+		return Plugin_Continue;
+	}
+
+	// If the client is alive then execute this section
+	if(IsPlayerAlive(client))
+	{
+		return Plugin_Continue;
+	}
+
+	// Respawns the player
+	CS_RespawnPlayer(client);
 
 	return Plugin_Continue;
 }

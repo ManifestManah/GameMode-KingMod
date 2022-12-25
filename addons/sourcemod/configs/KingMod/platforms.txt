@@ -1,0 +1,24 @@
+"platforms"									// Don't edit this line, or the script won't work
+{
+	/////////////////////
+	// - Custom Maps - //
+	/////////////////////
+
+	"Example Name"							// The name of the key value, a good idea is to name it something indicating it's map and position to maintain overview, but you can name it more or less whatever you like
+	{
+		"map"				"de_example"	// // The full name of the map / level that you wish the explosive medic kit to spawn on
+
+		"location_x"		"0.0"			// The location on the X-axiz at which the medic kit will be located
+		"location_y"		"0.0"			// The location on the Y-axiz at which the medic kit will be located
+		"location_z"		"64.0"			// The location on the Z-axiz at which the medic kit will be located
+	}
+
+	"Platform One"
+	{
+		"map"				"de_exampletwo"
+
+		"location_x"		"250.0"
+		"location_y"		"-500.0"
+		"location_z"		"128.0"
+	}
+}

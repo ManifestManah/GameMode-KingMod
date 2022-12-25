@@ -43,11 +43,9 @@ float cvar_RespawnTime = 1.50;
 //////////////////////////
 
 
-// #define LOOP_CHILDREN2(%1,%2) for (new %2=Entity_GetNextChild2(%1); %2 != INVALID_ENT_REFERENCE; %2=Entity_GetNextChild2(%1, ++%2))
-
-
 // Global Booleans
 bool gameInProgress = true;
+bool mapHasPlatformSupport = false;
 
 bool isPlayerKing[MAXPLAYERS + 1] = {false,...};
 
@@ -58,6 +56,11 @@ int pointCounterT = 0;
 int pointCounterCT = 0;
 
 int EntityOwner[2049] = {-1, ...};
+
+
+
+float platformLocation[3];
+
 
 
 // Global Characters
@@ -103,6 +106,9 @@ public void OnMapStart()
 {
 	// Adds all of the game mode's required files to the download list and precaches content that needs precaching
 	DownloadAndPrecacheFiles();
+
+	// Checks if the current map has been configured to have platform support included 
+	CheckForPlatformSupport();
 }
 
 
@@ -259,6 +265,13 @@ public Action Event_PlayerDeath(Handle event, const char[] name, bool dontBroadc
 			// Assigsn a clantag to the player which indicates that the player is the current king
 			AssignClanTag(attacker);
 
+			// If the map have been configured to have platform support then execute this section
+			if(mapHasPlatformSupport)
+			{
+				// Teleports the client to the specified location of the map's platform
+				TeleportEntity(attacker, platformLocation, NULL_VECTOR, NULL_VECTOR);
+			}
+
 			// Obtains the name of the attacker and store it within the kingName variable
 			GetClientName(attacker, kingName, sizeof(kingName));
 
@@ -325,6 +338,13 @@ public Action Event_PlayerDeath(Handle event, const char[] name, bool dontBroadc
 	// Attaches a crown model on top of the attacker's head
 	GiveCrown(attacker);
 
+	// If the map have been configured to have platform support then execute this section
+	if(mapHasPlatformSupport)
+	{
+		// Teleports the client to the specified location of the map's platform
+		TeleportEntity(attacker, platformLocation, NULL_VECTOR, NULL_VECTOR);
+	}
+
 	// Assigsn a clantag to the player which indicates that the player is the current king
 	AssignClanTag(attacker);
 
@@ -349,10 +369,12 @@ public Action Event_PlayerDeath(Handle event, const char[] name, bool dontBroadc
 }
 
 
-
 // This happens when the round starts 
 public Action Event_RoundStart(Handle event, const char[] name, bool dontBroadcast)
 {
+	// Checks if the current map has been configured to have platform support included 
+	CheckForPlatformSupport();
+
 	// Changes the gameInProgress state to true
 	gameInProgress = true;
 
@@ -485,6 +507,89 @@ public void LateLoadSupport()
 {
 	// Changes the kingName variable's value to just be None
 	kingName = "None";
+}
+
+
+// This function is called upon whenever a new round starts or a new map is loaded
+void CheckForPlatformSupport()
+{
+	// Sets the coordinate location of the platform to an impossible value
+	platformLocation[0] = -32769.0;
+	platformLocation[1] = -32769.0;
+	platformLocation[2] = -32769.0;
+
+	// Creates a variable named CurerntMapName
+	char CurrentMapName[64];
+
+	// Obtains the name of the current map and st ore it within our CurrentMapName variable
+	GetCurrentMap(CurrentMapName, sizeof(CurrentMapName));
+
+	// Creates a KeyValue structure which we store within our handle named kv
+	Handle kv = CreateKeyValues("platforms");
+
+	// Defines the destination and used file of our located keyvalue tree 
+	FileToKeyValues(kv, "addons/sourcemod/configs/KingMod/platforms.txt");
+
+	// If there isn't a first sub key then execute this section
+	if(!KvGotoFirstSubKey(kv))
+	{
+		return;
+	}
+
+	// Loops through all the sub keys
+	do
+	{
+		// Creates a variable named KeyValueSection which we will use to store data within
+		char KeyValueSection[32];
+
+		// Creates a variable named KeyValueMapName which we will use to store data within
+		char KeyValueMapName[PLATFORM_MAX_PATH];
+
+		// Obtains the name of the KeyValue trees section and store it within the kv handle
+		KvGetSectionName(kv, KeyValueSection, sizeof(KeyValueSection));
+
+		// Obtains the string value that is stored within our sub key value "map" and store it within our variable named KeyValueMapName
+		KvGetString(kv, "map", KeyValueMapName, sizeof(KeyValueMapName));
+
+		// If the current map contains the same name as the data that was stored within our KeyValueMapName variable then execute this section
+		if(StrContains(CurrentMapName, KeyValueMapName, false) != -1)
+		{
+			// Obtains the values stored within our keyvalues, x_coord, y_coord and z_coord and store them within our variables KeyValueX, KeyValueY, and KeyValueZ respectively
+			platformLocation[0] = KvGetFloat(kv, "location_x");
+			platformLocation[1] = KvGetFloat(kv, "location_y");
+			platformLocation[2] = KvGetFloat(kv, "location_z");
+
+			// Adds + 2.0 game units to the Z-axis
+			platformLocation[2] += 2.0;
+		}
+	}
+
+	while (KvGotoNextKey(kv));
+
+	// If the coordinates used are one of the three default out of bounds map coordinates then execute this section
+	if(platformLocation[0] == -32769.0 || platformLocation[1] == -32769.0 || platformLocation[2] == -32769.0)
+	{
+		// Changes the mapHasPlatformSupport state to be false
+		mapHasPlatformSupport = false;
+
+		// Writes a message to the server's console informing about the possible issue at hand
+		PrintToServer("=======================================================================================================");
+		PrintToServer("[King Mod Warning]:");
+		PrintToServer("   %s map is missing a proper platform coordinate specification", CurrentMapName);
+		PrintToServer("   to fix this add a location by editing addons/sourcemod/configs/KingMod/platforms.txt");
+		PrintToServer("   ");
+		PrintToServer("=======================================================================================================");
+	}
+
+	// If the coordinates used are not one of the three default out of bounds map coordinates then execute this section
+	else
+	{
+		// Changes the mapHasPlatformSupport state to be true
+		mapHasPlatformSupport = true;
+	}
+
+	// Closes our kv handle once we are done using it
+	CloseHandle(kv);
 }
 
 

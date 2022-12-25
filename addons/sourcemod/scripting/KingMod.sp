@@ -315,17 +315,19 @@ public Action Event_RoundStart(Handle event, const char[] name, bool dontBroadca
 
 	PrintToChatAll("Debug: A new round has started, kill an enemy to become the first King");
 
+	// Creates a variable secondsToRoundEnd that stores the value of the round's duration + freeze time minus -0.25 seconds
+	float secondsToRoundEnd = (GetConVarFloat(FindConVar("mp_roundtime")) * 60.0) + GetConVarFloat(FindConVar("mp_freezetime")) - 0.25;
+
+	// After secondsToRoundEnd seconds has passed then call upon the Timer_EndCurrentRound function to end the current round
+	CreateTimer(secondsToRoundEnd, Timer_EndCurrentRound, _, TIMER_FLAG_NO_MAPCHANGE);
+
 	return Plugin_Continue;
 }
-
 
 
 // This happens when the round ends
 public Action Event_RoundEnd(Handle event, const char[] name, bool dontBroadcast)
 {
-	// Changes the gameInProgress state to false
-	gameInProgress = false;
-
 	// Loops through all of the clients
 	for (int client = 1; client <= MaxClients; client++)
 	{
@@ -353,7 +355,7 @@ public Action Event_RoundEnd(Handle event, const char[] name, bool dontBroadcast
 		{
 			// Sends a colored multi-language message to everyone in the chat area
 			// CPrintToChat(client, "%t", "Terrorists Won", pointCounterT, pointCounterCT);
-			PrintToChat(client, "Round Draw - T: %i CT: %i", pointCounterT, pointCounterCT);
+			PrintToChat(client, "T Won - T: %i CT: %i", pointCounterT, pointCounterCT);
 
 		}
 
@@ -362,7 +364,7 @@ public Action Event_RoundEnd(Handle event, const char[] name, bool dontBroadcast
 		{
 			// Sends a colored multi-language message to everyone in the chat area
 			// CPrintToChat(client, "%t", "Counter-Terrorists Won", pointCounterT, pointCounterCT);
-			PrintToChat(client, "Round Draw - T: %i CT: %i", pointCounterT, pointCounterCT);
+			PrintToChat(client, "CT Won - T: %i CT: %i", pointCounterT, pointCounterCT);
 		}
 
 		// If the Terrorist team have the same amount of points as the Counter-Terrorist team then execute this section
@@ -519,6 +521,45 @@ public Action Timer_RespawnPlayer(Handle timer, int client)
 	CS_RespawnPlayer(client);
 
 	return Plugin_Continue;
+}
+
+
+// This happens 0.25 seconds prior to when the round would normally end
+public Action Timer_EndCurrentRound(Handle Timer, float HudRoundtimeFloat)
+{
+	// Changes the gameInProgress state to false
+	gameInProgress = false;
+
+	// Creates a variable named restartRoundDelay storing the value of the mp_round_restart_delay convar within
+	float restartRoundDelay = GetConVarFloat(FindConVar("mp_round_restart_delay"));
+
+	// If the value stored within restartRoundDelay is below 3.0 then execute this section
+	if(restartRoundDelay < 3.0)
+	{
+		// Changes the value of restartRoundDelay to 3.0
+		restartRoundDelay = 3.0;
+	}
+
+	// If the Terrorist team have more points than the Counter-Terrorist team then execute this section
+	if(pointCounterT > pointCounterCT)
+	{
+		// Forcefully ends the round and considers it a win for the terrorist team
+		CS_TerminateRound(restartRoundDelay, CSRoundEnd_TerroristWin);
+	}
+
+	// If the Terrorist team have less points than the Counter-Terrorist team then execute this section
+	else if(pointCounterT < pointCounterCT)
+	{
+		// Forcefully ends the round and considers it a win for the counter-terrorist team
+		CS_TerminateRound(restartRoundDelay, CSRoundEnd_CTWin);
+	}
+
+	// If the Terrorist team have the same amount of points as the Counter-Terrorist team then execute this section
+	else
+	{
+		// Forcefully ends the round and considers it a round draw
+		CS_TerminateRound(restartRoundDelay, CSRoundEnd_Draw);
+	}
 }
 
 

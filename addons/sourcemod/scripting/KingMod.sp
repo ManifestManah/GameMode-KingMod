@@ -63,6 +63,8 @@ int EntityOwner[2049] = {-1, ...};
 // Global Characters
 char kingName[64];
 
+char PlayerClanTag[MAXPLAYERS + 1][14];
+
 
 //////////////////////////
 // - Forwards & Hooks - //
@@ -217,6 +219,9 @@ public Action Event_PlayerDeath(Handle event, const char[] name, bool dontBroadc
 		// Removes any currently present king crowns from the game
 		RemoveCrownEntity();
 
+		// Strips the player of the clantag which indicates that the player is the current king 
+		RemoveClanTag(client);
+
 		PrintToChat(client, "Debug: You lost your kingship because you committed suicide");
 
 		// Changes the indicator of which team the King is currently on be none
@@ -245,8 +250,14 @@ public Action Event_PlayerDeath(Handle event, const char[] name, bool dontBroadc
 			// Removes any currently present king crowns from the game
 			RemoveCrownEntity();
 
+			// Strips the player of the clantag which indicates that the player is the current king 
+			RemoveClanTag(client);
+
 			// Attaches a crown model on top of the attacker's head
 			GiveCrown(attacker);
+
+			// Assigsn a clantag to the player which indicates that the player is the current king
+			AssignClanTag(attacker);
 
 			// Obtains the name of the attacker and store it within the kingName variable
 			GetClientName(attacker, kingName, sizeof(kingName));
@@ -308,8 +319,14 @@ public Action Event_PlayerDeath(Handle event, const char[] name, bool dontBroadc
 	// Removes any currently present king crowns from the game
 	RemoveCrownEntity();
 
+	// Strips the player of the clantag which indicates that the player is the current king 
+	RemoveClanTag(client);
+
 	// Attaches a crown model on top of the attacker's head
 	GiveCrown(attacker);
+
+	// Assigsn a clantag to the player which indicates that the player is the current king
+	AssignClanTag(attacker);
 
 	// Obtains the name of the attacker and store it within the kingName variable
 	GetClientName(attacker, kingName, sizeof(kingName));
@@ -375,18 +392,15 @@ public Action Event_RoundEnd(Handle event, const char[] name, bool dontBroadcast
 			continue;
 		}
 
-		// If the client is a bot then execute this section
-		if(IsFakeClient(client))
-		{
-			continue;
-		}
-
 		// If the client is the king then execute this section
 		if(isPlayerKing[client])
 		{
 			// Changes the killed player's king status to false
 			isPlayerKing[client] = false;
 		}
+
+		// Strips the player of the clantag which indicates that the player is the current king 
+		RemoveClanTag(client);
 
 		// If the Terrorist team have more points than the Counter-Terrorist team then execute this section
 		if(pointCounterT > pointCounterCT)
@@ -468,6 +482,60 @@ public void LateLoadSupport()
 {
 	// Changes the kingName variable's value to just be None
 	kingName = "None";
+}
+
+
+// This happens when someone stops being the current king
+public Action RemoveClanTag(int client)
+{
+	// If the client is not a bot then execute this section
+	if(!IsFakeClient(client))
+	{
+		// Creates a variable which we will use to store data within
+		char TempClanTag[14];
+
+		// Obtains the player's current clantag and store it within the tempClanTag variable
+		CS_GetClientClanTag(client, TempClanTag, sizeof(TempClanTag));
+		
+		// If the player's current clantag is [ - King - ] then execute this section
+		if(StrEqual(TempClanTag, "[ - King - ] ", false))
+		{
+			// Changes the player's tag to the previously saved clan tag
+			CS_SetClientClanTag(client, PlayerClanTag[client]);
+		}
+	}
+	else
+	{
+		// Changes the player's clantag to [ - King - ]
+		CS_SetClientClanTag(client, "");
+	}
+
+	return Plugin_Continue;
+}
+
+
+// This happens when someone becommes the king
+public void AssignClanTag(int client)
+{
+	// If the client is not a bot then execute this section
+	if(!IsFakeClient(client))
+	{
+		// Creates a variable which we will use to store data within
+		char TempClanTag[14];
+
+		// Obtains the player's current clantag and store it within the tempClanTag variable
+		CS_GetClientClanTag(client, TempClanTag, sizeof(TempClanTag));
+		
+		// If the player's current clantag is not [ - King - ] then execute this section
+		if(!StrEqual(TempClanTag, "[ - King - ] ", false))
+		{
+			// Sets playerClanTag[client] to store the player's current clantag for later
+			CS_GetClientClanTag(client, PlayerClanTag[client], sizeof(PlayerClanTag));
+		}
+	}
+
+	// Changes the player's clantag to [ - King - ]
+	CS_SetClientClanTag(client, "[ - King - ] ");
 }
 
 
@@ -732,7 +800,6 @@ public Action Timer_EndCurrentRound(Handle Timer, float HudRoundtimeFloat)
 		CS_TerminateRound(restartRoundDelay, CSRoundEnd_Draw);
 	}
 }
-
 
 
 ////////////////////////////////

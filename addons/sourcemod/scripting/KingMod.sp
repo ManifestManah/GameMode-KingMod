@@ -57,9 +57,7 @@ int kingIsOnTeam = 0;
 int pointCounterT = 0;
 int pointCounterCT = 0;
 
-
-//int PlayerHasPropModel[MAXPLAYERS + 1] = {-1, ...};
-//int EntityOwner[2049] = {-1, ...};
+int EntityOwner[2049] = {-1, ...};
 
 
 // Global Characters
@@ -565,9 +563,48 @@ public void GiveCrown(int client)
 	
 	// Teleports the crown model to the previously specified coordinates relative to the player
 	TeleportEntity(PropEntity, modelPosition, modelAngles, NULL_VECTOR);
+
+	// Sets the EntityOwner variable to that of the client's index
+	EntityOwner[PropEntity] = client;
+
+	// Hooks on to the PropEntity and modifies how it is transmitted to clients in the game
+	SDKHook(PropEntity, SDKHook_SetTransmit, Transmit_HideCrown);
 }
 
 
+// This happens once every game tick
+public Action Transmit_HideCrown(int entity, int client)
+{
+	// If the client does not meet our validation criteria then execute this section
+	if(!IsValidClient(client))
+	{
+		return Plugin_Continue;
+	}
+
+	// If the client is not a bot then execute this section
+	if(IsFakeClient(client))
+	{
+		return Plugin_Continue;
+	}
+
+	// If the client is the entity owner then execute this section
+	if(client == EntityOwner[entity])
+	{
+		return Plugin_Handled;
+	}
+
+	// If the player is in observermode and seeing in first person then execute this section
+	if(GetEntProp(client, Prop_Send, "m_iObserverMode") == 4)
+	{
+		// If the client observed is the owner of the crown entity thn execute this section
+		if(GetEntPropEnt(client, Prop_Send, "m_hObserverTarget") == EntityOwner[entity])
+		{
+			return Plugin_Handled;
+		}
+	}
+
+	return Plugin_Continue;
+}
 
 
 

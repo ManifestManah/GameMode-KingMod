@@ -35,6 +35,7 @@ int cvar_PointsNormalKill = 1;
 int cvar_PointsKingKill = 3;
 
 float cvar_RespawnTime = 1.50;
+float cvar_ImmobilityTime = 3.00;
 
 
 
@@ -270,6 +271,12 @@ public Action Event_PlayerDeath(Handle event, const char[] name, bool dontBroadc
 			{
 				// Teleports the client to the specified location of the map's platform
 				TeleportEntity(attacker, platformLocation, NULL_VECTOR, NULL_VECTOR);
+
+				// Changes the movement speed of the player to 0.0 essentially freezing all player movement aside from camera turning
+				SetEntPropFloat(attacker, Prop_Data, "m_flLaggedMovementValue", 0.0);
+
+				// After (3.0 default) seconds has passed the king will have normal movement once again
+				CreateTimer(cvar_ImmobilityTime, Timer_UnfreezeKing, attacker, TIMER_FLAG_NO_MAPCHANGE);
 			}
 
 			// Obtains the name of the attacker and store it within the kingName variable
@@ -343,6 +350,12 @@ public Action Event_PlayerDeath(Handle event, const char[] name, bool dontBroadc
 	{
 		// Teleports the client to the specified location of the map's platform
 		TeleportEntity(attacker, platformLocation, NULL_VECTOR, NULL_VECTOR);
+
+		// Changes the movement speed of the player to 0.0 essentially freezing all player movement aside from camera turning
+		SetEntPropFloat(attacker, Prop_Data, "m_flLaggedMovementValue", 0.0);
+
+		// After (3.0 default) seconds has passed the king will have normal movement once again
+		CreateTimer(cvar_ImmobilityTime, Timer_UnfreezeKing, attacker, TIMER_FLAG_NO_MAPCHANGE);
 	}
 
 	// Assigsn a clantag to the player which indicates that the player is the current king
@@ -841,6 +854,23 @@ public Action UpdateTeamScoreHud(Handle timer, any unused)
 
 	return Plugin_Continue;
 }
+
+
+// This happens 3.0 seconds after a player becomes the king if the map has platform support
+public Action Timer_UnfreezeKing(Handle timer, int client)
+{
+	// If the client does not meet our validation criteria then execute this section
+	if(!IsValidClient(client))
+	{
+		return Plugin_Continue;
+	}
+
+	// Changes the movement speed of the player to 1.0 essentially returning their movement to the normal speed
+	SetEntPropFloat(client, Prop_Data, "m_flLaggedMovementValue", 1.0);
+
+	return Plugin_Continue;
+}
+
 
 
 // This function is called upon briefly after a player changes team or dies

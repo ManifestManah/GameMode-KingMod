@@ -370,11 +370,14 @@ public Action Event_RoundStart(Handle event, const char[] name, bool dontBroadca
 
 	PrintToChatAll("Debug: A new round has started, kill an enemy to become the first King");
 
+	// Creates a variable with the value of the terrorist and counter-terrorist teams' current score added together
+	int initialRound = GetTeamScore(2) + GetTeamScore(3);
+
 	// Creates a variable secondsToRoundEnd that stores the value of the round's duration + freeze time minus -0.25 seconds
 	float secondsToRoundEnd = (GetConVarFloat(FindConVar("mp_roundtime")) * 60.0) + GetConVarFloat(FindConVar("mp_freezetime")) - 0.25;
 
 	// After secondsToRoundEnd seconds has passed then call upon the Timer_EndCurrentRound function to end the current round
-	CreateTimer(secondsToRoundEnd, Timer_EndCurrentRound, _, TIMER_FLAG_NO_MAPCHANGE);
+	CreateTimer(secondsToRoundEnd, Timer_EndCurrentRound, initialRound, TIMER_FLAG_NO_MAPCHANGE);
 
 	return Plugin_Continue;
 }
@@ -764,8 +767,15 @@ public Action Timer_RespawnPlayer(Handle timer, int client)
 
 
 // This happens 0.25 seconds prior to when the round would normally end
-public Action Timer_EndCurrentRound(Handle Timer, float HudRoundtimeFloat)
+public Action Timer_EndCurrentRound(Handle Timer, int initialRound)
 {
+	int currentRound = GetTeamScore(2) + GetTeamScore(3);
+
+	if(initialRound != currentRound)
+	{
+		return Plugin_Stop;
+	}
+
 	// Changes the gameInProgress state to false
 	gameInProgress = false;
 
@@ -799,6 +809,8 @@ public Action Timer_EndCurrentRound(Handle Timer, float HudRoundtimeFloat)
 		// Forcefully ends the round and considers it a round draw
 		CS_TerminateRound(restartRoundDelay, CSRoundEnd_Draw);
 	}
+
+	return Plugin_Continue;
 }
 
 

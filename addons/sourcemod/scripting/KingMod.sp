@@ -769,8 +769,10 @@ public Action Timer_RespawnPlayer(Handle timer, int client)
 // This happens 0.25 seconds prior to when the round would normally end
 public Action Timer_EndCurrentRound(Handle Timer, int initialRound)
 {
+	// Obtain the current round based on the counter-terrorist and terrorist teams' scores
 	int currentRound = GetTeamScore(2) + GetTeamScore(3);
 
+	// If the currentRound and initialRound differ from one another then execute this section
 	if(initialRound != currentRound)
 	{
 		return Plugin_Stop;
@@ -794,6 +796,9 @@ public Action Timer_EndCurrentRound(Handle Timer, int initialRound)
 	{
 		// Forcefully ends the round and considers it a win for the terrorist team
 		CS_TerminateRound(restartRoundDelay, CSRoundEnd_TerroristWin);
+
+		// Adds + 1 to the terrorist team's current team score
+		SetTeamScore(2, GetTeamScore(2) + 1);
 	}
 
 	// If the Terrorist team have less points than the Counter-Terrorist team then execute this section
@@ -801,6 +806,9 @@ public Action Timer_EndCurrentRound(Handle Timer, int initialRound)
 	{
 		// Forcefully ends the round and considers it a win for the counter-terrorist team
 		CS_TerminateRound(restartRoundDelay, CSRoundEnd_CTWin);
+
+		// Adds + 1 to the counter-terrorist team's current team score
+		SetTeamScore(3, GetTeamScore(3) + 1);
 	}
 
 	// If the Terrorist team have the same amount of points as the Counter-Terrorist team then execute this section

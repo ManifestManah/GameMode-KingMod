@@ -4,7 +4,10 @@
 
 // List of Includes
 #include <sourcemod>
+#include <sdktools>
+#include <sdkhooks>
 #include <cstrike>
+// #include <clientprefs>
 #include <multicolors>
 
 // The code formatting rules we wish to follow
@@ -40,6 +43,9 @@ float cvar_RespawnTime = 1.50;
 //////////////////////////
 
 
+// #define LOOP_CHILDREN2(%1,%2) for (new %2=Entity_GetNextChild2(%1); %2 != INVALID_ENT_REFERENCE; %2=Entity_GetNextChild2(%1, ++%2))
+
+
 // Global Booleans
 bool gameInProgress = true;
 
@@ -50,6 +56,10 @@ bool isPlayerKing[MAXPLAYERS + 1] = {false,...};
 int kingIsOnTeam = 0;
 int pointCounterT = 0;
 int pointCounterCT = 0;
+
+
+//int PlayerHasPropModel[MAXPLAYERS + 1] = {-1, ...};
+//int EntityOwner[2049] = {-1, ...};
 
 
 // Global Characters
@@ -77,11 +87,22 @@ public void OnPluginStart()
 	// Creates a timer that will update the team score hud every 1 second
 	CreateTimer(1.0, UpdateTeamScoreHud, _, TIMER_REPEAT);
 
+	// Adds all of the game mode's required files to the download list and precaches content that needs precaching
+	DownloadAndPrecacheFiles();
+
 	// Allows the modification to be loaded while the server is running, without causing gameplay issues
 	LateLoadSupport();
 
 	// Loads the translaltion file which we intend to use
 	LoadTranslations("manifest_kingmod.phrases");
+}
+
+
+// This happens when a new map is loaded
+public void OnMapStart()
+{
+	// Adds all of the game mode's required files to the download list and precaches content that needs precaching
+	DownloadAndPrecacheFiles();
 }
 
 
@@ -102,6 +123,9 @@ public void OnClientDisconnect(int client)
 
 	// Changes the killed player's king status to false
 	isPlayerKing[client] = false;
+
+	// Removes any currently present king crowns from the game
+	RemoveCrownEntity();
 
 	// Changes the indicator of which team the King is currently on be none
 	kingIsOnTeam = 0;
@@ -191,6 +215,10 @@ public Action Event_PlayerDeath(Handle event, const char[] name, bool dontBroadc
 	{
 		// Changes the killed player's king status to false
 		isPlayerKing[client] = false;
+
+		// Removes any currently present king crowns from the game
+		RemoveCrownEntity();
+
 		PrintToChat(client, "Debug: You lost your kingship because you committed suicide");
 
 		// Changes the indicator of which team the King is currently on be none
@@ -215,6 +243,12 @@ public Action Event_PlayerDeath(Handle event, const char[] name, bool dontBroadc
 			// Changes the attacking player's king status to true
 			isPlayerKing[attacker] = true;
 			PrintToChat(attacker, "Debug: You stole the king title from the enemy that died");
+
+			// Removes any currently present king crowns from the game
+			RemoveCrownEntity();
+
+			// Attaches a crown model on top of the attacker's head
+			GiveCrown(attacker);
 
 			// Obtains the name of the attacker and store it within the kingName variable
 			GetClientName(attacker, kingName, sizeof(kingName));
@@ -272,6 +306,12 @@ public Action Event_PlayerDeath(Handle event, const char[] name, bool dontBroadc
 	// Changes the attacking player's king status to true
 	isPlayerKing[attacker] = true;
 	PrintToChat(attacker, "Debug: You became the new king");
+
+	// Removes any currently present king crowns from the game
+	RemoveCrownEntity();
+
+	// Attaches a crown model on top of the attacker's head
+	GiveCrown(attacker);
 
 	// Obtains the name of the attacker and store it within the kingName variable
 	GetClientName(attacker, kingName, sizeof(kingName));
@@ -432,6 +472,100 @@ public void LateLoadSupport()
 	kingName = "None";
 }
 
+
+// This happens when a king dies or disconnects from the game
+public void RemoveCrownEntity()
+{
+	// Creates a variable to store our data within 
+	int entity = INVALID_ENT_REFERENCE;
+
+	// Loops through the entities and execute this section if the entity has the classname prop_dynamic_override
+	while ((entity = FindEntityByClassname(entity, "prop_dynamic_override")) != INVALID_ENT_REFERENCE)
+	{
+		// If the entity does not meet our criteria validation then execute this section
+		if(!IsValidEntity(entity))
+		{
+			continue;
+		}
+
+		// Creates a variable which we will use to store our data within
+		char entityName[128];
+
+		// Obtains the name of the entity and store it within the our entityName variable
+		GetEntPropString(entity, Prop_Data, "m_iName", entityName, sizeof(entityName));
+
+		// If the name of the entity is not KingName then execute this section
+		if(!StrEqual(entityName, "KingCrown", false))
+		{
+			continue;
+		}
+
+		// Removes the entity from the game
+		AcceptEntityInput(entity, "Kill");
+
+		break;
+	}
+}
+
+
+// This happens when a new king has been chosen
+public void GiveCrown(int client)
+{
+	// If the model is not precached then execute this section
+	if(!IsModelPrecached("models/props/crown.mdl"))
+	{
+		// Precaches the model
+		PrecacheModel("models/props/crown.mdl");
+	}
+
+	// Creates a variable named PropEntity to store our prop_dynamic_override unique id within 
+ 	int PropEntity = CreateEntityByName("prop_dynamic_override");
+ 	
+ 	// Sets the targetname for our crown to be our formatted EntityName
+	DispatchKeyValue(PropEntity, "targetname", "KingCrown");
+
+	// Changes the model of the prop to a crown
+	DispatchKeyValue(PropEntity, "model", "models/props/crown.mdl");
+
+	// Turns off receiving shadows for the model
+	DispatchKeyValue(PropEntity, "disablereceiveshadows", "1");
+
+	// Turns off the model's own shadows 
+	DispatchKeyValue(PropEntity, "disableshadows", "1");
+	
+	// Changes the solidity of the model to be unsolid
+	DispatchKeyValue(PropEntity, "solid", "0");
+	
+	// Changes the spawn flags of the model
+	DispatchKeyValue(PropEntity, "spawnflags", "256");
+
+	// Changes the collisiongroup to that of the ones used by weapons in CS:GO as well
+	SetEntProp(PropEntity, Prop_Send, "m_CollisionGroup", 11);
+	
+	// Spawns the crown model in to the world
+	DispatchSpawn(PropEntity);
+
+	// Creates a variable which we will use to store our data within
+	float modelAngles[3];
+
+	// Creates a variable which we will use to store our data within
+	float modelPosition[3];
+
+	// Modifies the placement of the crown model relative to the player's x-coordinate position
+	modelPosition[0] = 5.50;
+
+	// Modifies the placement of the crown model relative to the player's z-coordinate position
+	modelPosition[2] = 53.25;
+
+	// Changes the variantstring to !activator
+	SetVariantString("!activator");
+	
+	// Changes the parent of the model to be that of the player who just became the new king
+	AcceptEntityInput(PropEntity, "SetParent", client, PropEntity, 0);
+	
+	// Teleports the crown model to the previously specified coordinates relative to the player
+	TeleportEntity(PropEntity, modelPosition, modelAngles, NULL_VECTOR);
+}
 
 
 
@@ -603,4 +737,22 @@ public bool IsThereACurrentKing()
 	}
 
 	return false;
+}
+
+
+
+//////////////////////////////////////
+// - Download & Precache Function - //
+//////////////////////////////////////
+
+
+public void DownloadAndPrecacheFiles()
+{
+	AddFileToDownloadsTable("materials/models/props/vip.vmt");
+	AddFileToDownloadsTable("materials/models/props/vip.vtf");
+	AddFileToDownloadsTable("models/props/crown.dx90.vtx");
+	AddFileToDownloadsTable("models/props/crown.mdl");
+	AddFileToDownloadsTable("models/props/crown.vvd");
+
+	PrecacheModel("models/props/crown.mdl");
 }

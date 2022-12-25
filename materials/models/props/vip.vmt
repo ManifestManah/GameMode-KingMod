@@ -1,0 +1,9 @@
+UnlitGeneric
+{
+	"$baseTexture" "models/props/vip"
+	"$surfaceprop" "metal"
+	"$envmap" "env_cubemap"
+	"$envmaptint" "[.7 .7 .7]"
+	"$envmapcontrast" 3
+	"$selfillum" "1"
+}

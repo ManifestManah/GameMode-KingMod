@@ -407,102 +407,6 @@ public Action Event_PlayerSpawn(Handle event, const char[] name, bool dontBroadc
 }
 
 
-// This happens when a player spawns
-public Action GrantPlayerSpawnProtection(int client)
-{
-	// Changes the SpawnProtection to true
-	isPlayerProtected[client] = true;
-
-	// Makes the client unable to take damage by enabling God-Mode
-	SetEntProp(client, Prop_Data, "m_takedamage", 0, 1);
-
-	// Changes the rendering mode of the player
-	SetEntityRenderMode(client, RENDER_TRANSCOLOR);
-
-	// If the client is on the terrorist team then execute this section
-	if(GetClientTeam(client) == 2)
-	{
-		// Changes the client's color to red
-		SetEntityRenderColor(client, 200, 0, 0, 255);
-	}
-
-	// If the client is on the counter-terrorist team then execute this section
-	else if(GetClientTeam(client) == 3)
-	{
-		// Changes the client's color to blue
-		SetEntityRenderColor(client, 0, 0, 215, 255);
-	}
-
-	// Adds +1 to the PlayerSpawnCount[client] variable
-	PlayerSpawnCount[client]++;
-	
-	// Creates a datapack called pack which we will store our data within 
-	DataPack pack = new DataPack();
-
-	// Stores the client's index within our datapack
-	pack.WriteCell(client);
-
-	// Stores the PlayerSpawnCount variable within our datapack
-	pack.WriteCell(PlayerSpawnCount[client]);
-
-	// After (3.5 default) seconds remove the spawn protection from the player
-	CreateTimer(cvar_SpawnProtectionDuration, Timer_ExpireSpawnProtection, pack, TIMER_FLAG_NO_MAPCHANGE);
-}
-
-
-// This happens (3.5 default) seconds after a player spawns
-public Action Timer_ExpireSpawnProtection(Handle timer, DataPack dataPackage)
-{
-	dataPackage.Reset();
-
-	// Obtains client index stored within our data pack and store it within the client variable
-	int client = dataPackage.ReadCell();
-
-	// Obtains PlayerSpawnCount stored within our data pack and store it within the SpawnCount variable
-	int SpawnCount = dataPackage.ReadCell();
-	
-	// Deletes our data package after having acquired the information we needed
-	delete dataPackage;
-	
-	// If the client does not meet our validation criteria then execute this section
-	if(!IsValidClient(client))
-	{
-		return Plugin_Stop;
-	}
-
-	// If the spawncount and PlayerSpawnCount variable differs then execute this section
-	if(SpawnCount != PlayerSpawnCount[client])
-	{
-		return Plugin_Stop;
-	}
-
-	// If the player is no longer spawnprotected then execute this section
-	if(!isPlayerProtected[client])
-	{
-		return Plugin_Stop;
-	}
-
-	// Removes the spawn protection from the client
-	RemoveSpawnProtection(client);
-
-	return Plugin_Stop;
-}
-
-
-// This happens (3.5 default) seconds after a player spawns
-public Action RemoveSpawnProtection(int client)
-{
-	// Changes the SpawnProtection status of the client to be turned off
-	isPlayerProtected[client] = false;
-
-	// Turns the player's God Mode off
-	SetEntProp(client, Prop_Data, "m_takedamage", 2, 1);
-
-	// Changes the player's color to the default color 
-	SetEntityRenderColor(client, 255, 255, 255, 255);
-}
-
-
 
 // This happens when a player dies
 public Action Event_PlayerDeath(Handle event, const char[] name, bool dontBroadcast)
@@ -1275,6 +1179,64 @@ public void StripPlayerOfWeapons(int client)
 }
 
 
+
+// This happens when a player spawns
+public Action GrantPlayerSpawnProtection(int client)
+{
+	// Changes the SpawnProtection to true
+	isPlayerProtected[client] = true;
+
+	// Makes the client unable to take damage by enabling God-Mode
+	SetEntProp(client, Prop_Data, "m_takedamage", 0, 1);
+
+	// Changes the rendering mode of the player
+	SetEntityRenderMode(client, RENDER_TRANSCOLOR);
+
+	// If the client is on the terrorist team then execute this section
+	if(GetClientTeam(client) == 2)
+	{
+		// Changes the client's color to red
+		SetEntityRenderColor(client, 200, 0, 0, 255);
+	}
+
+	// If the client is on the counter-terrorist team then execute this section
+	else if(GetClientTeam(client) == 3)
+	{
+		// Changes the client's color to blue
+		SetEntityRenderColor(client, 0, 0, 215, 255);
+	}
+
+	// Adds +1 to the PlayerSpawnCount[client] variable
+	PlayerSpawnCount[client]++;
+	
+	// Creates a datapack called pack which we will store our data within 
+	DataPack pack = new DataPack();
+
+	// Stores the client's index within our datapack
+	pack.WriteCell(client);
+
+	// Stores the PlayerSpawnCount variable within our datapack
+	pack.WriteCell(PlayerSpawnCount[client]);
+
+	// After (3.5 default) seconds remove the spawn protection from the player
+	CreateTimer(cvar_SpawnProtectionDuration, Timer_ExpireSpawnProtection, pack, TIMER_FLAG_NO_MAPCHANGE);
+}
+
+
+// This happens (3.5 default) seconds after a player spawns
+public Action RemoveSpawnProtection(int client)
+{
+	// Changes the SpawnProtection status of the client to be turned off
+	isPlayerProtected[client] = false;
+
+	// Turns the player's God Mode off
+	SetEntProp(client, Prop_Data, "m_takedamage", 2, 1);
+
+	// Changes the player's color to the default color 
+	SetEntityRenderColor(client, 255, 255, 255, 255);
+}
+
+
 // This happens when a player that controls a bot dies
 public void RespawnOvertakenBots()
 {
@@ -1404,6 +1366,45 @@ public Action Timer_GiveGoldenKnife(Handle Timer, int client)
 	GivePlayerItem(client, "weapon_knifegg");
 
 	return Plugin_Continue;
+}
+
+
+// This happens (3.5 default) seconds after a player spawns
+public Action Timer_ExpireSpawnProtection(Handle timer, DataPack dataPackage)
+{
+	dataPackage.Reset();
+
+	// Obtains client index stored within our data pack and store it within the client variable
+	int client = dataPackage.ReadCell();
+
+	// Obtains PlayerSpawnCount stored within our data pack and store it within the SpawnCount variable
+	int SpawnCount = dataPackage.ReadCell();
+	
+	// Deletes our data package after having acquired the information we needed
+	delete dataPackage;
+	
+	// If the client does not meet our validation criteria then execute this section
+	if(!IsValidClient(client))
+	{
+		return Plugin_Stop;
+	}
+
+	// If the spawncount and PlayerSpawnCount variable differs then execute this section
+	if(SpawnCount != PlayerSpawnCount[client])
+	{
+		return Plugin_Stop;
+	}
+
+	// If the player is no longer spawnprotected then execute this section
+	if(!isPlayerProtected[client])
+	{
+		return Plugin_Stop;
+	}
+
+	// Removes the spawn protection from the client
+	RemoveSpawnProtection(client);
+
+	return Plugin_Stop;
 }
 
 

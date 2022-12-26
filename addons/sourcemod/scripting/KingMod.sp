@@ -126,6 +126,16 @@ public void OnMapStart()
 }
 
 
+public void OnPluginEnd()
+{
+	PrintToChatAll("King Mod has been unloaded.");
+	PrintToChatAll("A new round will soon commence.");
+
+	// Forcefully ends the round and considers it a round draw
+	CS_TerminateRound(3.0, CSRoundEnd_Draw);
+}
+
+
 // This happens when a player disconnects
 public void OnClientDisconnect(int client)
 {
@@ -656,6 +666,12 @@ public void LateLoadSupport()
 {
 	// Changes the kingName variable's value to just be None
 	kingName = "None";
+
+	// Forcefully ends the round and considers it a round draw
+	CS_TerminateRound(3.0, CSRoundEnd_Draw);
+
+	PrintToChatAll("King Mod has been loaded. ");
+	PrintToChatAll("A new round will soon commence.");
 }
 
 

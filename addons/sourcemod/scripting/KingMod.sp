@@ -40,7 +40,7 @@ int cvar_KingHealth = 200;
 
 float cvar_RespawnTime = 1.50;
 float cvar_ImmobilityTime = 3.00;
-
+float cvar_SpawnProtectionDuration = 3.0;
 
 
 //////////////////////////
@@ -53,6 +53,7 @@ bool gameInProgress = true;
 bool mapHasPlatformSupport = false;
 
 bool isPlayerKing[MAXPLAYERS + 1] = {false,...};
+bool isPlayerProtected[MAXPLAYERS + 1] = {false,...};
 bool isPlayerControllingBot[MAXPLAYERS + 1] = {false,...};
 bool displayRestrictionHud[MAXPLAYERS + 1] = {false,...};
 
@@ -62,6 +63,7 @@ int kingIsOnTeam = 0;
 int pointCounterT = 0;
 int pointCounterCT = 0;
 
+int PlayerSpawnCount[MAXPLAYERS+1] = {0, ...};
 int EntityOwner[2049] = {-1, ...};
 
 int mapHasMinimapHidden = 0;
@@ -95,6 +97,7 @@ public void OnPluginStart()
 	HookEvent("round_start", Event_RoundStart, EventHookMode_Post);
 	HookEvent("round_end", Event_RoundEnd, EventHookMode_Post);
 	HookEvent("player_team", Event_PlayerTeam, EventHookMode_Post);
+	HookEvent("weapon_fire", Event_WeaponFire, EventHookMode_Pre);
 
 	// Calls upon our CommandListenerJoinTeam function whenever a player changes team
 	AddCommandListener(CommandListenerJoinTeam, "jointeam");
@@ -222,6 +225,47 @@ public Action OnPlayerRunCmd(int client, int &buttons, int &impulse, float unuse
 		return Plugin_Continue;
 	}
 
+	// If the player is spawn protected then execute this section
+	if(isPlayerProtected[client])
+	{
+		// If the client is not alive then execute this section
+		if(!IsPlayerAlive(client))
+		{
+			return Plugin_Continue;
+		}
+
+		// Obtains the client's active weapon and store it within the variable: weapon
+		int weapon = GetEntPropEnt(client, Prop_Send, "m_hActiveWeapon");
+
+		// If the weapon that was picked up our entity criteria of validation then execute this section
+		if(!IsValidEntity(weapon))
+		{
+			return Plugin_Continue;
+		}
+
+		// Obtains the player's weapon based on weapon slot
+		int knife_weapon = GetPlayerWeaponSlot(client, 2);
+
+		// If the knife_weapon entity does not meet our criteria of validation then execute this section
+		if(!IsValidEntity(knife_weapon))
+		{
+			return Plugin_Continue;
+		}
+
+		// If the entity stored within our weapon variable and the entity stored within our knife_weapon differs then execute this section
+		if(weapon != knife_weapon)
+		{
+			return Plugin_Continue;
+		}
+
+		// if the player presses their right click button then execute this
+		if(buttons & IN_ATTACK2)
+		{
+			// Removes the spawn protection from the client
+			RemoveSpawnProtection(client);
+		}
+	}
+
 	// If the client is alive then execute this section
 	if(IsPlayerAlive(client))
 	{
@@ -248,7 +292,6 @@ public Action OnPlayerRunCmd(int client, int &buttons, int &impulse, float unuse
 	{
 		return Plugin_Continue;
 	}
-
 
 	// If the player presses their USE button then execute this section
 	if(buttons & IN_USE)
@@ -354,11 +397,111 @@ public Action Event_PlayerSpawn(Handle event, const char[] name, bool dontBroadc
 	// Gives the client the specified weapon
 	GivePlayerItem(client, "weapon_knife");
 
-	//  Disables CS:GO's built-in minimap / radar hud element if it is specified in the keyvalue file
+	// Provides the player with invulnerability temporarily to protect the player
+	GrantPlayerSpawnProtection(client);
+
+	// Disables CS:GO's built-in minimap / radar hud element if it is specified in the keyvalue file
 	CreateTimer(0.0, Timer_HudElementMinimap, client, TIMER_FLAG_NO_MAPCHANGE);
 
 	return Plugin_Continue;
 }
+
+
+// This happens when a player spawns
+public Action GrantPlayerSpawnProtection(int client)
+{
+	// Changes the SpawnProtection to true
+	isPlayerProtected[client] = true;
+
+	// Makes the client unable to take damage by enabling God-Mode
+	SetEntProp(client, Prop_Data, "m_takedamage", 0, 1);
+
+	// Changes the rendering mode of the player
+	SetEntityRenderMode(client, RENDER_TRANSCOLOR);
+
+	// If the client is on the terrorist team then execute this section
+	if(GetClientTeam(client) == 2)
+	{
+		// Changes the client's color to red
+		SetEntityRenderColor(client, 200, 0, 0, 255);
+	}
+
+	// If the client is on the counter-terrorist team then execute this section
+	else if(GetClientTeam(client) == 3)
+	{
+		// Changes the client's color to blue
+		SetEntityRenderColor(client, 0, 0, 215, 255);
+	}
+
+	// Adds +1 to the PlayerSpawnCount[client] variable
+	PlayerSpawnCount[client]++;
+	
+	// Creates a datapack called pack which we will store our data within 
+	DataPack pack = new DataPack();
+
+	// Stores the client's index within our datapack
+	pack.WriteCell(client);
+
+	// Stores the PlayerSpawnCount variable within our datapack
+	pack.WriteCell(PlayerSpawnCount[client]);
+
+	// After (3.5 default) seconds remove the spawn protection from the player
+	CreateTimer(cvar_SpawnProtectionDuration, Timer_ExpireSpawnProtection, pack, TIMER_FLAG_NO_MAPCHANGE);
+}
+
+
+// This happens (3.5 default) seconds after a player spawns
+public Action Timer_ExpireSpawnProtection(Handle timer, DataPack dataPackage)
+{
+	dataPackage.Reset();
+
+	// Obtains client index stored within our data pack and store it within the client variable
+	int client = dataPackage.ReadCell();
+
+	// Obtains PlayerSpawnCount stored within our data pack and store it within the SpawnCount variable
+	int SpawnCount = dataPackage.ReadCell();
+	
+	// Deletes our data package after having acquired the information we needed
+	delete dataPackage;
+	
+	// If the client does not meet our validation criteria then execute this section
+	if(!IsValidClient(client))
+	{
+		return Plugin_Stop;
+	}
+
+	// If the spawncount and PlayerSpawnCount variable differs then execute this section
+	if(SpawnCount != PlayerSpawnCount[client])
+	{
+		return Plugin_Stop;
+	}
+
+	// If the player is no longer spawnprotected then execute this section
+	if(!isPlayerProtected[client])
+	{
+		return Plugin_Stop;
+	}
+
+	// Removes the spawn protection from the client
+	RemoveSpawnProtection(client);
+
+	return Plugin_Stop;
+}
+
+
+// This happens (3.5 default) seconds after a player spawns
+public Action RemoveSpawnProtection(int client)
+{
+	// Changes the SpawnProtection status of the client to be turned off
+	isPlayerProtected[client] = false;
+
+	// Turns the player's God Mode off
+	SetEntProp(client, Prop_Data, "m_takedamage", 2, 1);
+
+	// Changes the player's color to the default color 
+	SetEntityRenderColor(client, 255, 255, 255, 255);
+}
+
 
 
 // This happens when a player dies
@@ -729,6 +872,31 @@ public Action Event_PlayerTeam(Handle event, const char[] name, bool dontBroadca
 
 	// Calls upon the Timer_RespawnPlayer function after (1.5 default) seconds
 	CreateTimer(cvar_RespawnTime, Timer_RespawnPlayer, client, TIMER_FLAG_NO_MAPCHANGE);
+
+	return Plugin_Continue;
+}
+
+
+// This happens when a player uses the left attack with their knife or weapon
+public Action Event_WeaponFire(Handle event, const char[] name, bool dontBroadcast)
+{
+	// Obtains the client's userid and converts it to an index and store it within our client variable
+	int client = GetClientOfUserId(GetEventInt(event, "userid"));
+
+	// If the client does not meet our validation criteria then execute this section
+	if(!IsValidClient(client))
+	{
+		return Plugin_Continue;
+	}
+
+	// If the player is no longer spawnprotected then execute this section
+	if(!isPlayerProtected[client])
+	{
+		return Plugin_Continue;
+	}
+
+	// Removes the spawn protection from the client
+	RemoveSpawnProtection(client);
 
 	return Plugin_Continue;
 }

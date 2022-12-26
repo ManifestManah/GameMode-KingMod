@@ -54,6 +54,7 @@ bool isPlayerKing[MAXPLAYERS + 1] = {false,...};
 
 
 // Global Integers
+int kingIndex = -1;
 int kingIsOnTeam = 0;
 int pointCounterT = 0;
 int pointCounterCT = 0;
@@ -133,6 +134,9 @@ public void OnClientDisconnect(int client)
 	// Changes the killed player's king status to false
 	isPlayerKing[client] = false;
 
+	// Changes the value of the kingIndex to -1
+	kingIndex = -1;
+
 	// Removes any currently present king crowns from the game
 	RemoveCrownEntity();
 
@@ -159,6 +163,39 @@ public Action CommandListenerJoinTeam(int client, const char[] command, int numA
 
 	// Calls upon the Timer_RespawnPlayer function after (1.5 default) seconds
 	CreateTimer(cvar_RespawnTime, Timer_RespawnPlayer, client, TIMER_FLAG_NO_MAPCHANGE);
+
+	return Plugin_Continue;
+}
+
+
+// This happens when a player presses a key
+public Action OnPlayerRunCmd(int client, int &buttons, int &impulse, float unused_velocity[3]) 
+{
+	// If the client does not meet our validation criteria then execute this section
+	if(!IsValidClient(client))
+	{
+		return Plugin_Continue;
+	}
+
+	// If the client is alive then execute this section
+	if(IsPlayerAlive(client))
+	{
+		return Plugin_Continue;
+	}
+
+	// If the client observed is not the current king then execute this section
+	if(GetEntPropEnt(client, Prop_Send, "m_hObserverTarget") != kingIndex)
+	{
+		return Plugin_Continue;
+	}
+
+	// If the player presses their USE button then execute this section
+	if(buttons & IN_USE)
+	{
+		PrintToChat(client, "You cannot take over the bot if it is the current king");
+
+		return Plugin_Handled;
+	}
 
 	return Plugin_Continue;
 }
@@ -230,9 +267,12 @@ public Action Event_PlayerDeath(Handle event, const char[] name, bool dontBroadc
 		{
 			return Plugin_Continue;
 		}
-		
+
 		// Changes the killed player's king status to false
 		isPlayerKing[client] = false;
+
+		// Changes the value of the kingIndex to -1
+		kingIndex = -1;
 
 		// Removes any currently present king crowns from the game
 		RemoveCrownEntity();
@@ -264,6 +304,9 @@ public Action Event_PlayerDeath(Handle event, const char[] name, bool dontBroadc
 			// Changes the attacking player's king status to true
 			isPlayerKing[attacker] = true;
 			PrintToChat(attacker, "Debug: You stole the king title from the enemy that died");
+
+			// Changes the value of the kingIndex to the same index as the attacker's
+			kingIndex = attacker;
 
 			// Removes any currently present king crowns from the game
 			RemoveCrownEntity();
@@ -355,6 +398,9 @@ public Action Event_PlayerDeath(Handle event, const char[] name, bool dontBroadc
 	// Changes the attacking player's king status to true
 	isPlayerKing[attacker] = true;
 	PrintToChat(attacker, "Debug: You became the new king");
+
+	// Changes the value of the kingIndex to the same index as the attacker's
+	kingIndex = attacker;
 
 	// Removes any currently present king crowns from the game
 	RemoveCrownEntity();
@@ -450,6 +496,9 @@ public Action Event_RoundStart(Handle event, const char[] name, bool dontBroadca
 // This happens when the round ends
 public Action Event_RoundEnd(Handle event, const char[] name, bool dontBroadcast)
 {
+	// Changes the value of the kingIndex to -1
+	kingIndex = -1;
+
 	// Loops through all of the clients
 	for (int client = 1; client <= MaxClients; client++)
 	{

@@ -34,6 +34,8 @@ public Plugin myinfo =
 int cvar_PointsNormalKill = 1;
 int cvar_PointsKingKill = 3;
 
+int cvar_KingHealth = 200;
+
 float cvar_RespawnTime = 1.50;
 float cvar_ImmobilityTime = 3.00;
 
@@ -269,6 +271,9 @@ public Action Event_PlayerDeath(Handle event, const char[] name, bool dontBroadc
 			// Assigsn a clantag to the player which indicates that the player is the current king
 			AssignClanTag(attacker);
 
+			// Changes the health of the player to (200 default)
+			SetEntProp(attacker, Prop_Send, "m_iHealth", cvar_KingHealth, 1);
+
 			// Strips the client of all their weapons
 			StripPlayerOfWeapons(attacker);
 
@@ -353,6 +358,9 @@ public Action Event_PlayerDeath(Handle event, const char[] name, bool dontBroadc
 
 	// Attaches a crown model on top of the attacker's head
 	GiveCrown(attacker);
+
+	// Changes the health of the player to (200 default)
+	SetEntProp(attacker, Prop_Send, "m_iHealth", cvar_KingHealth, 1);
 
 	// Strips the client of all their weapons
 	StripPlayerOfWeapons(attacker);

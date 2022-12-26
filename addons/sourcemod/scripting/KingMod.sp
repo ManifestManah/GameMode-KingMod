@@ -31,6 +31,8 @@ public Plugin myinfo =
 // - Planned Convars - //
 /////////////////////////
 
+bool cvar_HideMoneyHud = true;
+
 int cvar_PointsNormalKill = 1;
 int cvar_PointsKingKill = 3;
 
@@ -117,6 +119,9 @@ public void OnMapStart()
 
 	// Checks if the current map has been configured to have platform support included 
 	CheckForPlatformSupport();
+
+	// Disables CS:GO's built-in money hud element and money related messages if the cvar is enabled
+	HudElementMoney();
 }
 
 
@@ -733,6 +738,34 @@ void CheckForPlatformSupport()
 }
 
 
+// This happens when a new map is loaded
+public void HudElementMoney()
+{
+	// If the cvar_HideMoneyHud is set to true then execute this section
+	if(cvar_HideMoneyHud)
+	{
+		// Changes the two server variables in order to remove the money hud element and money related messages
+		SetConVar("mp_playercashawards", "0");
+		SetConVar("mp_teamcashawards", "0");
+	}
+}
+
+
+// This happens when we wish to change a server variable convar
+public void SetConVar(const char[] ConvarName, const char[] ConvarValue)
+{
+	// Finds an existing convar with the specified name and store it within the ServerVariable name 
+	ConVar ServerVariable = FindConVar(ConvarName);
+
+	// If the convar exists then execute this section
+	if(ServerVariable != null)
+	{
+		// Changes the value of the convar to the value specified in the ConvarValue variable
+		ServerVariable.SetString(ConvarValue, true);
+	}
+}
+
+
 // This happens when someone stops being the current king
 public Action RemoveClanTag(int client)
 {
@@ -1208,6 +1241,7 @@ public bool IsThereACurrentKing()
 /////////////////////////////////////////
 // - Administrator Command Functions - //
 /////////////////////////////////////////
+
 
 // This happens when an administrator with root access uses the sm_platform command
 public Action Command_DeveloperMenu(int client, int args)

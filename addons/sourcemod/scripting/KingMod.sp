@@ -139,6 +139,20 @@ public void OnMapStart()
 }
 
 
+// This happens once all post authorizations have been performed and the client is fully in-game
+public void OnClientPostAdminCheck(int client)
+{
+	// If the client does not meet our validation criteria then execute this section
+	if(!IsValidClient(client))
+	{
+		return;
+	}
+
+	// Adds a hook to the client which will let us track when the player is eligible to pick up a weapon
+	SDKHook(client, SDKHook_WeaponCanUse, OnWeaponCanUse);
+}
+
+
 // This happens when a player disconnects
 public void OnClientDisconnect(int client)
 {
@@ -154,6 +168,9 @@ public void OnClientDisconnect(int client)
 		// Attempts to respawn all bots that are currently dead
 		RespawnOvertakenBots();
 	}
+
+	// Removes the hook that we had added to the player to track when he was eligible to pick up weapons
+	SDKUnhook(client, SDKHook_WeaponCanUse, OnWeaponCanUse);
 
 	// If the client is not the current king then execute this section
 	if(!isPlayerKing[client])
@@ -252,6 +269,44 @@ public Action OnPlayerRunCmd(int client, int &buttons, int &impulse, float unuse
 	}
 
 	return Plugin_Continue;
+}
+
+
+// This happens when a player can pick up a weapon
+public Action OnWeaponCanUse(int client, int weapon)
+{
+	// If the weapon that was picked up our entity criteria of validation then execute this section
+	if(!IsValidEntity(weapon))
+	{
+		return Plugin_Continue;
+	}
+
+	// Creates a variable called ClassName which we will store the weapon entity's name within
+	char ClassName[64];
+
+	// Obtains the classname of the weapon entity and store it within our ClassName variable
+	GetEntityClassname(weapon, ClassName, sizeof(ClassName));
+
+	// If the client is the current king then execute this section
+	if(isPlayerKing[client])
+	{
+		// If the weapon's entity name is weapon_knifegg then execute this section
+		if(StrEqual(ClassName, "weapon_knifegg", false))
+		{
+			return Plugin_Continue;
+		}
+	}
+
+	// If the weapon's entity name is the same as weapon_knife or weapon_healthshot then execute this section
+	if(StrEqual(ClassName, "weapon_knife", false) || StrEqual(ClassName, "weapon_healthshot", false))
+	{
+		return Plugin_Continue;
+	}
+	
+	// Kills the weapon entity, removing it from the game
+	AcceptEntityInput(weapon, "Kill");
+
+	return Plugin_Handled;
 }
 
 
@@ -675,6 +730,19 @@ public void LateLoadSupport()
 
 	PrintToChatAll("King Mod has been loaded. ");
 	PrintToChatAll("A new round will soon commence.");
+
+	// Loops through all of the clients
+	for (int client = 1; client <= MaxClients; client++)
+	{
+		// If the client does not meet our validation criteria then execute this section
+		if(!IsValidClient(client))
+		{
+			continue;
+		}
+
+		// Adds a hook to the client which will let us track when the player is eligible to pick up a weapon
+		SDKHook(client, SDKHook_WeaponCanUse, OnWeaponCanUse);
+	}
 }
 
 

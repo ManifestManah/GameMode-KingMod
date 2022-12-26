@@ -51,10 +51,10 @@ bool gameInProgress = true;
 bool mapHasPlatformSupport = false;
 
 bool isPlayerKing[MAXPLAYERS + 1] = {false,...};
+bool isPlayerControllingBot[MAXPLAYERS + 1] = {false,...};
 
 
 // Global Integers
-int kingIndex = -1;
 int kingIsOnTeam = 0;
 int pointCounterT = 0;
 int pointCounterCT = 0;
@@ -125,6 +125,13 @@ public void OnClientDisconnect(int client)
 		return;
 	}
 
+	// If the client is not a controlled bot then execute this section
+	if(isPlayerControllingBot[client])
+	{
+		// Attempts to respawn all bots that are currently dead
+		RespawnOvertakenBots();
+	}
+
 	// If the client is not the current king then execute this section
 	if(!isPlayerKing[client])
 	{
@@ -133,9 +140,6 @@ public void OnClientDisconnect(int client)
 
 	// Changes the killed player's king status to false
 	isPlayerKing[client] = false;
-
-	// Changes the value of the kingIndex to -1
-	kingIndex = -1;
 
 	// Removes any currently present king crowns from the game
 	RemoveCrownEntity();
@@ -183,15 +187,42 @@ public Action OnPlayerRunCmd(int client, int &buttons, int &impulse, float unuse
 		return Plugin_Continue;
 	}
 
-	// If the client observed is not the current king then execute this section
-	if(GetEntPropEnt(client, Prop_Send, "m_hObserverTarget") != kingIndex)
+	// Obtains the target that the client is observing and store its' index within the observerTarget variable
+	int observerTarget = GetEntPropEnt(client, Prop_Send, "m_hObserverTarget");
+
+	// If the observerTarget does not meet our validation criteria then execute this section
+	if(!IsValidClient(observerTarget))
 	{
 		return Plugin_Continue;
 	}
 
+	// If the observerTarget is on a different team than the client then execute this section
+	if(GetClientTeam(observerTarget) != GetClientTeam(client))
+	{
+		return Plugin_Continue;
+	}
+
+	// If the observerTarget is not a bot then execute this section
+	if(!IsFakeClient(observerTarget))
+	{
+		return Plugin_Continue;
+	}
+
+
 	// If the player presses their USE button then execute this section
 	if(buttons & IN_USE)
 	{
+		// If the observerTarget is not the current king then execute this section
+		if(!isPlayerKing[observerTarget])
+		{
+			// Changes the isPlayerControllingBot to true
+			isPlayerControllingBot[client] = true;
+
+			PrintToChat(client, "You took over a bot");
+
+			return Plugin_Continue;
+		}
+
 		PrintToChat(client, "You cannot take over the bot if it is the current king");
 
 		return Plugin_Handled;
@@ -244,6 +275,13 @@ public Action Event_PlayerDeath(Handle event, const char[] name, bool dontBroadc
 	// Calls upon the Timer_RespawnPlayer function after (1.5 default) seconds
 	CreateTimer(cvar_RespawnTime, Timer_RespawnPlayer, client, TIMER_FLAG_NO_MAPCHANGE);
 
+	// If the client is not a controlled bot then execute this section
+	if(isPlayerControllingBot[client])
+	{
+		// Attempts to respawn all bots that are currently dead
+		RespawnOvertakenBots();
+	}
+
 	// If the game is not currently in progress then execute this section	
 	if(!gameInProgress)
 	{
@@ -270,9 +308,6 @@ public Action Event_PlayerDeath(Handle event, const char[] name, bool dontBroadc
 
 		// Changes the killed player's king status to false
 		isPlayerKing[client] = false;
-
-		// Changes the value of the kingIndex to -1
-		kingIndex = -1;
 
 		// Removes any currently present king crowns from the game
 		RemoveCrownEntity();
@@ -304,9 +339,6 @@ public Action Event_PlayerDeath(Handle event, const char[] name, bool dontBroadc
 			// Changes the attacking player's king status to true
 			isPlayerKing[attacker] = true;
 			PrintToChat(attacker, "Debug: You stole the king title from the enemy that died");
-
-			// Changes the value of the kingIndex to the same index as the attacker's
-			kingIndex = attacker;
 
 			// Removes any currently present king crowns from the game
 			RemoveCrownEntity();
@@ -399,9 +431,6 @@ public Action Event_PlayerDeath(Handle event, const char[] name, bool dontBroadc
 	isPlayerKing[attacker] = true;
 	PrintToChat(attacker, "Debug: You became the new king");
 
-	// Changes the value of the kingIndex to the same index as the attacker's
-	kingIndex = attacker;
-
 	// Removes any currently present king crowns from the game
 	RemoveCrownEntity();
 
@@ -489,6 +518,25 @@ public Action Event_RoundStart(Handle event, const char[] name, bool dontBroadca
 	// After secondsToRoundEnd seconds has passed then call upon the Timer_EndCurrentRound function to end the current round
 	CreateTimer(secondsToRoundEnd, Timer_EndCurrentRound, initialRound, TIMER_FLAG_NO_MAPCHANGE);
 
+	// Loops through all of the clients
+	for (int client = 1; client <= MaxClients; client++)
+	{
+		// If the client does not meet our validation criteria then execute this section
+		if(!IsValidClient(client))
+		{
+			continue;
+		}
+
+		// If the client is not a bot then execute this section
+		if(!IsFakeClient(client))
+		{
+			continue;
+		}
+
+		// Changes the isPlayerControllingBot to false
+		isPlayerControllingBot[client] = false;
+	}
+
 	return Plugin_Continue;
 }
 
@@ -496,9 +544,6 @@ public Action Event_RoundStart(Handle event, const char[] name, bool dontBroadca
 // This happens when the round ends
 public Action Event_RoundEnd(Handle event, const char[] name, bool dontBroadcast)
 {
-	// Changes the value of the kingIndex to -1
-	kingIndex = -1;
-
 	// Loops through all of the clients
 	for (int client = 1; client <= MaxClients; client++)
 	{
@@ -908,6 +953,36 @@ public void StripPlayerOfWeapons(int client)
 }
 
 
+// This happens when a player that controls a bot dies
+public void RespawnOvertakenBots()
+{
+	// Loops through all of the clients
+	for (int i = 1; i <= MaxClients; i++)
+	{
+		// If the client does not meet our validation criteria then execute this section
+		if(!IsValidClient(i))
+		{
+			continue;
+		}
+
+		// If the client is not a bot then execute this section
+		if(!IsFakeClient(i))
+		{
+			continue;
+		}
+
+		// If the client is not alive then execute this section
+		if(IsPlayerAlive(i))
+		{
+			continue;
+		}
+
+		// Calls upon the Timer_RespawnPlayer function after (1.5 default) seconds
+		CreateTimer(cvar_RespawnTime, Timer_RespawnPlayer, i, TIMER_FLAG_NO_MAPCHANGE);
+	}
+}
+
+
 
 ///////////////////////////////
 // - Timer Based Functions - //
@@ -997,7 +1072,6 @@ public Action Timer_UnfreezeKing(Handle timer, int client)
 
 	return Plugin_Continue;
 }
-
 
 
 // This function is called upon briefly after a player changes team or dies

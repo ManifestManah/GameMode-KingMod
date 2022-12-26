@@ -63,6 +63,7 @@ int pointCounterCT = 0;
 
 int EntityOwner[2049] = {-1, ...};
 
+int mapHasMinimapHidden = 0;
 
 
 float platformLocation[3];
@@ -264,6 +265,9 @@ public Action Event_PlayerSpawn(Handle event, const char[] name, bool dontBroadc
 
 	// Gives the client the specified weapon
 	GivePlayerItem(client, "weapon_knife");
+
+	//  Disables CS:GO's built-in minimap / radar hud element if it is specified in the keyvalue file
+	CreateTimer(0.0, Timer_HudElementMinimap, client, TIMER_FLAG_NO_MAPCHANGE);
 
 	return Plugin_Continue;
 }
@@ -658,6 +662,9 @@ public void LateLoadSupport()
 // This function is called upon whenever a new round starts or a new map is loaded
 void CheckForPlatformSupport()
 {
+	// Sets the mapHasMinimapHidden variable to 0
+	mapHasMinimapHidden = 0;
+
 	// Sets the coordinate location of the platform to an impossible value
 	platformLocation[0] = -32769.0;
 	platformLocation[1] = -32769.0;
@@ -703,6 +710,9 @@ void CheckForPlatformSupport()
 			platformLocation[0] = KvGetFloat(kv, "location_x");
 			platformLocation[1] = KvGetFloat(kv, "location_y");
 			platformLocation[2] = KvGetFloat(kv, "location_z");
+
+			// Sets the mapHasMinimapHidden variable to whatever may be defined in the key value file
+			mapHasMinimapHidden = KvGetNum(kv, "hide_minimap");
 
 			// Adds + 2.0 game units to the Z-axis
 			platformLocation[2] += 2.0;
@@ -1095,6 +1105,34 @@ public Action Timer_GiveGoldenKnife(Handle Timer, int client)
 }
 
 
+// This happens when a player spawns
+public Action Timer_HudElementMinimap(Handle timer, int client) 
+{
+	// If the minimap / radar is not set to be hidden then execute this section
+	if(!mapHasMinimapHidden)
+	{
+		return Plugin_Continue;
+	}
+
+	// If the client does not meet our validation criteria then execute this section
+	if(!IsValidClient(client))
+	{
+		return Plugin_Continue;
+	}
+
+	// If the player is anything but a bot then execute this section
+	if(IsFakeClient(client))
+	{
+		return Plugin_Continue;
+	}
+
+	//Disables CS:GO's built-in minimap / radar hud element
+	SetEntProp(client, Prop_Send, "m_iHideHUD", GetEntProp(client, Prop_Send, "m_iHideHUD") | 4096);
+
+	return Plugin_Continue;
+}
+
+
 // This happens 3.0 seconds after a player becomes the king if the map has platform support
 public Action Timer_UnfreezeKing(Handle timer, int client)
 {
@@ -1269,6 +1307,8 @@ public Action Command_DeveloperMenu(int client, int args)
 	PrintToConsole(client, "        \"location_x\"               \"%0.2f\"", PlayerLocation[0]);
 	PrintToConsole(client, "        \"location_y\"               \"%0.2f\"", PlayerLocation[1]);
 	PrintToConsole(client, "        \"location_z\"               \"%0.2f\"", PlayerLocation[2]);
+	PrintToConsole(client, "");
+	PrintToConsole(client, "        \"hide_minimap\"             \"0\"");
 	PrintToConsole(client, "    }");
 	PrintToConsole(client, "");
 	PrintToConsole(client, "");

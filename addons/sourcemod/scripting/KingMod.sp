@@ -54,6 +54,7 @@ bool mapHasPlatformSupport = false;
 
 bool isPlayerKing[MAXPLAYERS + 1] = {false,...};
 bool isPlayerControllingBot[MAXPLAYERS + 1] = {false,...};
+bool displayRestrictionHud[MAXPLAYERS + 1] = {false,...};
 
 
 // Global Integers
@@ -98,7 +99,7 @@ public void OnPluginStart()
 	// Calls upon our CommandListenerJoinTeam function whenever a player changes team
 	AddCommandListener(CommandListenerJoinTeam, "jointeam");
 
-	// Creates a timer that will update the team score hud every 1 second
+	// Creates a timer that will update the team score hud every 0.5 second
 	CreateTimer(1.0, UpdateTeamScoreHud, _, TIMER_REPEAT);
 
 	// Adds all of the game mode's required files to the download list and precaches content that needs precaching
@@ -302,7 +303,26 @@ public Action OnWeaponCanUse(int client, int weapon)
 	{
 		return Plugin_Continue;
 	}
-	
+
+	// If the sound is not already precached then execute this section
+	if(!IsSoundPrecached("kingmod/sfx_restrictedweapon.mp3"))
+	{	
+		// Precaches the sound file
+		PrecacheSound("kingmod/sfx_restrictedweapon.mp3", true);
+	}
+
+	// Performs a clientcommand to play a sound only the clint can hear
+	ClientCommand(client, "play */kingmod/sfx_restrictedweapon.mp3");
+
+	// Changes the state of displayRestrictionHud[client] to true
+	displayRestrictionHud[client] = true;
+
+	// Calls upon the UpdateTeamScoreHud function to display the restriction message
+	CreateTimer(0.0, UpdateTeamScoreHud, _, TIMER_FLAG_NO_MAPCHANGE);
+
+	// After 3.0 seconds changes the restriction hud back to the score hud
+	CreateTimer(3.0, Timer_DisableRestrictionHud , client, TIMER_FLAG_NO_MAPCHANGE);
+
 	// Kills the weapon entity, removing it from the game
 	AcceptEntityInput(weapon, "Kill");
 
@@ -1124,7 +1144,7 @@ public void RespawnOvertakenBots()
 
 
 // This function happens once every 1 second and is used to update the custom team score hud element
-public Action UpdateTeamScoreHud(Handle timer, any unused)
+public Action UpdateTeamScoreHud(Handle timer)
 {
 	// Creates a variable which we will use to store our data within
 	char hudMessage[1024];
@@ -1168,9 +1188,36 @@ public Action UpdateTeamScoreHud(Handle timer, any unused)
 			continue;
 		}
 
+		// If the client recently touched a restricted weapon then execute this section
+		if(displayRestrictionHud[client])
+		{
+			// Resets the contents of the hudMessage variable
+			hudMessage = "";
+
+			// Formats the message that we wish to send to the player and store it within our message_string variable
+			Format(hudMessage, 1024, "%s\n<font color='#e30000'>Weapon Restriction:</font>", hudMessage);
+			Format(hudMessage, 1024, "%s\n<font color='#fbb227'>This weapon is restricted for you</font>", hudMessage);
+		}
+
 		// Displays the contents of our hudMessage variable for the client to see in the hint text area of their screen 
 		PrintHintText(client, hudMessage);
 	}
+
+	return Plugin_Continue;
+}
+
+
+// This happens 3.0 seconds after a player tries to pick up a restricted weapon
+public Action Timer_DisableRestrictionHud(Handle Timer, int client)
+{
+	// If the player does not meet our validation criteria then execut this section
+	if(!IsValidClient(client))
+	{
+		return Plugin_Continue;
+	}
+
+	// Changes the state of displayRestrictionHud[client] to false
+	displayRestrictionHud[client] = false;
 
 	return Plugin_Continue;
 }

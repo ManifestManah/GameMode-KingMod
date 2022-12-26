@@ -225,6 +225,12 @@ public Action Event_PlayerDeath(Handle event, const char[] name, bool dontBroadc
 	// If the attacker is the same as the victim (suicide) then execute this section
 	if(attacker == client)
 	{
+		// If the client is not the current king then execute this section
+		if(!isPlayerKing[client])
+		{
+			return Plugin_Continue;
+		}
+		
 		// Changes the killed player's king status to false
 		isPlayerKing[client] = false;
 

@@ -112,6 +112,16 @@ public void OnPluginStart()
 }
 
 
+// This happens when the plugin is unloaded
+public void OnPluginEnd()
+{
+	PrintToChatAll("King Mod has been unloaded.");
+	PrintToChatAll("A new round will soon commence.");
+
+	// Forcefully ends the round and considers it a round draw
+	CS_TerminateRound(3.0, CSRoundEnd_Draw);
+}
+
 // This happens when a new map is loaded
 public void OnMapStart()
 {
@@ -123,16 +133,9 @@ public void OnMapStart()
 
 	// Disables CS:GO's built-in money hud element and money related messages if the cvar is enabled
 	HudElementMoney();
-}
 
-
-public void OnPluginEnd()
-{
-	PrintToChatAll("King Mod has been unloaded.");
-	PrintToChatAll("A new round will soon commence.");
-
-	// Forcefully ends the round and considers it a round draw
-	CS_TerminateRound(3.0, CSRoundEnd_Draw);
+	// Executes the configuration file containing the modification specific configurations
+	ServerCommand("exec sourcemod/KingMod/kingmod.cfg");
 }
 
 

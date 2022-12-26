@@ -105,6 +105,9 @@ public void OnPluginStart()
 	// Creates a timer that will update the team score hud every 0.5 second
 	CreateTimer(1.0, UpdateTeamScoreHud, _, TIMER_REPEAT);
 
+	// Adds a hook for mp_restartgame to prevent the usage of it
+	PreventRestartGameUsage();
+
 	// Adds all of the game mode's required files to the download list and precaches content that needs precaching
 	DownloadAndPrecacheFiles();
 
@@ -834,6 +837,34 @@ public void LateLoadSupport()
 
 		// Adds a hook to the client which will let us track when the player is eligible to pick up a weapon
 		SDKHook(client, SDKHook_WeaponCanUse, OnWeaponCanUse);
+	}
+}
+
+
+// This happens when the plugin is loaded
+public void PreventRestartGameUsage()
+{
+	// Obtains the value of the mp_restartgame convar and store it within the variable named restartGame
+	Handle restartGame = FindConVar("mp_restartgame");
+
+	// Adds a hook to our mp_restartgame convar to keep track of any possible changes 
+	HookConVarChange(restartGame, RestartGameConvarChanged);
+}
+
+
+// This happens when changes to the mp_restartgame convar are attempted
+public void RestartGameConvarChanged(Handle cvar, const char[] oldVal, const char[] newVal)
+{
+	// If the new convar value is anything else than 0 then execute this section
+	if(!StrEqual(newVal, "0"))
+	{
+		// Creates a convar named restartGame with the value similar to that of mp_restartgame
+		ConVar restartGame = FindConVar("mp_restartgame");
+
+		// Changes the value of our mp_restartgame back to 0
+		restartGame.IntValue = 0;
+
+		PrintToChatAll("King Mod: Please try not to use mp_restartgame, change the map instead.");
 	}
 }
 

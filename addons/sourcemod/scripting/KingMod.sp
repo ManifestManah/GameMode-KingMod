@@ -180,11 +180,49 @@ public Action Event_PlayerSpawn(Handle event, const char[] name, bool dontBroadc
 		return Plugin_Continue;
 	}
 
-
+	// Strips the client of all their weapons
+	StripPlayerOfWeapons(client);
 
 	return Plugin_Continue;
 }
 
+
+
+// This happens when a player spawns and when a player becomes the new king
+public void StripPlayerOfWeapons(int client)
+{
+	// Loops through the five weapon holding
+	for(int weaponCarrySlot = 0; weaponCarrySlot < 4 ; weaponCarrySlot++)
+	{
+		// Loops through all of the weapon numbers
+		for(int WeaponNumber = 0; WeaponNumber < 24; WeaponNumber++)
+		{
+			// Obtains the weapon in the weapon slot and store it within the WeaponSlotNumber variable
+			int WeaponSlotNumber = GetPlayerWeaponSlot(client, WeaponNumber);
+
+			// IF the WeaponSlotNumber is not a valid edict then execute this setting 
+			if(!IsValidEdict(WeaponSlotNumber))
+			{
+				continue;
+			}
+
+			// If the entity does not meet our criteria validation then execute this section
+			if(!IsValidEntity(WeaponSlotNumber))
+			{
+				continue;
+			}
+
+			// Removes the player's item from the client
+			RemovePlayerItem(client, WeaponSlotNumber);
+
+			// Deletes the entity from the game
+			AcceptEntityInput(WeaponSlotNumber, "Kill");
+		}
+	}
+
+	// Gives the client the specified weapon
+	GivePlayerItem(client, "weapon_knife");
+}
 
 
 // This happens when a player dies
@@ -266,6 +304,9 @@ public Action Event_PlayerDeath(Handle event, const char[] name, bool dontBroadc
 			// Assigsn a clantag to the player which indicates that the player is the current king
 			AssignClanTag(attacker);
 
+			// Strips the client of all their weapons
+			StripPlayerOfWeapons(attacker);
+
 			// If the map have been configured to have platform support then execute this section
 			if(mapHasPlatformSupport)
 			{
@@ -344,6 +385,9 @@ public Action Event_PlayerDeath(Handle event, const char[] name, bool dontBroadc
 
 	// Attaches a crown model on top of the attacker's head
 	GiveCrown(attacker);
+
+	// Strips the client of all their weapons
+	StripPlayerOfWeapons(attacker);
 
 	// If the map have been configured to have platform support then execute this section
 	if(mapHasPlatformSupport)

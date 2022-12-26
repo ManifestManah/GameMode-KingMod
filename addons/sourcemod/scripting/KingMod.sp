@@ -277,8 +277,8 @@ public Action Event_PlayerDeath(Handle event, const char[] name, bool dontBroadc
 			// Strips the client of all their weapons
 			StripPlayerOfWeapons(attacker);
 
-			// Gives the client the specified weapon
-			GivePlayerItem(client, "weapon_knifegg");
+			// After 0.1 seconds gives the player a golden knife
+			CreateTimer(0.1, Timer_GiveGoldenKnife, attacker, TIMER_FLAG_NO_MAPCHANGE);
 
 			// If the map have been configured to have platform support then execute this section
 			if(mapHasPlatformSupport)
@@ -365,8 +365,8 @@ public Action Event_PlayerDeath(Handle event, const char[] name, bool dontBroadc
 	// Strips the client of all their weapons
 	StripPlayerOfWeapons(attacker);
 
-	// Gives the client the specified weapon
-	GivePlayerItem(client, "weapon_knifegg");
+	// After 0.1 seconds gives the player a golden knife
+	CreateTimer(0.1, Timer_GiveGoldenKnife, attacker, TIMER_FLAG_NO_MAPCHANGE);
 
 	// If the map have been configured to have platform support then execute this section
 	if(mapHasPlatformSupport)
@@ -907,6 +907,22 @@ public Action UpdateTeamScoreHud(Handle timer, any unused)
 		// Displays the contents of our hudMessage variable for the client to see in the hint text area of their screen 
 		PrintHintText(client, hudMessage);
 	}
+
+	return Plugin_Continue;
+}
+
+
+// This happens when a player becomes the king
+public Action Timer_GiveGoldenKnife(Handle Timer, int client)
+{
+	// If the player does not meet our validation criteria then execut this section
+	if(!IsValidClient(client))
+	{
+		return Plugin_Continue;
+	}
+
+	// Gives the client the specified weapon
+	GivePlayerItem(client, "weapon_knifegg");
 
 	return Plugin_Continue;
 }

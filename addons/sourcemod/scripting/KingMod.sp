@@ -73,6 +73,7 @@ char kingName[64];
 char PlayerClanTag[MAXPLAYERS + 1][14];
 
 
+
 //////////////////////////
 // - Forwards & Hooks - //
 //////////////////////////
@@ -81,6 +82,9 @@ char PlayerClanTag[MAXPLAYERS + 1][14];
 // This happens when the plugin is loaded
 public void OnPluginStart()
 {
+	// Adds a command only available to administrators with the Root flag
+	RegAdminCmd("sm_platform", Command_DeveloperMenu, ADMFLAG_ROOT);
+
 	// Hooks the events that we intend to use in our plugin
 	HookEvent("player_spawn", Event_PlayerSpawn, EventHookMode_Post);
 	HookEvent("player_death", Event_PlayerDeath, EventHookMode_Post);
@@ -1197,6 +1201,44 @@ public bool IsThereACurrentKing()
 	}
 
 	return false;
+}
+
+
+
+/////////////////////////////////////////
+// - Administrator Command Functions - //
+/////////////////////////////////////////
+
+// This happens when an administrator with root access uses the sm_platform command
+public Action Command_DeveloperMenu(int client, int args)
+{
+	// Creates a variable which we will use to store data within
+	float PlayerLocation[3];
+
+	// Creates a variable which we will use to store data within
+	char CurrentMapName[64];
+
+	// Obtains the name of the current map and then store it within the CurrentMapName variable
+	GetCurrentMap(CurrentMapName, sizeof(CurrentMapName));
+
+	// Obtains the location of the client and store it within our PlayerLocation variable
+	GetClientAbsOrigin(client, PlayerLocation);
+	
+	// Sends a message to the player's console that can be easily copied and added to the addons/sourcemod/configs/platforms.txt
+	PrintToConsole(client, "");
+	PrintToConsole(client, "");
+	PrintToConsole(client, "");
+	PrintToConsole(client, "    \"%s platform\"", CurrentMapName);
+	PrintToConsole(client, "    {");
+	PrintToConsole(client, "        \"map\"                      \"%s\"", CurrentMapName);
+	PrintToConsole(client, "");
+	PrintToConsole(client, "        \"location_x\"               \"%0.2f\"", PlayerLocation[0]);
+	PrintToConsole(client, "        \"location_y\"               \"%0.2f\"", PlayerLocation[1]);
+	PrintToConsole(client, "        \"location_z\"               \"%0.2f\"", PlayerLocation[2]);
+	PrintToConsole(client, "    }");
+	PrintToConsole(client, "");
+	PrintToConsole(client, "");
+	PrintToConsole(client, "");
 }
 
 

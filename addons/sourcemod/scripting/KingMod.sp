@@ -43,7 +43,7 @@ int cvar_KingHealth = 200;
 float cvar_RespawnTime = 1.50;
 float cvar_ImmobilityTime = 3.00;
 float cvar_SpawnProtectionDuration = 3.0;
-float cvar_RecoveryCooldownDuration = 1.50;
+float cvar_RecoveryCooldownDuration = 10.00;
 
 
 //////////////////////////
@@ -1375,7 +1375,7 @@ public Action KingRecovery(int client)
 	SetEntityRenderColor(client, 35, 230, 5, 255);
 
 	// After seconds, calls upon our Timer_RegenerationProtocolCooldown function to remove the cooldown on the Regeneration Protocol
-	CreateTimer(0.1, Timer_RecoverHealth, client, TIMER_FLAG_NO_MAPCHANGE);
+	CreateTimer(0.0, Timer_RecoverHealth, client, TIMER_FLAG_NO_MAPCHANGE);
 
 	// After a few seconds calls upon our 
 	CreateTimer(cvar_RecoveryCooldownDuration, Timer_RemoveRecoveryCooldown, client, TIMER_FLAG_NO_MAPCHANGE);
@@ -1849,30 +1849,28 @@ public Action Timer_RecoverHealth(Handle Timer, int client)
 		return Plugin_Continue;
 	}
 
-	// Obtains the health of client and store it within our variable playerHealth
-	int playerHealth = GetEntProp(client, Prop_Send, "m_iHealth");
-
-	// If the client's health is 75 or above thhen execute this section
-	if (playerHealth >= 75)
-	{
-		return Plugin_Continue;
-	}
-
 	// Adds 1 to our the tick counter
 	kingRecoveryCounter++;
 
-	// If the client's health is 75 or above thhen execute this section
-	if(playerHealth >= 70)
-	{
-		// Seets the value of playerHealth to 75
-		playerHealth = 75;
-	}
+	// Obtains the health of client and store it within our variable playerHealth
+	int playerHealth = GetEntProp(client, Prop_Send, "m_iHealth");
 
-	// If the client had 69 or less health then execute this section
-	else
+	// If the client's health is below or equals to 75 then execute this section
+	if(playerHealth <= 75)
 	{
-		// Adds +5 to the value of the playerHealth variable
-		playerHealth += 5;
+		// If the client's health is 70 or above thhen execute this section
+		if(playerHealth >= 70)
+		{
+			// Sets the value of playerHealth to 75
+			playerHealth = 75;
+		}
+
+		// If the client have 69 or less health then execute this section
+		else
+		{
+			// Adds +5 to the value of the playerHealth variable
+			playerHealth += 5;
+		}		
 	}
 
 	// Changes the client's health to the value of the playerHealth variable
@@ -1883,8 +1881,6 @@ public Action Timer_RecoverHealth(Handle Timer, int client)
 	{
 		// Calls upon this same function again after 0.3 seconds has passed
 		CreateTimer(0.3, Timer_RecoverHealth, client, TIMER_FLAG_NO_MAPCHANGE);
-
-		return Plugin_Continue;
 	}
 
 	// If the tick counter is 15 or above then execute this section

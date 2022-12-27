@@ -32,6 +32,8 @@ public Plugin myinfo =
 /////////////////////////
 
 bool cvar_HideMoneyHud = true;
+bool cvar_EffectTesla = true;
+bool cvar_EffectRing = true;
 
 int cvar_PointsNormalKill = 1;
 int cvar_PointsKingKill = 3;
@@ -60,22 +62,20 @@ bool displayRestrictionHud[MAXPLAYERS + 1] = {false,...};
 bool isRecoveryOnCooldown[MAXPLAYERS + 1] = {false,...};
 
 
-
 // Global Integers
 int kingIsOnTeam = 0;
 int pointCounterT = 0;
 int pointCounterCT = 0;
+int mapHasMinimapHidden = 0;
+int kingRecoveryCounter = 0;
+int effectSprite = 0;
 
 int PlayerSpawnCount[MAXPLAYERS+1] = {0, ...};
 int EntityOwner[2049] = {-1, ...};
 
-int mapHasMinimapHidden = 0;
 
-int kingRecoveryCounter = 0;
-
-
+// Global Floats
 float platformLocation[3];
-
 
 
 // Global Characters
@@ -121,7 +121,7 @@ public void OnPluginStart()
 	LateLoadSupport();
 
 	// Loads the translaltion file which we intend to use
-	LoadTranslations("manifest_kingmod.phrases");
+// TO DO	LoadTranslations("manifest_kingmod.phrases");
 }
 
 
@@ -531,6 +531,9 @@ public Action Event_PlayerDeath(Handle event, const char[] name, bool dontBroadc
 				CreateTimer(cvar_ImmobilityTime, Timer_UnfreezeKing, attacker, TIMER_FLAG_NO_MAPCHANGE);
 			}
 
+			// Creates visual effects at the location of the new king
+			DisplayVisualEffects(attacker);
+
 			// Obtains the name of the attacker and store it within the kingName variable
 			GetClientName(attacker, kingName, sizeof(kingName));
 
@@ -621,6 +624,9 @@ public Action Event_PlayerDeath(Handle event, const char[] name, bool dontBroadc
 
 	// Assigsn a clantag to the player which indicates that the player is the current king
 	AssignClanTag(attacker);
+
+	// Creates visual effects at the location of the new king
+	DisplayVisualEffects(attacker);
 
 	// Obtains the name of the attacker and store it within the kingName variable
 	GetClientName(attacker, kingName, sizeof(kingName));
@@ -1235,7 +1241,6 @@ public void StripPlayerOfWeapons(int client)
 }
 
 
-
 // This happens when a player spawns
 public Action GrantPlayerSpawnProtection(int client)
 {
@@ -1376,6 +1381,181 @@ public Action KingRecovery(int client)
 	CreateTimer(cvar_RecoveryCooldownDuration, Timer_RemoveRecoveryCooldown, client, TIMER_FLAG_NO_MAPCHANGE);
 
 	return Plugin_Continue;
+}
+
+
+// This happens when a new king is chosen
+public Action DisplayVisualEffects(int attacker)
+{
+	// If neither ring or tesla effects are enabled then execute this section
+	if(!cvar_EffectRing && !cvar_EffectTesla)
+	{
+		return Plugin_Continue;
+	}
+
+	// Creates a variable which we will store our effectColor within 
+	int effectColor[4];
+
+	// Creates a variable which we will store our data within
+	float playerLocation[3];
+
+	// Obtains the location of the attacker and store it within the playerLocation variable
+	GetClientAbsOrigin(attacker, playerLocation);
+
+	// Modifies the position by +20.0 on z-axis
+	playerLocation[2] += 20.0;
+
+	// If the player is on the Terrorist team then execute this section
+	if(GetClientTeam(attacker) == 2)
+	{
+		// Changes the color values for the effects 
+		effectColor[0] = 255;
+		effectColor[1] = 45;
+		effectColor[2] = 45;
+		effectColor[3] = 220;
+	}
+
+	// If the player is on the Counter-Terrorist team then execute this section
+	else if(GetClientTeam(attacker) == 3)
+	{
+		// Changes the color values for the effects
+		effectColor[0] = 75;
+		effectColor[1] = 75;
+		effectColor[2] = 255;
+		effectColor[3] = 220;
+	}
+
+	// If effect rings are enabled then execute this section
+	if(cvar_EffectRing)
+	{
+		// Creates a temp entity visual efefct shaped like a ring
+		TE_SetupBeamRingPoint(playerLocation, 40.0, 2000.0, effectSprite, effectSprite, 0, 20, 1.5, 90.0, 2.0, effectColor, 1, 1);
+
+		// Sends the visual effect temp entity to the players with visual headshot effects enabled 
+		ShowVisualEffectToPlayers();
+	}
+
+	// If tesla effects are enabled then execute this section
+	if(!cvar_EffectTesla)
+	{
+		return Plugin_Continue;
+	}
+
+
+	// Tesla Effect Stuff
+	int point_tesla = CreateEntityByName("point_tesla");
+
+	// If the edict does not meet our validation criteria then execute this section
+	if(!IsValidEdict(point_tesla))
+	{
+		return Plugin_Continue;
+	}
+
+	// Modifies the position by -28 on z-axis
+	playerLocation[2] -= 28.0;
+
+	// Creates a variable which we will use to store data within
+	char teslaName[16];
+
+	// Creates a variable which we will use to store data within
+	char teslaColor[16];
+
+	// Formats the teslaName to create a unique name for the tesla effect
+	Format(teslaName, sizeof(teslaName), "teslaeffect_%i", attacker);
+
+	// Formats the teslaColor to create a color that corrosponds to a team
+	Format(teslaColor, sizeof(teslaColor), "%i %i %i", effectColor[0], effectColor[1], effectColor[2]);
+	
+	// Sets the name of the tesla to the one stored within our teslaName variable
+	DispatchKeyValue(point_tesla, "Name", teslaName);
+
+	// Sets the color of the tesla to the one we have stored within our teslaColor variable
+	DispatchKeyValue(point_tesla, "m_Color", teslaColor);
+
+	// Specifies the texture we wish to use for our visual effect
+	DispatchKeyValue(point_tesla, "texture", "manifest/sprites/lgtning.vmt");
+
+	// Sets the minimum of tesla beams that will be created by our tesla
+	DispatchKeyValue(point_tesla, "beamcount_min", "1250");
+
+	// Sets the maximum of tesla beams that will be created by our tesla
+	DispatchKeyValue(point_tesla, "beamcount_max", "3750");
+
+	// Defines how large the radius of our tesla will b
+	DispatchKeyValueFloat(point_tesla, "m_flRadius", 1250.0);
+
+	// Sets the width of the teslabeam at the center of the tesla
+	DispatchKeyValueFloat(point_tesla, "thick_min", 3.4);
+
+	// Sets the width of the tesla beams at the end point of the tesla
+	DispatchKeyValueFloat(point_tesla, "thick_max", 0.6);
+
+	// Specifies the minimum duration that the tesla beam will be displayed for
+	DispatchKeyValueFloat(point_tesla, "lifetime_min", 0.1);
+
+	// Specifies the maximum duration that the tesla beam will be displayed for
+	DispatchKeyValueFloat(point_tesla, "lifetime_min", 0.3);
+
+	// Specifies the minimum frequency of the emitting intervals of the tesla beams
+	DispatchKeyValueFloat(point_tesla, "interval_min", 0.1);
+
+	// Specifies the maximum frequency of the emitting intervals of the tesla beams
+	DispatchKeyValueFloat(point_tesla, "interval_max", 0.2);
+	
+	// Defines the sound that is played when the tesla creates a spark
+	DispatchKeyValue(point_tesla, "m_SoundName", "DoSpark");
+	
+	// Spawns the tesla entity in to the world 
+	DispatchSpawn(point_tesla);
+	
+	// Activates the tesla entity
+	ActivateEntity(point_tesla);
+	
+	// Teleports the tesla entity to the coordinate location stored within our variable playerLocation
+	TeleportEntity(point_tesla, playerLocation, NULL_VECTOR, NULL_VECTOR);
+	
+	// Turns on the Tesla entity
+	AcceptEntityInput(point_tesla, "TurnOn");
+
+	// Makes the tesla create a spark
+	AcceptEntityInput(point_tesla, "DoSpark");
+
+	// Makes the tesla create a spark after the specified time
+	CreateTimer(0.1, Timer_TeslaEffectDoSpark, point_tesla);
+	CreateTimer(0.3, Timer_TeslaEffectDoSpark, point_tesla);
+	CreateTimer(0.4, Timer_TeslaEffectDoSpark, point_tesla);
+	CreateTimer(0.5, Timer_TeslaEffectDoSpark, point_tesla);
+	CreateTimer(0.6, Timer_TeslaEffectDoSpark, point_tesla);
+	CreateTimer(0.7, Timer_TeslaEffectDoSpark, point_tesla);
+
+	// Removes the point_tesla entity after 1.0 seconds has passed
+	CreateTimer(1.0, Timer_TeslaEffectKill, point_tesla);
+
+	return Plugin_Continue;
+}
+
+
+// This happens when a ring effect is to be created which happens when a new king is chosen
+public void ShowVisualEffectToPlayers()
+{
+	// Loops through all of the clients
+	for (int client = 1; client <= MaxClients; client++)
+	{
+		// If the client does not meet our validation criteria then execute this section
+		if(!IsValidClient(client))
+		{
+			continue;
+		}
+
+		// If the client is a bot then execute this section
+		if(IsFakeClient(client))
+		{
+			continue;
+		}
+
+		// Sends the temp entity visual effects only to those with the headshot kill visual effects enabled
+		TE_SendToClient(client, 0.0);
+	}
 }
 
 
@@ -1738,6 +1918,38 @@ public Action Timer_RemoveRecoveryCooldown(Handle Timer, int client)
 }
 
 
+// This happens a few times within 1 second after a new king is chosen
+public Action Timer_TeslaEffectDoSpark(Handle timer, int edict)
+{
+	// If the edict does not meet our validation criteria then execute this section
+	if(!IsValidEdict(edict))
+	{
+		return Plugin_Continue;
+	}
+
+	// Makes the edict emit a spark
+	AcceptEntityInput(edict, "DoSpark");
+
+	return Plugin_Continue;
+}
+
+
+// This happens 1 second after a new king has been chosen
+public Action Timer_TeslaEffectKill(Handle timer, int edict)
+{
+	// If the edict does not meet our validation criteria then execute this section
+	if(!IsValidEdict(edict))
+	{
+		return Plugin_Continue;
+	}
+
+	// Removes the entity from the game
+	AcceptEntityInput(edict, "Kill");
+
+	return Plugin_Continue;
+}
+
+
 
 ////////////////////////////////
 // - Return Based Functions - //
@@ -1837,4 +2049,9 @@ public void DownloadAndPrecacheFiles()
 	AddFileToDownloadsTable("models/props/crown.vvd");
 
 	PrecacheModel("models/props/crown.mdl");
+
+	AddFileToDownloadsTable("materials/kingmod/sprites/lgtning.vtf");
+	AddFileToDownloadsTable("materials/kingmod/sprites/lgtning.vmt");
+
+	effectSprite = PrecacheModel("kingmod/sprites/lgtning.vmt");
 }

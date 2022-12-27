@@ -69,6 +69,7 @@ int pointCounterCT = 0;
 int mapHasMinimapHidden = 0;
 int kingRecoveryCounter = 0;
 int effectSprite = 0;
+int weaponOwner = -1;
 
 int PlayerSpawnCount[MAXPLAYERS+1] = {0, ...};
 int EntityOwner[2049] = {-1, ...};
@@ -108,8 +109,14 @@ public void OnPluginStart()
 	// Calls upon our CommandListenerJoinTeam function whenever a player changes team
 	AddCommandListener(CommandListenerJoinTeam, "jointeam");
 
-	// Creates a timer that will update the team score hud every 0.5 second
-	CreateTimer(1.0, UpdateTeamScoreHud, _, TIMER_REPEAT);
+	// Obtains and stores the entity owner offset within our weaponOwner variable 
+	weaponOwner = FindSendPropInfo("CBaseCombatWeapon", "m_hOwnerEntity");
+
+	// Creates a timer that will update the team score hud every 1.0 second
+	CreateTimer(1.0, Timer_UpdateTeamScoreHud, _, TIMER_REPEAT);
+
+	// Creates a timer that will remove dropped items and weapons from the map every 2.5 seconds
+	CreateTimer(2.5, Timer_CleanFloor, _, TIMER_REPEAT);
 
 	// Adds a hook for mp_restartgame to prevent the usage of it
 	PreventRestartGameUsage();
@@ -369,8 +376,8 @@ public Action OnWeaponCanUse(int client, int weapon)
 	// Changes the state of displayRestrictionHud[client] to true
 	displayRestrictionHud[client] = true;
 
-	// Calls upon the UpdateTeamScoreHud function to display the restriction message
-	CreateTimer(0.0, UpdateTeamScoreHud, _, TIMER_FLAG_NO_MAPCHANGE);
+	// Calls upon the Timer_UpdateTeamScoreHud function to display the restriction message
+	CreateTimer(0.0, Timer_UpdateTeamScoreHud, _, TIMER_FLAG_NO_MAPCHANGE);
 
 	// After 3.0 seconds changes the restriction hud back to the score hud
 	CreateTimer(3.0, Timer_DisableRestrictionHud , client, TIMER_FLAG_NO_MAPCHANGE);
@@ -1566,7 +1573,7 @@ public void ShowVisualEffectToPlayers()
 
 
 // This function happens once every 1 second and is used to update the custom team score hud element
-public Action UpdateTeamScoreHud(Handle timer)
+public Action Timer_UpdateTeamScoreHud(Handle timer)
 {
 	// Creates a variable which we will use to store our data within
 	char hudMessage[1024];
@@ -1623,6 +1630,52 @@ public Action UpdateTeamScoreHud(Handle timer)
 
 		// Displays the contents of our hudMessage variable for the client to see in the hint text area of their screen 
 		PrintHintText(client, hudMessage);
+	}
+
+	return Plugin_Continue;
+}
+
+
+// This happens every 2.5 seconds and is used to remove items and weapons lying around in the mapr
+public Action Timer_CleanFloor(Handle timer)
+{
+	// Loops through all entities that are currently in the game
+	for (int entity = MaxClients + 1; entity <= GetMaxEntities(); entity++)
+	{
+		// If the entity does not meet our criteria of validation then execute this section
+		if(!IsValidEntity(entity))
+		{
+			continue;
+		}
+
+		// Creates a variable which we will use to store data within
+		char className[64];
+
+		// Obtains the entity's class name and store it within our className variable
+		GetEntityClassname(entity, className, sizeof(className));
+
+		// If the entity is a healthshot then execute this section
+		if(StrEqual(className, "weapon_healthshot"))
+		{	
+			continue;
+		}
+
+		// If the className contains neither weapon_ nor item_ then execute this section
+		if((StrContains(className, "weapon_") == -1 && StrContains(className, "item_") == -1))
+		{
+			continue;
+		}
+
+		// If the entity has an ownership relation to somebody or something, then execute this section
+		if(GetEntDataEnt2(entity, weaponOwner) != -1)
+		{
+			continue;
+		}
+
+		PrintToChatAll("Debug removed weapon %s", className);
+
+		// Removes the entity from the map 
+		AcceptEntityInput(entity, "Kill");
 	}
 
 	return Plugin_Continue;

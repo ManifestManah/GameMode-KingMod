@@ -41,6 +41,7 @@ int cvar_KingHealth = 200;
 float cvar_RespawnTime = 1.50;
 float cvar_ImmobilityTime = 3.00;
 float cvar_SpawnProtectionDuration = 3.0;
+float cvar_RecoveryCooldownDuration = 1.50;
 
 
 //////////////////////////
@@ -56,6 +57,8 @@ bool isPlayerKing[MAXPLAYERS + 1] = {false,...};
 bool isPlayerProtected[MAXPLAYERS + 1] = {false,...};
 bool isPlayerControllingBot[MAXPLAYERS + 1] = {false,...};
 bool displayRestrictionHud[MAXPLAYERS + 1] = {false,...};
+bool isRecoveryOnCooldown[MAXPLAYERS + 1] = {false,...};
+
 
 
 // Global Integers
@@ -67,6 +70,8 @@ int PlayerSpawnCount[MAXPLAYERS+1] = {0, ...};
 int EntityOwner[2049] = {-1, ...};
 
 int mapHasMinimapHidden = 0;
+
+int kingRecoveryCounter = 0;
 
 
 float platformLocation[3];
@@ -97,6 +102,7 @@ public void OnPluginStart()
 	HookEvent("round_start", Event_RoundStart, EventHookMode_Post);
 	HookEvent("round_end", Event_RoundEnd, EventHookMode_Post);
 	HookEvent("player_team", Event_PlayerTeam, EventHookMode_Post);
+	HookEvent("player_hurt", Event_PlayerHurt, EventHookMode_Pre);
 	HookEvent("weapon_fire", Event_WeaponFire, EventHookMode_Pre);
 
 	// Calls upon our CommandListenerJoinTeam function whenever a player changes team
@@ -784,6 +790,25 @@ public Action Event_PlayerTeam(Handle event, const char[] name, bool dontBroadca
 }
 
 
+// This happens when a player takes damage
+public Action Event_PlayerHurt(Handle event, const char[] name, bool dontBroadcast)
+{
+	// Obtains the client's userid and converts it to an index and store it within our client variable
+	int client = GetClientOfUserId(GetEventInt(event, "userid"));
+
+	// If the client does not meet our validation criteria then execute this section
+	if(!IsValidClient(client))
+	{
+		return Plugin_Continue;
+	}
+
+	// Makes the king recover óver a few seconds if the king is brought below 75 health
+	KingRecovery(client);
+
+	return Plugin_Continue;
+}
+
+
 // This happens when a player uses the left attack with their knife or weapon
 public Action Event_WeaponFire(Handle event, const char[] name, bool dontBroadcast)
 {
@@ -1286,7 +1311,7 @@ public void RespawnOvertakenBots()
 			continue;
 		}
 
-		// If the client is not alive then execute this section
+		// If the client is alive then execute this section
 		if(IsPlayerAlive(i))
 		{
 			continue;
@@ -1295,6 +1320,62 @@ public void RespawnOvertakenBots()
 		// Calls upon the Timer_RespawnPlayer function after (1.5 default) seconds
 		CreateTimer(cvar_RespawnTime, Timer_RespawnPlayer, i, TIMER_FLAG_NO_MAPCHANGE);
 	}
+}
+
+
+// This happens when a player is takes damage
+public Action KingRecovery(int client)
+{
+	// If the client is not the current king then execute this section
+	if(!isPlayerKing[client])
+	{
+		return Plugin_Continue;
+	}
+
+	// Obtains the health of client and store it within our variable playerHealth
+	int playerHealth = GetEntProp(client, Prop_Send, "m_iHealth");
+
+	// If the client's health is 0 or below then execute this section
+	if(playerHealth <= 0)
+	{
+		return Plugin_Continue;
+	}
+
+	// If the client's health is 75 or above thhen execute this section
+	if (playerHealth >= 75)
+	{
+		return Plugin_Continue;
+	}
+
+	// If recovery is currently on cooldown then execute this section
+	if(isRecoveryOnCooldown[client])
+	{
+		return Plugin_Continue;
+	}
+
+	// Resets the recovry counter back to 0
+	kingRecoveryCounter = 0;
+
+	// Changes the cooldown state of the recovery to be on cooldown
+	isRecoveryOnCooldown[client] = true;
+
+	// Sends a colored multi-language message in the chat area
+	// CPrintToChat(client, "%t", "Recovery Starts");
+	PrintToChat(client, "King Recovery Started");
+
+	// Plays a sound that only the king can hear
+	ClientCommand(client, "play */manifest/kingmod/king_threat_detected.wav");
+
+	// Changes the king's color to green while recovery is active
+	SetEntityRenderColor(client, 35, 230, 5, 255);
+
+	// After seconds, calls upon our Timer_RegenerationProtocolCooldown function to remove the cooldown on the Regeneration Protocol
+	CreateTimer(0.1, Timer_RecoverHealth, client, TIMER_FLAG_NO_MAPCHANGE);
+
+	// After a few seconds calls upon our 
+	CreateTimer(cvar_RecoveryCooldownDuration, Timer_RemoveRecoveryCooldown, client, TIMER_FLAG_NO_MAPCHANGE);
+
+	return Plugin_Continue;
 }
 
 
@@ -1565,6 +1646,97 @@ public Action Timer_EndCurrentRound(Handle Timer, int initialRound)
 
 	return Plugin_Continue;
 }
+
+
+// This happens when the king drops below 75 health from taking damage
+public Action Timer_RecoverHealth(Handle Timer, int client)
+{
+	// If the client does not meet our validation criteria then execute this section
+	if(!IsValidClient(client))
+	{
+		return Plugin_Continue;
+	}
+
+	// If the client is not alive then execute this section
+	if(!IsPlayerAlive(client))
+	{
+		return Plugin_Continue;
+	}
+
+	// If the client is not the current king then execute this section
+	if(!isPlayerKing[client])
+	{
+		return Plugin_Continue;
+	}
+
+	// Obtains the health of client and store it within our variable playerHealth
+	int playerHealth = GetEntProp(client, Prop_Send, "m_iHealth");
+
+	// If the client's health is 75 or above thhen execute this section
+	if (playerHealth >= 75)
+	{
+		return Plugin_Continue;
+	}
+
+	// Adds 1 to our the tick counter
+	kingRecoveryCounter++;
+
+	// If the client's health is 75 or above thhen execute this section
+	if(playerHealth >= 70)
+	{
+		// Seets the value of playerHealth to 75
+		playerHealth = 75;
+	}
+
+	// If the client had 69 or less health then execute this section
+	else
+	{
+		// Adds +5 to the value of the playerHealth variable
+		playerHealth += 5;
+	}
+
+	// Changes the client's health to the value of the playerHealth variable
+	SetEntProp(client, Prop_Send, "m_iHealth", playerHealth, 1);
+
+	// If the tick counter is below or equal to 15 then execute this section 
+	if(kingRecoveryCounter <= 15)
+	{
+		// Calls upon this same function again after 0.3 seconds has passed
+		CreateTimer(0.3, Timer_RecoverHealth, client, TIMER_FLAG_NO_MAPCHANGE);
+
+		return Plugin_Continue;
+	}
+
+	// If the tick counter is 15 or above then execute this section
+	else
+	{
+		// Changes the king's color back to the default color
+		SetEntityRenderColor(client, 255, 255, 255, 255);
+
+		// Sends a colored multi-language message in the chat area
+		// CPrintToChat(client, "%t", "Regeneration Protocol Completed");
+		PrintToChat(client, "King Recovery Has Ended");
+	}
+
+	return Plugin_Continue;
+}
+
+
+// This happens 10 seconds after the king drops below 75 health from taking damage
+public Action Timer_RemoveRecoveryCooldown(Handle Timer, int client)
+{
+	// If the client does not meet our validation criteria then execute this section
+	if(!IsValidClient(client))
+	{
+		return Plugin_Continue;
+	}
+
+	// Changes the recovry cooldown state to be off cooldown
+	isRecoveryOnCooldown[client] = false;
+
+	return Plugin_Continue;
+}
+
 
 
 ////////////////////////////////

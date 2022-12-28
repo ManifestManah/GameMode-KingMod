@@ -37,11 +37,7 @@ bool cvar_EffectRing = true;
 
 int cvar_PointsNormalKill = 1;
 int cvar_PointsKingKill = 3;
-
 int cvar_DropChance = 33;
-
-
-
 int cvar_KingHealth = 200;
 
 float cvar_RespawnTime = 1.50;
@@ -434,86 +430,6 @@ public Action Event_PlayerSpawn(Handle event, const char[] name, bool dontBroadc
 
 	return Plugin_Continue;
 }
-
-
-
-// This function is called upon whenever a player is killed
-public Action DropHealthShot(int client)
-{
-	// If the randomly chosen number is larger than the value of the cvar_DropChance then execute this section
-	if(cvar_DropChance >= GetRandomInt(1, 100))
-	{
-		return Plugin_Continue;
-	}
-
-	// Creates a variable to store our data within
-	float playerLocation[3];
-
-	// Creates a variable to store our data within
-	float entityRotation[3];
-
-	// Obtains the location of the client and store it within the playerLocation variable
-	GetClientAbsOrigin(client, playerLocation);
-
-	// Changes the obtained player location by +64 on the z-axis
-	playerLocation[2] += 64;
-
-	// Sets the entity's rotation to 90.0 around its' z-axis
-	entityRotation[2] = 90.0;
-
-	// Creates a healthshot and store it's index within our entity variable
-	int entity = CreateEntityByName("weapon_healthshot");
-
-	// If the entity does not meet our criteria validation then execute this section
-	if(!IsValidEntity(entity))
-	{
-		return Plugin_Continue;
-	}
-
-	// Changes the size of the entity
-	SetEntPropFloat(entity, Prop_Send, "m_flModelScale", 1.98);
-
-	// Spawns the entity
-	DispatchSpawn(entity);
-
-	// Teleports the entity to the specified coordinates relative to the player and rotate it
-	TeleportEntity(entity, playerLocation, entityRotation, NULL_VECTOR);
-
-	// Calls our Timer_RemoveSpawnedHealthShotInjection function to remove any healthshots that hasn't been picked up within the last 5 seconds
-	CreateTimer(cvar_HealthshotExpirationTime, Timer_RemoveHealthShot, entity, TIMER_FLAG_NO_MAPCHANGE);
-
-	return Plugin_Continue;
-}
-
-
-// This happens (10.0 default) seconds after a player dies and drops a healthshot
-public Action Timer_RemoveHealthShot(Handle Timer, int entity)
-{
-	// If the entity does not meet our criteria validation then execute this section
-	if(!IsValidEntity(entity))
-	{
-		return Plugin_Continue;
-	}
-
-	// Creates a variable to store our data within
-	char classname[32];
-
-	// Obtains the classname of the entity and store it within our classname variable
-	GetEdictClassname(entity, classname, sizeof(classname));
-
-	// If the entity has an ownership relation then execute this section
-	if(GetEntPropEnt(entity, Prop_Data, "m_hOwnerEntity") != -1)
-	{
-		return Plugin_Continue;
-	}
-
-	// Removes the entity from the game
-	AcceptEntityInput(entity, "Kill");
-
-	return Plugin_Continue;
-}
-
-
 
 
 // This happens when a player dies
@@ -1400,6 +1316,133 @@ public Action RemoveSpawnProtection(int client)
 }
 
 
+// This function is called upon whenever a player is killed
+public Action DropHealthShot(int client)
+{
+	// If the randomly chosen number is larger than the value of the cvar_DropChance then execute this section
+	if(cvar_DropChance >= GetRandomInt(1, 100))
+	{
+		return Plugin_Continue;
+	}
+
+	// Creates a variable to store our data within
+	float playerLocation[3];
+
+	// Creates a variable to store our data within
+	float entityRotation[3];
+
+	// Obtains the location of the client and store it within the playerLocation variable
+	GetClientAbsOrigin(client, playerLocation);
+
+	// Changes the obtained player location by +64 on the z-axis
+	playerLocation[2] += 64;
+
+	// Sets the entity's rotation to 90.0 around its' z-axis
+	entityRotation[2] = 90.0;
+
+	// Creates a healthshot and store it's index within our entity variable
+	int entity = CreateEntityByName("weapon_healthshot");
+
+	// If the entity does not meet our criteria validation then execute this section
+	if(!IsValidEntity(entity))
+	{
+		return Plugin_Continue;
+	}
+
+	// Changes the size of the entity
+	SetEntPropFloat(entity, Prop_Send, "m_flModelScale", 1.98);
+
+	// Changes the color of the entity to a random predefined color
+	SetRandomColor(entity);
+
+	// Spawns the entity
+	DispatchSpawn(entity);
+
+	// Teleports the entity to the specified coordinates relative to the player and rotate it
+	TeleportEntity(entity, playerLocation, entityRotation, NULL_VECTOR);
+
+	// Calls our Timer_RemoveSpawnedHealthShotInjection function to remove any healthshots that hasn't been picked up within the last 5 seconds
+	CreateTimer(cvar_HealthshotExpirationTime, Timer_RemoveHealthShot, entity, TIMER_FLAG_NO_MAPCHANGE);
+
+	return Plugin_Continue;
+}
+
+
+// This happens when a player dies and drops a healthshot
+public void SetRandomColor(int entity)
+{
+	// Picks a random number between 1 and 9 and store it within our randomColor variable
+	int randomcolor = GetRandomInt(1, 9);
+
+	// Creates a switch statement to manage outcomes depnding on the value of our randomVariable
+	switch(randomcolor)
+	{
+		// If the color is 1 then execute this section
+		case 1:
+		{
+			// Changes the color of the entity
+			DispatchKeyValue(entity, "rendercolor", "194 35 35");
+		}
+
+		// If the color is 2 then execute this section
+		case 2:
+		{
+			// Changes the color of the entity
+			DispatchKeyValue(entity, "rendercolor", "19 226 14");
+		}
+
+		// If the color is 3 then execute this section
+		case 3:
+		{
+			// Changes the color of the entity
+			DispatchKeyValue(entity, "rendercolor", "113 123 255");
+		}
+
+		// If the color is 4 then execute this section
+		case 4:
+		{
+			// Changes the color of the entity
+			DispatchKeyValue(entity, "rendercolor", "254 234 122");
+		}
+
+		// If the color is 5 then execute this section
+		case 5:
+		{
+			// Changes the color of the entity
+			DispatchKeyValue(entity, "rendercolor", "255 146 47");
+		}
+
+		// If the color is 6 then execute this section
+		case 6:
+		{
+			// Changes the color of the entity
+			DispatchKeyValue(entity, "rendercolor", "133 255 213");
+		}
+
+		// If the color is 7 then execute this section
+		case 7:
+		{
+			// Changes the color of the entity
+			DispatchKeyValue(entity, "rendercolor", "15 255 255");
+		}
+
+		// If the color is 8 then execute this section
+		case 8:
+		{
+			// Changes the color of the entity
+			DispatchKeyValue(entity, "rendercolor", "255 0 255");
+		}
+
+		// If the color is 9 then execute this section
+		case 9:
+		{
+			// Changes the color of the entity
+			DispatchKeyValue(entity, "rendercolor", "131 22 228");
+		}
+	}
+}
+
+
 // This happens when a player that controls a bot dies
 public void RespawnOvertakenBots()
 {
@@ -1887,6 +1930,34 @@ public Action Timer_UnfreezeKing(Handle timer, int client)
 
 	// Changes the movement speed of the player to 1.0 essentially returning their movement to the normal speed
 	SetEntPropFloat(client, Prop_Data, "m_flLaggedMovementValue", 1.0);
+
+	return Plugin_Continue;
+}
+
+
+// This happens (10.0 default) seconds after a player dies and drops a healthshot
+public Action Timer_RemoveHealthShot(Handle Timer, int entity)
+{
+	// If the entity does not meet our criteria validation then execute this section
+	if(!IsValidEntity(entity))
+	{
+		return Plugin_Continue;
+	}
+
+	// Creates a variable to store our data within
+	char classname[32];
+
+	// Obtains the classname of the entity and store it within our classname variable
+	GetEdictClassname(entity, classname, sizeof(classname));
+
+	// If the entity has an ownership relation then execute this section
+	if(GetEntPropEnt(entity, Prop_Data, "m_hOwnerEntity") != -1)
+	{
+		return Plugin_Continue;
+	}
+
+	// Removes the entity from the game
+	AcceptEntityInput(entity, "Kill");
 
 	return Plugin_Continue;
 }

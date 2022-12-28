@@ -470,6 +470,9 @@ public Action DropHealthShot(int client)
 		return Plugin_Continue;
 	}
 
+	// Changes the size of the entity
+	SetEntPropFloat(entity, Prop_Send, "m_flModelScale", 1.98);
+
 	// Spawns the entity
 	DispatchSpawn(entity);
 

@@ -1320,7 +1320,7 @@ public Action RemoveSpawnProtection(int client)
 public Action DropHealthShot(int client)
 {
 	// If the randomly chosen number is larger than the value of the cvar_DropChance then execute this section
-	if(cvar_DropChance >= GetRandomInt(1, 100))
+	if(cvar_DropChance <= GetRandomInt(1, 100))
 	{
 		return Plugin_Continue;
 	}

@@ -72,6 +72,7 @@ int kingRecoveryCounter = 0;
 int effectSprite = 0;
 int weaponOwner = -1;
 
+int colorRGB[3];
 int PlayerSpawnCount[MAXPLAYERS+1] = {0, ...};
 int EntityOwner[2049] = {-1, ...};
 
@@ -82,6 +83,7 @@ float platformLocation[3];
 
 // Global Characters
 char kingName[64];
+char colorCombination[32];
 
 char PlayerClanTag[MAXPLAYERS + 1][14];
 
@@ -336,8 +338,6 @@ public Action OnPlayerRunCmd(int client, int &buttons, int &impulse, float unuse
 // This happens when a player can pick up a weapon
 public Action OnWeaponCanUse(int client, int weapon)
 {
-/*
-
 	// If the weapon that was picked up our entity criteria of validation then execute this section
 	if(!IsValidEntity(weapon))
 	{
@@ -373,12 +373,9 @@ public Action OnWeaponCanUse(int client, int weapon)
 		PrecacheSound("kingmod/sfx_restrictedweapon.mp3", true);
 	}
 
-*/
-
 	// Performs a clientcommand to play a sound only the clint can hear
-//	ClientCommand(client, "play */kingmod/sfx_restrictedweapon.mp3");
+	ClientCommand(client, "play */kingmod/sfx_restrictedweapon.mp3");
 
-/*
 	// Changes the state of displayRestrictionHud[client] to true
 	displayRestrictionHud[client] = true;
 
@@ -392,9 +389,6 @@ public Action OnWeaponCanUse(int client, int weapon)
 	AcceptEntityInput(weapon, "Kill");
 
 	return Plugin_Handled;
-	*/
-
-	return Plugin_Continue;
 }
 
 
@@ -1355,6 +1349,9 @@ public Action DropHealthShot(int client)
 	// Changes the color of the entity to a random predefined color
 	SetRandomColor(entity);
 
+	// Attaches a light_dynamic entity to the healthshot of a random predefined color
+	SetRandomLightColor(entity);
+
 	// Spawns the entity
 	DispatchSpawn(entity);
 
@@ -1377,70 +1374,151 @@ public void SetRandomColor(int entity)
 	// Creates a switch statement to manage outcomes depnding on the value of our randomVariable
 	switch(randomcolor)
 	{
-		// If the color is 1 then execute this section
+		// If the randomcolor variable is 1 then execute this section
 		case 1:
 		{
-			// Changes the color of the entity
-			DispatchKeyValue(entity, "rendercolor", "194 35 35");
+			// Changes the color values of our colorRGB variable
+			colorRGB[0] = 193;
+			colorRGB[1] = 35;
+			colorRGB[2] = 35;
 		}
 
-		// If the color is 2 then execute this section
+		// If the randomcolor variable is 2 then execute this section
 		case 2:
 		{
-			// Changes the color of the entity
-			DispatchKeyValue(entity, "rendercolor", "19 226 14");
+			// Changes the color values of our colorRGB variable
+			colorRGB[0] = 19;
+			colorRGB[1] = 226;
+			colorRGB[2] = 14;
 		}
 
-		// If the color is 3 then execute this section
+		// If the randomcolor variable is 3 then execute this section
 		case 3:
 		{
-			// Changes the color of the entity
-			DispatchKeyValue(entity, "rendercolor", "113 123 255");
+			// Changes the color values of our colorRGB variable
+			colorRGB[0] = 113;
+			colorRGB[1] = 123;
+			colorRGB[2] = 255;
 		}
 
-		// If the color is 4 then execute this section
+		// If the randomcolor variable is 4 then execute this section
 		case 4:
 		{
-			// Changes the color of the entity
-			DispatchKeyValue(entity, "rendercolor", "254 234 122");
+			// Changes the color values of our colorRGB variable
+			colorRGB[0] = 254;
+			colorRGB[1] = 234;
+			colorRGB[2] = 122;
 		}
 
-		// If the color is 5 then execute this section
+		// If the randomcolor variable is 5 then execute this section
 		case 5:
 		{
-			// Changes the color of the entity
-			DispatchKeyValue(entity, "rendercolor", "255 146 47");
+			// Changes the color values of our colorRGB variable
+			colorRGB[0] = 255;
+			colorRGB[1] = 146;
+			colorRGB[2] = 47;
 		}
 
-		// If the color is 6 then execute this section
+		// If the randomcolor variable is 6 then execute this section
 		case 6:
 		{
-			// Changes the color of the entity
-			DispatchKeyValue(entity, "rendercolor", "133 255 213");
+			// Changes the color values of our colorRGB variable
+			colorRGB[0] = 133;
+			colorRGB[1] = 255;
+			colorRGB[2] = 213;
 		}
 
-		// If the color is 7 then execute this section
+		// If the randomcolor variable is 7 then execute this section
 		case 7:
 		{
-			// Changes the color of the entity
-			DispatchKeyValue(entity, "rendercolor", "15 255 255");
+			// Changes the color values of our colorRGB variable
+			colorRGB[0] = 15;
+			colorRGB[1] = 255;
+			colorRGB[2] = 255;
 		}
 
-		// If the color is 8 then execute this section
+		// If the randomcolor variable is 8 then execute this section
 		case 8:
 		{
-			// Changes the color of the entity
-			DispatchKeyValue(entity, "rendercolor", "255 0 255");
+			// Changes the color values of our colorRGB variable
+			colorRGB[0] = 255;
+			colorRGB[1] = 0;
+			colorRGB[2] = 255;
 		}
 
-		// If the color is 9 then execute this section
+		// If the randomcolor variable is 9 then execute this section
 		case 9:
 		{
-			// Changes the color of the entity
-			DispatchKeyValue(entity, "rendercolor", "131 22 228");
+			// Changes the color values of our colorRGB variable
+			colorRGB[0] = 131;
+			colorRGB[1] = 22;
+			colorRGB[2] = 228;
 		}
 	}
+
+	// Formats the colorCombination to create a variable containing red, green and blue color values
+	Format(colorCombination, sizeof(colorCombination), "%i %i %i", colorRGB[0], colorRGB[1], colorRGB[2]);
+
+	// Changes the color of the entity to the RGB color combination within our colorCombination variable
+	DispatchKeyValue(entity, "rendercolor", colorCombination);
 }
+
+
+// This happens when a player dies and drops a healthshot
+public Action SetRandomLightColor(int healthShotEntity)
+{
+	// Creates a dynamic light and store it's index within our entity variable
+	int entity = CreateEntityByName("light_dynamic");
+
+	// If the entity does not meet our criteria validation then execute this section
+	if(!IsValidEntity(entity))
+	{
+		return Plugin_Continue;
+	}
+
+	// Formats the colorCombination to create a variable containing red, green and blue color values
+	Format(colorCombination, sizeof(colorCombination), "%i %i %i 255", colorRGB[0], colorRGB[1], colorRGB[2]);
+
+	// Changes the color of the light emitted from the light_dynamic entity
+	DispatchKeyValue(entity, "_light", colorCombination);
+	
+	// Defines the brightness
+	DispatchKeyValue(entity, "brightness", "6");
+
+	// Defins the radius of the spotlight
+	DispatchKeyValueFloat(entity, "spotlight_radius", 300.0);
+
+	// Sets the distance of the light_dynamic entity
+	DispatchKeyValueFloat(entity, "distance", float(65));
+
+	// Chooses which lighting style that should be used by our light_dynamic
+	DispatchKeyValue(entity, "style", "6");
+
+	// Spawns the light_dynamic entity in to the world 
+	DispatchSpawn(entity);
+
+	// Turns on the entity's light
+	AcceptEntityInput(entity, "TurnOn");
+	
+	// Creates a variable which we will use to store our data within
+	float entityLocation[3];
+
+	// Modifies the placement of the light_dynamic's z-coordinate position
+	entityLocation[2] = 5.0;
+
+	// Changes the variantstring to !activator
+	SetVariantString("!activator");
+	
+	// Changes the parent of the light_dynamic to be the spawned healthshot
+	AcceptEntityInput(entity, "SetParent", healthShotEntity, entity, 0);
+	
+	// Teleports the light_dynamic to the specified coordinate location
+	TeleportEntity(entity, entityLocation, NULL_VECTOR, NULL_VECTOR);
+
+	return Plugin_Continue;
+}
+
+
 
 
 // This happens when a player that controls a bot dies

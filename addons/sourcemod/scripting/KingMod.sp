@@ -38,12 +38,17 @@ bool cvar_EffectRing = true;
 int cvar_PointsNormalKill = 1;
 int cvar_PointsKingKill = 3;
 
+int cvar_DropChance = 33;
+
+
+
 int cvar_KingHealth = 200;
 
 float cvar_RespawnTime = 1.50;
 float cvar_ImmobilityTime = 3.00;
 float cvar_SpawnProtectionDuration = 3.0;
 float cvar_RecoveryCooldownDuration = 10.00;
+float cvar_HealthshotExpirationTime = 10.0;
 
 
 //////////////////////////
@@ -335,6 +340,8 @@ public Action OnPlayerRunCmd(int client, int &buttons, int &impulse, float unuse
 // This happens when a player can pick up a weapon
 public Action OnWeaponCanUse(int client, int weapon)
 {
+/*
+
 	// If the weapon that was picked up our entity criteria of validation then execute this section
 	if(!IsValidEntity(weapon))
 	{
@@ -370,9 +377,12 @@ public Action OnWeaponCanUse(int client, int weapon)
 		PrecacheSound("kingmod/sfx_restrictedweapon.mp3", true);
 	}
 
-	// Performs a clientcommand to play a sound only the clint can hear
-	ClientCommand(client, "play */kingmod/sfx_restrictedweapon.mp3");
+*/
 
+	// Performs a clientcommand to play a sound only the clint can hear
+//	ClientCommand(client, "play */kingmod/sfx_restrictedweapon.mp3");
+
+/*
 	// Changes the state of displayRestrictionHud[client] to true
 	displayRestrictionHud[client] = true;
 
@@ -386,6 +396,9 @@ public Action OnWeaponCanUse(int client, int weapon)
 	AcceptEntityInput(weapon, "Kill");
 
 	return Plugin_Handled;
+	*/
+
+	return Plugin_Continue;
 }
 
 
@@ -424,6 +437,82 @@ public Action Event_PlayerSpawn(Handle event, const char[] name, bool dontBroadc
 
 
 
+// This function is called upon whenever a player is killed
+public Action DropHealthShot(int client)
+{
+	// If the randomly chosen number is larger than the value of the cvar_DropChance then execute this section
+	if(cvar_DropChance >= GetRandomInt(1, 100))
+	{
+		return Plugin_Continue;
+	}
+
+	// Creates a variable to store our data within
+	float playerLocation[3];
+
+	// Creates a variable to store our data within
+	float entityRotation[3];
+
+	// Obtains the location of the client and store it within the playerLocation variable
+	GetClientAbsOrigin(client, playerLocation);
+
+	// Changes the obtained player location by +64 on the z-axis
+	playerLocation[2] += 64;
+
+	// Sets the entity's rotation to 90.0 around its' z-axis
+	entityRotation[2] = 90.0;
+
+	// Creates a healthshot and store it's index within our entity variable
+	int entity = CreateEntityByName("weapon_healthshot");
+
+	// If the entity does not meet our criteria validation then execute this section
+	if(!IsValidEntity(entity))
+	{
+		return Plugin_Continue;
+	}
+
+	// Spawns the entity
+	DispatchSpawn(entity);
+
+	// Teleports the entity to the specified coordinates relative to the player and rotate it
+	TeleportEntity(entity, playerLocation, entityRotation, NULL_VECTOR);
+
+	// Calls our Timer_RemoveSpawnedHealthShotInjection function to remove any healthshots that hasn't been picked up within the last 5 seconds
+	CreateTimer(cvar_HealthshotExpirationTime, Timer_RemoveHealthShot, entity, TIMER_FLAG_NO_MAPCHANGE);
+
+	return Plugin_Continue;
+}
+
+
+// This happens (10.0 default) seconds after a player dies and drops a healthshot
+public Action Timer_RemoveHealthShot(Handle Timer, int entity)
+{
+	// If the entity does not meet our criteria validation then execute this section
+	if(!IsValidEntity(entity))
+	{
+		return Plugin_Continue;
+	}
+
+	// Creates a variable to store our data within
+	char classname[32];
+
+	// Obtains the classname of the entity and store it within our classname variable
+	GetEdictClassname(entity, classname, sizeof(classname));
+
+	// If the entity has an ownership relation then execute this section
+	if(GetEntPropEnt(entity, Prop_Data, "m_hOwnerEntity") != -1)
+	{
+		return Plugin_Continue;
+	}
+
+	// Removes the entity from the game
+	AcceptEntityInput(entity, "Kill");
+
+	return Plugin_Continue;
+}
+
+
+
+
 // This happens when a player dies
 public Action Event_PlayerDeath(Handle event, const char[] name, bool dontBroadcast)
 {
@@ -435,6 +524,9 @@ public Action Event_PlayerDeath(Handle event, const char[] name, bool dontBroadc
 	{
 		return Plugin_Continue;
 	}
+
+	// Gives the client a (33% default) chance to drop a healthshot where they stood upon dying
+	DropHealthShot(client);
 
 	// Calls upon the Timer_RespawnPlayer function after (1.5 default) seconds
 	CreateTimer(cvar_RespawnTime, Timer_RespawnPlayer, client, TIMER_FLAG_NO_MAPCHANGE);

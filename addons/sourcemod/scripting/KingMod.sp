@@ -173,6 +173,9 @@ public void OnClientPostAdminCheck(int client)
 
 	// Adds a hook to the client which will let us track when the player is eligible to pick up a weapon
 	SDKHook(client, SDKHook_WeaponCanUse, OnWeaponCanUse);
+
+	// Adds a hook to the client which will let us track when the player picks up a weapon
+	SDKHook(client, SDKHook_WeaponEquip, OnWeaponEquip);
 }
 
 
@@ -192,8 +195,11 @@ public void OnClientDisconnect(int client)
 		RespawnOvertakenBots();
 	}
 
-	// Removes the hook that we had added to the player to track when he was eligible to pick up weapons
+	// Removes the hook that we had added to the client to track when he was eligible to pick up weapons
 	SDKUnhook(client, SDKHook_WeaponCanUse, OnWeaponCanUse);
+
+	// Removes teh hook that we had added to the client to track when he had picked up a weapon
+	SDKHook(client, SDKHook_WeaponEquip, OnWeaponEquip);
 
 	// If the client is not the current king then execute this section
 	if(!isPlayerKing[client])
@@ -389,6 +395,42 @@ public Action OnWeaponCanUse(int client, int weapon)
 	AcceptEntityInput(weapon, "Kill");
 
 	return Plugin_Handled;
+}
+
+
+// This happens when a player has picked up a weapon
+public Action OnWeaponEquip(int client, int weapon)
+{
+	// If the weapon that was picked up our entity criteria of validation then execute this section
+	if(!IsValidEntity(weapon))
+	{
+		return Plugin_Continue;
+	}
+
+	// Creates a variable called ClassName which we will store the weapon entity's name within
+	char ClassName[64];
+
+	// Obtains the classname of the weapon entity and store it within our ClassName variable
+	GetEntityClassname(weapon, ClassName, sizeof(ClassName));
+
+	// If the weapon's entity name is the weapon_healthshot then execute this section
+	if(StrEqual(ClassName, "weapon_healthshot", false))
+	{
+		// Obtains the entity's model scale and store it within our modelScale variable
+		float modelScale = GetEntPropFloat(weapon, Prop_Send, "m_flModelScale");
+
+		// If the entity's model scale is anything other than 1.0 then execute this section
+		if(modelScale != 1.0)
+		{
+			// Kills the weapon entity, removing it from the game
+			AcceptEntityInput(weapon, "Kill");
+
+			// Gives the client the specified weapon
+			GivePlayerItem(client, "weapon_healthshot");
+		}
+	}
+
+	return Plugin_Continue;
 }
 
 
@@ -880,6 +922,9 @@ public void LateLoadSupport()
 
 		// Adds a hook to the client which will let us track when the player is eligible to pick up a weapon
 		SDKHook(client, SDKHook_WeaponCanUse, OnWeaponCanUse);
+
+		// Adds a hook to the client which will let us track when the player picks up a weapon
+		SDKHook(client, SDKHook_WeaponEquip, OnWeaponEquip);
 	}
 }
 

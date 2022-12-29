@@ -1071,11 +1071,12 @@ public void LateLoadSupport()
 	// Changes the kingName variable's value to just be None
 	kingName = "None";
 
-	// Forcefully ends the round and considers it a round draw
-	CS_TerminateRound(3.0, CSRoundEnd_Draw);
 
 	PrintToChatAll("King Mod has been loaded. ");
 	PrintToChatAll("A new round will soon commence.");
+
+	// Calls upon the Timer_TerminateRound function after 3.0 seconds
+	CreateTimer(3.0, Timer_TerminateRound, _, TIMER_FLAG_NO_MAPCHANGE);
 
 	// Loops through all of the clients
 	for (int client = 1; client <= MaxClients; client++)
@@ -1757,8 +1758,6 @@ public Action SetRandomLightColor(int healthShotEntity)
 }
 
 
-
-
 // This happens when a player that controls a bot dies
 public void RespawnOvertakenBots()
 {
@@ -2131,6 +2130,16 @@ public Action Timer_CleanFloor(Handle timer)
 		// Removes the entity from the map 
 		AcceptEntityInput(entity, "Kill");
 	}
+
+	return Plugin_Continue;
+}
+
+
+// This function is called upon 3.0 seconds after LateLoadSupport is initiated
+public Action Timer_TerminateRound(Handle timer)
+{
+	// Forcefully ends the round and considers it a round draw
+	CS_TerminateRound(0.0, CSRoundEnd_Draw);
 
 	return Plugin_Continue;
 }

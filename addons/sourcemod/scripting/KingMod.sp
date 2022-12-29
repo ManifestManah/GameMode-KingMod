@@ -179,6 +179,9 @@ public void OnClientPostAdminCheck(int client)
 
 	// Adds a hook to the client which will let us track when the player picks up a weapon
 	SDKHook(client, SDKHook_WeaponEquip, OnWeaponEquip);
+
+	// Attempts to auto-assign the player to the team at a disadvantage after the mp_force_pick_time duration
+	AutoJoinTeam(client);
 }
 
 
@@ -1000,6 +1003,7 @@ public Action Timer_InjectHealthshot(Handle Timer, int client)
 
 	// Obtains the player's current health and store it within the playerHealth variable
 	int playerHealth = playerHealthPreInjection[client];
+	PrintToChat(client, "Debug playerHealth initial HP: %i", playerHealth);
 
 	// Adds the value of recoveredHealth to the value stored within our playerHealth variable
 	playerHealth += recoveredHealth;
@@ -1043,6 +1047,8 @@ public Action Timer_InjectHealthshot(Handle Timer, int client)
 		{
 			// Changes the player's health to the value of playerHealth
 			SetEntProp(client, Prop_Send, "m_iHealth", playerHealth, 1);
+
+			PrintToChat(client, "playerHealth HP: %i", playerHealth);
 		}
 	}
 
@@ -1231,6 +1237,33 @@ public void SetConVar(const char[] ConvarName, const char[] ConvarValue)
 		// Changes the value of the convar to the value specified in the ConvarValue variable
 		ServerVariable.SetString(ConvarValue, true);
 	}
+}
+
+
+// This happens once all post authorizations have been performed and the client is fully in-game
+public void AutoJoinTeam(int client)
+{
+	// Creates a variable secondsToRoundEnd that stores the value of the round's duration + freeze time minus -0.25 seconds
+	float forcedPickWaitTime = GetConVarFloat(FindConVar("mp_force_pick_time"));
+
+	// If the value of forcedPickWaitTime is 0.00 then execute this section
+	if(forcedPickWaitTime <= 1.0)
+	{
+		SetConVar("mp_force_pick_time", "1");
+
+		// Sets the value of our forcedPickWaitTime variable to 0.5
+		forcedPickWaitTime = 0.5;
+	}
+
+	// If the value of forcedPickWaitTime is above 1.0 then execute this section
+	else
+	{
+		// Subtracts 0.5 seconds from the value of forcedPickWaitTime
+		forcedPickWaitTime -= 0.5;
+	}
+
+	// Calls upon the Timer_AutoJoinTeam function after (1.5 default) seconds
+	CreateTimer(forcedPickWaitTime, Timer_AutoJoinTeam, client, TIMER_FLAG_NO_MAPCHANGE);
 }
 
 
@@ -2098,6 +2131,93 @@ public Action Timer_CleanFloor(Handle timer)
 		// Removes the entity from the map 
 		AcceptEntityInput(entity, "Kill");
 	}
+
+	return Plugin_Continue;
+}
+
+
+// This happens when a player joins the server after the mp-force_pick_time has run out 
+public Action Timer_AutoJoinTeam(Handle timer, int client)
+{
+	// If the client does not meet our validation criteria then execute this section
+	if(!IsValidClient(client))
+	{
+		return Plugin_Continue;
+	}
+
+	// If the client is on the terrorist or counter-terrorist team then execute this section
+	if(GetClientTeam(client) >= 1)
+	{
+		return Plugin_Continue;
+	}
+
+	// Creates the teamChoice variable and set it to -1 to indicate the team is still undecided
+	int teamChoice = -1;
+
+	// If there are more players on the terrorist team then execute this
+	if(GetTeamClientCount(2) > GetTeamClientCount(3))
+	{
+		// Sets the teamChoice variable to 3 to indicate the counter-terrorist team
+		teamChoice = 3;
+	}
+
+	// If there are more players on the counter-terrorist team then execute this
+	else if(GetTeamClientCount(2) < GetTeamClientCount(3))
+	{
+		// Sets the teamChoice variable to 2 to indicate the terrorist team
+		teamChoice = 2;
+	}
+
+	// If there are the same amount of players on both teams then execute this section
+	else
+	{
+		// Obtain the terrorist team's score and store it within the scoreT variable
+		int scoreT = GetTeamScore(2);
+
+		// Obtain the counter-terrorist team's score and store it within the scoreCT variable
+		int scoreCT = GetTeamScore(3);
+
+		// If the terrorists have more points than the counter-terrorists then execute this section
+		if(scoreT > scoreCT)
+		{
+			// Sets the teamChoice variable to 3 to indicate the counter-terrorist team
+			teamChoice = 3;
+		}
+
+		// If the terrorists have less points than the counter-terrorists then execute this section
+		else if(scoreT < scoreCT)
+		{
+			// Sets the teamChoice variable to 2 to indicate the terrorist team
+			teamChoice = 2;
+		}
+
+		// If both teams have the same score then execute this section
+		else
+		{
+			// Picks a random number between 0 and 1 and store it within the randomTeam variable
+			int randomTeam = GetRandomInt(0, 1);
+
+			// If the value of the randomTeam variable is 0 then execute this section
+			if(!randomTeam)
+			{
+				// Sets the teamChoice variable to 2 to indicate the terrorist team
+				teamChoice = 2;
+			}
+
+			// If the value of the randomTeam variable is 1 then execute this section
+			else
+			{
+				// Sets the teamChoice variable to 3 to indicate the counter-terrorist team
+				teamChoice = 3;
+			}
+		}
+	}
+
+	// Changes the client's team to the team index stored within the teamChoice variable
+	ChangeClientTeam(client, teamChoice);
+
+	// Calls upon the Timer_RespawnPlayer function after (1.5 default) seconds
+	CreateTimer(cvar_RespawnTime, Timer_RespawnPlayer, client, TIMER_FLAG_NO_MAPCHANGE);
 
 	return Plugin_Continue;
 }

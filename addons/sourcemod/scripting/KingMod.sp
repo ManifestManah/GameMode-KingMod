@@ -926,6 +926,7 @@ public Action Event_PlayerHurt(Handle event, const char[] name, bool dontBroadca
 }
 
 
+
 // This happens when a player uses the left attack with their knife or weapon
 public Action Event_WeaponFire(Handle event, const char[] name, bool dontBroadcast)
 {
@@ -955,6 +956,7 @@ public Action Event_WeaponFire(Handle event, const char[] name, bool dontBroadca
 
 
 
+
 ///////////////////////////
 // - Regular Functions - //
 ///////////////////////////
@@ -980,6 +982,9 @@ public void LateLoadSupport()
 		{
 			continue;
 		}
+
+		// Renders the player unable to move or perform any movement related actions
+		SetEntityFlags(client, GetEntityFlags(client) | FL_FROZEN);
 
 		// Adds a hook to the client which will let us track when the player is eligible to pick up a weapon
 		SDKHook(client, SDKHook_WeaponCanUse, OnWeaponCanUse);
@@ -2770,6 +2775,13 @@ public Action Command_DeveloperMenu(int client, int args)
 
 public void DownloadAndPrecacheFiles()
 {
+	// Adds our custom sound files to the download tables
+	AddFileToDownloadsTable("sound/kingmod/sfx_restrictedweapon.mp3");
+
+	// Precaches our sound files
+	PrecacheSound("kingmod/sfx_restrictedweapon.mp3");
+
+
 	AddFileToDownloadsTable("materials/models/props/vip.vmt");
 	AddFileToDownloadsTable("materials/models/props/vip.vtf");
 	AddFileToDownloadsTable("models/props/crown.dx90.vtx");

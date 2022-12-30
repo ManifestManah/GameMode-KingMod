@@ -62,6 +62,7 @@ bool isPlayerControllingBot[MAXPLAYERS + 1] = {false,...};
 bool displayRestrictionHud[MAXPLAYERS + 1] = {false,...};
 bool isRecoveryOnCooldown[MAXPLAYERS + 1] = {false,...};
 bool injectingHealthshot[MAXPLAYERS + 1] = {false,...};
+bool cooldownHealthshot[MAXPLAYERS + 1] = {false,...};
 bool cooldownWeaponSwapMessage[MAXPLAYERS + 1] = {false,...};
 
 
@@ -1475,14 +1476,26 @@ public Action InjectHealthshot(int client)
 		return Plugin_Continue;
 	}
 
+	// If the player's healthshot action is currently on cooldown then execute this section 
+	if(cooldownHealthshot[client])
+	{
+		return Plugin_Continue;
+	}
+
+	// Changes the player's cooldownHealthshot state to true
+	cooldownHealthshot[client] = true;
+
 	// Changes the player's injectingHealthshot state to true
 	injectingHealthshot[client] = true;
 
 	// Calls our Timer_InjectionComplete function to alter the effect of health injections
 	CreateTimer(0.55, Timer_InjectionComplete, client, TIMER_FLAG_NO_MAPCHANGE);
 
-	// After 0.66 secCalls our Timer_InjectionComplete function to alter the effect of health injections
-	CreateTimer(0.66, Timer_InjectHealthshot, client, TIMER_FLAG_NO_MAPCHANGE);
+	// After 0.85 seconds calls our Timer_InjectHealthshot function to alter the effect of health injections
+	CreateTimer(0.85, Timer_InjectHealthshot, client, TIMER_FLAG_NO_MAPCHANGE);
+
+	// After 1.90 seconds lifts the healthshot action cooldown from the player allowing them to use another injection
+	CreateTimer(1.90, Timer_CooldownHealthshotAction, client, TIMER_FLAG_NO_MAPCHANGE);
 
 	return Plugin_Continue;	
 }
@@ -2219,7 +2232,7 @@ public Action Timer_InjectionComplete(Handle Timer, int client)
 }
 
 
-// This happens 0.66 seconds after a player uses a halthshot
+// This happens 0.85 seconds after a player uses a halthshot
 public Action Timer_InjectHealthshot(Handle Timer, int client)
 {
 	// If the client does not meet our validation criteria then execute this section
@@ -2315,6 +2328,22 @@ public Action Timer_InjectHealthshot(Handle Timer, int client)
 
 	// Changes the player's cooldownWeaponSwapMessage state to false
 	cooldownWeaponSwapMessage[client] = false;
+
+	return Plugin_Continue;
+}
+
+
+// This happens 1.90 seconds after a player uses a halthshot
+public Action Timer_CooldownHealthshotAction(Handle Timer, int client)
+{
+	// If the client does not meet our validation criteria then execute this section
+	if(!IsValidClient(client))
+	{
+		return Plugin_Continue;
+	}
+
+	// Changes the player's cooldownHealthshot state to false
+	cooldownHealthshot[client] = false;
 
 	return Plugin_Continue;
 }

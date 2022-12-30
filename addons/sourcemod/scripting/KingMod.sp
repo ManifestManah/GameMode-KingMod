@@ -35,6 +35,15 @@ bool cvar_HideMoneyHud = true;
 bool cvar_EffectTesla = true;
 bool cvar_EffectRing = true;
 
+
+bool cvar_KingPowerChooser = true;
+bool cvar_PowerBumpmines = true;
+bool cvar_PowerSpeed = true;
+bool cvar_PowerArmor = true;
+bool cvar_PowerAxe = true;
+bool cvar_PowerFlashbangs = true;
+
+
 int cvar_PointsNormalKill = 1;
 int cvar_PointsKingKill = 3;
 int cvar_DropChance = 33;
@@ -623,6 +632,9 @@ public Action Event_PlayerDeath(Handle event, const char[] name, bool dontBroadc
 			// Changes the health of the player to (200 default)
 			SetEntProp(attacker, Prop_Send, "m_iHealth", cvar_KingHealth, 1);
 
+			// Decides which powers can be chosen, and picks a power from the list for the new king
+			ChooseKingPower(attacker);
+
 			// Strips the client of all their weapons
 			StripPlayerOfWeapons(attacker);
 
@@ -714,6 +726,9 @@ public Action Event_PlayerDeath(Handle event, const char[] name, bool dontBroadc
 	// Changes the health of the player to (200 default)
 	SetEntProp(attacker, Prop_Send, "m_iHealth", cvar_KingHealth, 1);
 
+	// Decides which powers can be chosen, and picks a power from the list for the new king
+	ChooseKingPower(attacker);
+
 	// Strips the client of all their weapons
 	StripPlayerOfWeapons(attacker);
 
@@ -758,6 +773,7 @@ public Action Event_PlayerDeath(Handle event, const char[] name, bool dontBroadc
 
 	return Plugin_Continue;
 }
+
 
 
 // This happens when the round starts 
@@ -2681,6 +2697,166 @@ public Action Timer_TeslaEffectKill(Handle timer, int edict)
 
 	return Plugin_Continue;
 }
+
+
+
+
+/////////////////////////////////////////
+// - Power Chooser Related Functions - //
+/////////////////////////////////////////
+
+
+// This happens when a new king has been chosen
+public Action ChooseKingPower(int client)
+{
+	// If the cvar_KingPowerChooser is not enabled then execute this section
+	if(!cvar_KingPowerChooser)
+	{
+		return Plugin_Continue;
+	}
+
+	// Creates a variable called powersAvailable and set it to the same value as the amount of enabled powers
+	int powersAvailable = countAvailablePowers();
+
+	// If the value of powersAvailable is 0 then execute this section
+	if(!powersAvailable)
+	{
+		// Writes a message to the server's console informing about the possible issue at hand
+		PrintToServer("=======================================================================================================");
+		PrintToServer("[King Mod Warning]:");
+		PrintToServer("   None of the available powers are enabled. Please change the cvar 'kingmod_kingpowers' to 0,");
+		PrintToServer("   inside of the addons/sourcemod/configs/KingMod/cvars.txt file to improve performance.");
+		PrintToServer("   ");
+		PrintToServer("=======================================================================================================");
+
+		return Plugin_Continue;
+	}
+
+	// Picks a value between 0 to the value stored within our powersAvailable variable
+	int chosenPower = GetRandomInt(0, powersAvailable);
+
+	// Resets the value of powersAvailable back to 0
+	powersAvailable = 0;
+
+	// If the cvar for the Bumpmine power is enabled then execute this section
+	if(cvar_PowerBumpmines)
+	{
+		// Adds +1 to the current value of the powersAvailable variable
+		powersAvailable++;
+
+		// If the value contained within chosenPower is the same as the value stored in powersAvailable then execute this section
+		if(chosenPower == powersAvailable)
+		{
+			// 
+			PrintToChatAll("Power Bumpmine - [ %i | %i ]", chosenPower, powersAvailable);
+		}
+	}
+
+	// If the cvar for the Bumpmine power is enabled then execute this section
+	if(cvar_PowerSpeed)
+	{
+		// Adds +1 to the current value of the powersAvailable variable
+		powersAvailable++;
+
+		// If the value contained within chosenPower is the same as the value stored in powersAvailable then execute this section
+		if(chosenPower == powersAvailable)
+		{
+			// 
+			PrintToChatAll("Power Speed - [ %i | %i ]", chosenPower, powersAvailable);
+		}
+	}
+
+	// If the cvar for the Bumpmine power is enabled then execute this section
+	if(cvar_PowerArmor)
+	{
+		// Adds +1 to the current value of the powersAvailable variable
+		powersAvailable++;
+
+		// If the value contained within chosenPower is the same as the value stored in powersAvailable then execute this section
+		if(chosenPower == powersAvailable)
+		{
+			// 
+			PrintToChatAll("Power Armor - [ %i | %i ]", chosenPower, powersAvailable);
+		}
+	}
+
+	// If the cvar for the Bumpmine power is enabled then execute this section
+	if(cvar_PowerAxe)
+	{
+		// Adds +1 to the current value of the powersAvailable variable
+		powersAvailable++;
+
+		// If the value contained within chosenPower is the same as the value stored in powersAvailable then execute this section
+		if(chosenPower == powersAvailable)
+		{
+			//
+			PrintToChatAll("Power Axe - [ %i | %i ]", chosenPower, powersAvailable);
+		}
+	}
+
+	// If the cvar for the Bumpmine power is enabled then execute this section
+	if(cvar_PowerFlashbangs)
+	{
+		// Adds +1 to the current value of the powersAvailable variable
+		powersAvailable++;
+
+		// If the value contained within chosenPower is the same as the value stored in powersAvailable then execute this section
+		if(chosenPower == powersAvailable)
+		{
+			// 
+			PrintToChatAll("Power Flashbang - [ %i | %i ]", chosenPower, powersAvailable);
+		}
+	}
+
+	return Plugin_Continue;
+}
+
+
+// This happens when a new king has been chosen and he is about to receive a unique power
+public int countAvailablePowers()
+{
+	// Creates a variable called powersAvailable and set it to 0
+	int powersAvailable = 0;
+
+	// If the cvar for the Bumpmine power is enabled then execute this section
+	if(cvar_PowerBumpmines)
+	{
+		// Adds +1 to the current value of the powersAvailable variable
+		powersAvailable++;
+	}
+
+	// If the cvar for the Bumpmine power is enabled then execute this section
+	if(cvar_PowerSpeed)
+	{
+		// Adds +1 to the current value of the powersAvailable variable
+		powersAvailable++;
+	}
+
+	// If the cvar for the Bumpmine power is enabled then execute this section
+	if(cvar_PowerArmor)
+	{
+		// Adds +1 to the current value of the powersAvailable variable
+		powersAvailable++;
+	}
+
+	// If the cvar for the Bumpmine power is enabled then execute this section
+	if(cvar_PowerAxe)
+	{
+		// Adds +1 to the current value of the powersAvailable variable
+		powersAvailable++;
+	}
+
+	// If the cvar for the Bumpmine power is enabled then execute this section
+	if(cvar_PowerFlashbangs)
+	{
+		// Adds +1 to the current value of the powersAvailable variable
+		powersAvailable++;
+	}
+
+	// Returns the value of our powersAvailable variable
+	return powersAvailable;
+}
+
 
 
 

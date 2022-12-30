@@ -62,6 +62,7 @@ bool isPlayerControllingBot[MAXPLAYERS + 1] = {false,...};
 bool displayRestrictionHud[MAXPLAYERS + 1] = {false,...};
 bool isRecoveryOnCooldown[MAXPLAYERS + 1] = {false,...};
 bool injectingHealthshot[MAXPLAYERS + 1] = {false,...};
+bool cooldownWeaponSwapMessage[MAXPLAYERS + 1] = {false,...};
 
 
 // Global Integers
@@ -180,6 +181,9 @@ public void OnClientPostAdminCheck(int client)
 	// Adds a hook to the client which will let us track when the player picks up a weapon
 	SDKHook(client, SDKHook_WeaponEquip, OnWeaponEquip);
 
+	// Adds a hook to the client which will let us track when the player changes weapon
+	SDKHook(client, SDKHook_WeaponCanSwitchTo, OnWeaponCanSwitchTo);
+
 	// Attempts to auto-assign the player to the team at a disadvantage after the mp_force_pick_time duration
 	AutoJoinTeam(client);
 }
@@ -204,8 +208,11 @@ public void OnClientDisconnect(int client)
 	// Removes the hook that we had added to the client to track when he was eligible to pick up weapons
 	SDKUnhook(client, SDKHook_WeaponCanUse, OnWeaponCanUse);
 
-	// Removes teh hook that we had added to the client to track when he had picked up a weapon
+	// Removes the hook that we had added to the client to track when he had picked up a weapon
 	SDKHook(client, SDKHook_WeaponEquip, OnWeaponEquip);
+
+	// Removes the hook that we had added to the client to track when he changes weapon
+	SDKHook(client, SDKHook_WeaponCanSwitchTo, OnWeaponCanSwitchTo);
 
 	// If the client is not the current king then execute this section
 	if(!isPlayerKing[client])
@@ -437,6 +444,49 @@ public Action OnWeaponEquip(int client, int weapon)
 	}
 
 	return Plugin_Continue;
+}
+
+
+// This happens when a player changes weapon
+public Action OnWeaponCanSwitchTo(int client, int weapon)
+{
+	// If the weapon that was picked up our entity criteria of validation then execute this section
+	if(!IsValidEntity(weapon))
+	{
+		return Plugin_Continue;
+	}
+
+	// If the player is currently injecting a healthshot then execute this section 
+	if(!injectingHealthshot[client])
+	{
+		return Plugin_Continue;
+	}
+
+	// If the player is has not recently received a message regarding weapon swapping being blockd then execute this section 
+	if(!cooldownWeaponSwapMessage[client])
+	{
+		// Changes the player's cooldownWeaponSwapMessage state to true
+		cooldownWeaponSwapMessage[client] = true;
+
+		PrintToChat(client, "KingMod You cannot change weapon once you have begun the injection procss");
+
+		// Removes the cooldown for announcing messages regarding the blocking of weapons
+		CreateTimer(1.0, Timer_RemoveCooldownWeaponSwapMessage, client, TIMER_FLAG_NO_MAPCHANGE);
+	}
+
+	// Creates a variable called ClassName which we will store the weapon entity's name within
+	char className[64];
+
+	// Obtains the classname of the weapon entity and store it within our ClassName variable
+	GetEntityClassname(weapon, className, sizeof(className));
+
+	// If the weapon's entity name is weapon_healthshot then execute this section
+	if(StrEqual(className, "weapon_healthshot", false))
+	{
+		return Plugin_Continue;
+	}
+
+	return Plugin_Handled;
 }
 
 
@@ -903,163 +953,6 @@ public Action Event_WeaponFire(Handle event, const char[] name, bool dontBroadca
 }
 
 
-// This happens when a player fires his weapon
-public Action InjectHealthshot(int client)
-{
-	// Obtains the name of the player's weapon and store it within our variable entity
-	int entity = GetEntPropEnt(client, Prop_Send, "m_hActiveWeapon");
-
-	// If the entity does not meet our criteria validation then execute this section
-	if(!IsValidEntity(entity))
-	{
-		return Plugin_Continue;
-	}
-
-	// Creates a variable which we will use to store data within
-	char className[64];
-
-	// Obtains the entity's class name and store it within our className variable
-	GetEntityClassname(entity, className, sizeof(className));
-
-	// If the entity is not a healthshot then execute this section
-	if(!StrEqual(className, "weapon_healthshot", false))
-	{
-		return Plugin_Continue;
-	}
-
-	// If the player is currently injecting a healthshot then execute this section 
-	if(injectingHealthshot[client])
-	{
-		return Plugin_Continue;
-	}
-
-	// Changes the player's injectingHealthshot state to true
-	injectingHealthshot[client] = true;
-
-	// Calls our Timer_InjectionComplete function to alter the effect of health injections
-	CreateTimer(0.55, Timer_InjectionComplete, client, TIMER_FLAG_NO_MAPCHANGE);
-
-	// After 0.55 secCalls our Timer_InjectionComplete function to alter the effect of health injections
-	CreateTimer(0.66, Timer_InjectHealthshot, client, TIMER_FLAG_NO_MAPCHANGE);
-
-	return Plugin_Continue;	
-}
-
-
-// This function is called 0.63 seconds after a player uses a health injection
-public Action Timer_InjectionComplete(Handle Timer, int client)
-{
-	// If the client does not meet our validation criteria then execute this section
-	if(!IsValidClient(client))
-	{
-		return Plugin_Continue;
-	}
-
-	playerHealthPreInjection[client] = GetEntProp(client, Prop_Send, "m_iHealth");
-
-	return Plugin_Continue;
-}
-
-
-// This happens 0.66 seconds after a player uses a halthshot
-public Action Timer_InjectHealthshot(Handle Timer, int client)
-{
-	// If the client does not meet our validation criteria then execute this section
-	if(!IsValidClient(client))
-	{
-		return Plugin_Continue;
-	}
-
-	// Execute this section if the injection is currently on cooldown
-	if(injectingHealthshot[client])
-	{
-		// Changes the player's injectingHealthshot state back to false
-		injectingHealthshot[client] = false;
-	}
-
-	// Obtains the name of the player's weapon and store it within our variable entity
-	int entity = GetEntPropEnt(client, Prop_Send, "m_hActiveWeapon");
-
-	// If the entity does not meet our criteria validation then execute this section
-	if(!IsValidEntity(entity))
-	{
-		return Plugin_Continue;
-	}
-
-	// Creates a variable which we will use to store data within
-	char className[64];
-
-	// Obtains the entity's class name and store it within our className variable
-	GetEntityClassname(entity, className, sizeof(className));
-
-	// If the entity is not a healthshot then execute this section
-	if(!StrEqual(className, "weapon_healthshot", false))
-	{
-		return Plugin_Continue;
-	}
-
-	// Picks a random number between 25 and 75 and store it within the recoveredHealth variable
-	int recoveredHealth = GetRandomInt(25, 75);
-
-	// Obtains the player's current health and store it within the playerHealth variable
-	int playerHealth = playerHealthPreInjection[client];
-	PrintToChat(client, "Debug playerHealth initial HP: %i", playerHealth);
-
-	// Adds the value of recoveredHealth to the value stored within our playerHealth variable
-	playerHealth += recoveredHealth;
-
-	// If the player is not the king then execute this section
-	if(!isPlayerKing[client])
-	{
-		// If the player's health will be 100 or above, then execute this section
-		if(playerHealth >= 100)
-		{
-			// Changes the player's health to 100
-			SetEntProp(client, Prop_Send, "m_iHealth", 100, 1);
-
-			// Finds the actual health granted by the healthshot and store it within recoveredHealth
-			recoveredHealth = (recoveredHealth - playerHealth) + 100;
-		}
-
-		// If the player's health is less than 1000 then execute this section
-		else
-		{
-			// Changes the player's health to the value of playerHealth
-			SetEntProp(client, Prop_Send, "m_iHealth", playerHealth, 1);
-		}
-	}
-
-	// If the player is the current king then execute this section
-	else
-	{
-		// If the player's health will be 200 or above, then execute this section
-		if(playerHealth >= 200)
-		{
-			// Changes the player's health to 200
-			SetEntProp(client, Prop_Send, "m_iHealth", 200, 1);
-
-			// Finds the actual health granted by the healthshot and store it within recoveredHealth
-			recoveredHealth = (recoveredHealth - playerHealth) + 200;
-		}
-
-		// If the player's health is less than 200 then execute this section
-		else
-		{
-			// Changes the player's health to the value of playerHealth
-			SetEntProp(client, Prop_Send, "m_iHealth", playerHealth, 1);
-
-			PrintToChat(client, "playerHealth HP: %i", playerHealth);
-		}
-	}
-
-	// Sends a multi-language message in the chat to the client
-	PrintToChat(client, "The healthshot recovered %i of your health", recoveredHealth);
-
-
-	return Plugin_Continue;
-}
-
-
 
 ///////////////////////////
 // - Regular Functions - //
@@ -1092,6 +985,9 @@ public void LateLoadSupport()
 
 		// Adds a hook to the client which will let us track when the player picks up a weapon
 		SDKHook(client, SDKHook_WeaponEquip, OnWeaponEquip);
+
+		// Adds a hook to the client which will let us track when the player changes weapon
+		SDKHook(client, SDKHook_WeaponCanSwitchTo, OnWeaponCanSwitchTo);
 	}
 }
 
@@ -1546,6 +1442,49 @@ public Action RemoveSpawnProtection(int client)
 
 	// Changes the player's color to the default color 
 	SetEntityRenderColor(client, 255, 255, 255, 255);
+}
+
+
+// This happens when a player fires his weapon
+public Action InjectHealthshot(int client)
+{
+	// Obtains the name of the player's weapon and store it within our variable entity
+	int entity = GetEntPropEnt(client, Prop_Send, "m_hActiveWeapon");
+
+	// If the entity does not meet our criteria validation then execute this section
+	if(!IsValidEntity(entity))
+	{
+		return Plugin_Continue;
+	}
+
+	// Creates a variable which we will use to store data within
+	char className[64];
+
+	// Obtains the entity's class name and store it within our className variable
+	GetEntityClassname(entity, className, sizeof(className));
+
+	// If the entity is not a healthshot then execute this section
+	if(!StrEqual(className, "weapon_healthshot", false))
+	{
+		return Plugin_Continue;
+	}
+
+	// If the player is currently injecting a healthshot then execute this section 
+	if(injectingHealthshot[client])
+	{
+		return Plugin_Continue;
+	}
+
+	// Changes the player's injectingHealthshot state to true
+	injectingHealthshot[client] = true;
+
+	// Calls our Timer_InjectionComplete function to alter the effect of health injections
+	CreateTimer(0.55, Timer_InjectionComplete, client, TIMER_FLAG_NO_MAPCHANGE);
+
+	// After 0.66 secCalls our Timer_InjectionComplete function to alter the effect of health injections
+	CreateTimer(0.66, Timer_InjectHealthshot, client, TIMER_FLAG_NO_MAPCHANGE);
+
+	return Plugin_Continue;	
 }
 
 
@@ -2259,6 +2198,139 @@ public Action Timer_GiveGoldenKnife(Handle Timer, int client)
 
 	// Gives the client the specified weapon
 	GivePlayerItem(client, "weapon_knifegg");
+
+	return Plugin_Continue;
+}
+
+
+// This function is called 0.55 seconds after a player uses a health injection
+public Action Timer_InjectionComplete(Handle Timer, int client)
+{
+	// If the client does not meet our validation criteria then execute this section
+	if(!IsValidClient(client))
+	{
+		return Plugin_Continue;
+	}
+
+	// Obtains the client's current health and store it within the variable playerHealthPreInjection[client]
+	playerHealthPreInjection[client] = GetEntProp(client, Prop_Send, "m_iHealth");
+
+	return Plugin_Continue;
+}
+
+
+// This happens 0.66 seconds after a player uses a halthshot
+public Action Timer_InjectHealthshot(Handle Timer, int client)
+{
+	// If the client does not meet our validation criteria then execute this section
+	if(!IsValidClient(client))
+	{
+		return Plugin_Continue;
+	}
+
+	// Execute this section if the injection is currently on cooldown
+	if(injectingHealthshot[client])
+	{
+		// Changes the player's injectingHealthshot state back to false
+		injectingHealthshot[client] = false;
+	}
+
+	// Obtains the name of the player's weapon and store it within our variable entity
+	int entity = GetEntPropEnt(client, Prop_Send, "m_hActiveWeapon");
+
+	// If the entity does not meet our criteria validation then execute this section
+	if(!IsValidEntity(entity))
+	{
+		return Plugin_Continue;
+	}
+
+	// Creates a variable which we will use to store data within
+	char className[64];
+
+	// Obtains the entity's class name and store it within our className variable
+	GetEntityClassname(entity, className, sizeof(className));
+
+	// If the entity is not a healthshot then execute this section
+	if(!StrEqual(className, "weapon_healthshot", false))
+	{
+		return Plugin_Continue;
+	}
+
+	// Picks a random number between 25 and 75 and store it within the recoveredHealth variable
+	int recoveredHealth = GetRandomInt(25, 75);
+
+	// Obtains the player's current health and store it within the playerHealth variable
+	int playerHealth = playerHealthPreInjection[client];
+	PrintToChat(client, "Debug playerHealth initial HP: %i", playerHealth);
+
+	// Adds the value of recoveredHealth to the value stored within our playerHealth variable
+	playerHealth += recoveredHealth;
+
+	// If the player is not the king then execute this section
+	if(!isPlayerKing[client])
+	{
+		// If the player's health will be 100 or above, then execute this section
+		if(playerHealth >= 100)
+		{
+			// Changes the player's health to 100
+			SetEntProp(client, Prop_Send, "m_iHealth", 100, 1);
+
+			// Finds the actual health granted by the healthshot and store it within recoveredHealth
+			recoveredHealth = (recoveredHealth - playerHealth) + 100;
+		}
+
+		// If the player's health is less than 1000 then execute this section
+		else
+		{
+			// Changes the player's health to the value of playerHealth
+			SetEntProp(client, Prop_Send, "m_iHealth", playerHealth, 1);
+		}
+	}
+
+	// If the player is the current king then execute this section
+	else
+	{
+		// If the player's health will be 200 or above, then execute this section
+		if(playerHealth >= 200)
+		{
+			// Changes the player's health to 200
+			SetEntProp(client, Prop_Send, "m_iHealth", 200, 1);
+
+			// Finds the actual health granted by the healthshot and store it within recoveredHealth
+			recoveredHealth = (recoveredHealth - playerHealth) + 200;
+		}
+
+		// If the player's health is less than 200 then execute this section
+		else
+		{
+			// Changes the player's health to the value of playerHealth
+			SetEntProp(client, Prop_Send, "m_iHealth", playerHealth, 1);
+
+			PrintToChat(client, "playerHealth HP: %i", playerHealth);
+		}
+	}
+
+	// Sends a multi-language message in the chat to the client
+	PrintToChat(client, "The healthshot recovered %i of your health", recoveredHealth);
+
+	// Changes the player's cooldownWeaponSwapMessage state to false
+	cooldownWeaponSwapMessage[client] = false;
+
+	return Plugin_Continue;
+}
+
+
+// This happens 1.0 second after a player with weapon swapping blocked has tried to swap weapons
+public Action Timer_RemoveCooldownWeaponSwapMessage(Handle Timer, int client)
+{
+	// If the client does not meet our validation criteria then execute this section
+	if(!IsValidClient(client))
+	{
+		return Plugin_Continue;
+	}
+
+	// Changes the player's cooldownWeaponSwapMessage state to false
+	cooldownWeaponSwapMessage[client] = false;
 
 	return Plugin_Continue;
 }

@@ -34,15 +34,11 @@ public Plugin myinfo =
 bool cvar_HideMoneyHud = true;
 bool cvar_EffectTesla = true;
 bool cvar_EffectRing = true;
-
-
 bool cvar_KingPowerChooser = true;
-bool cvar_PowerBumpmines = true;
-bool cvar_PowerSpeed = true;
-bool cvar_PowerStickyGrenades = true;
-bool cvar_PowerAxe = true;
-bool cvar_PowerFlashbangs = true;
 
+bool cvar_PowerImpregnableArmor = true;
+bool cvar_PowerSpeed = false;
+bool cvar_PowerStickyGrenades = true;
 
 int cvar_PointsNormalKill = 1;
 int cvar_PointsKingKill = 3;
@@ -62,6 +58,9 @@ float cvar_HealthshotExpirationTime = 10.0;
 ////////////////////////////////
 
 bool powerStickyGrenades = false;
+
+int powerImpregnableArmor = 0;
+
 
 
 //////////////////////////
@@ -107,6 +106,10 @@ float platformLocation[3];
 char kingName[64];
 char kingWeapon[64];
 char colorCombination[32];
+
+char nameOfPower[64];
+char nameOfTier[16];
+char powerSoundName[128];
 
 char PlayerClanTag[MAXPLAYERS + 1][14];
 
@@ -605,6 +608,9 @@ public Action Event_PlayerDeath(Handle event, const char[] name, bool dontBroadc
 		// Changes the killed player's king status to false
 		isPlayerKing[client] = false;
 
+		// Removes the screen overlay if the client is the king and impregnable armor is currently active
+		RemoveScreenOverlay(client);
+
 		// Removes any currently present king crowns from the game
 		RemoveCrownEntity();
 
@@ -635,6 +641,9 @@ public Action Event_PlayerDeath(Handle event, const char[] name, bool dontBroadc
 			// Changes the attacking player's king status to true
 			isPlayerKing[attacker] = true;
 			PrintToChat(attacker, "Debug: You stole the king title from the enemy that died");
+
+			// Removes the screen overlay if the client is the king and impregnable armor is currently active
+			RemoveScreenOverlay(client);
 
 			// Removes any currently present king crowns from the game
 			RemoveCrownEntity();
@@ -798,6 +807,9 @@ public Action Event_PlayerDeath(Handle event, const char[] name, bool dontBroadc
 // This happens when the round starts 
 public Action Event_RoundStart(Handle event, const char[] name, bool dontBroadcast)
 {
+	// Removes any power related effects that may elsewise be able to transfer over from the previous round
+	RemoveKingPowerEffects();
+
 	// Checks if the current map has been configured to have platform support included 
 	CheckForPlatformSupport();
 
@@ -2765,14 +2777,24 @@ public Action ChooseKingPower(int client)
 		return Plugin_Continue;
 	}
 
+	// If the sound is not already precached then execute this section
+	if(!IsSoundPrecached("kingmod/power_acquiringpower.mp3"))
+	{	
+		// Precaches the sound file
+		PrecacheSound("kingmod/power_acquiringpower.mp3", true);
+	}
+
+	// Emits a sound to the specified client that only they can hear
+	EmitSoundToClient(client, "kingmod/power_acquiringpower.mp3", SOUND_FROM_PLAYER, SNDCHAN_AUTO, SNDLEVEL_NORMAL, SND_NOFLAGS, 1.00, SNDPITCH_NORMAL, -1, NULL_VECTOR, NULL_VECTOR, true, 0.0);
+
 	// Picks a value between 1 to the value stored within our powersAvailable variable
 	int chosenPower = GetRandomInt(1, powersAvailable);
 
 	// Resets the value of powersAvailable back to 0
 	powersAvailable = 0;
 
-	// If the cvar for the Bumpmine power is enabled then execute this section
-	if(cvar_PowerBumpmines)
+	// If the cvar for the impregnable armor power is enabled then execute this section
+	if(cvar_PowerImpregnableArmor)
 	{
 		// Adds +1 to the current value of the powersAvailable variable
 		powersAvailable++;
@@ -2780,13 +2802,16 @@ public Action ChooseKingPower(int client)
 		// If the value contained within chosenPower is the same as the value stored in powersAvailable then execute this section
 		if(chosenPower == powersAvailable)
 		{
+			// Gives the client a heavy assault suit, a random armor value and applies a screen overlay
+			PowerImpregnableArmor(client);
+
 			// 
-			PrintToChatAll("Power Bumpmine - [ %i | %i ]", chosenPower, powersAvailable);
+			PrintToChatAll("Power impregnable Armor - [ %i | %i ]", chosenPower, powersAvailable);
 		}
 	}
 
 	// If the cvar for the Bumpmine power is enabled then execute this section
-	if(cvar_PowerSpeed)
+	else if(cvar_PowerSpeed)
 	{
 		// Adds +1 to the current value of the powersAvailable variable
 		powersAvailable++;
@@ -2800,7 +2825,7 @@ public Action ChooseKingPower(int client)
 	}
 
 	// If the cvar for the Bumpmine power is enabled then execute this section
-	if(cvar_PowerStickyGrenades)
+	else if(cvar_PowerStickyGrenades)
 	{
 		// Adds +1 to the current value of the powersAvailable variable
 		powersAvailable++;
@@ -2810,47 +2835,16 @@ public Action ChooseKingPower(int client)
 		// If the value contained within chosenPower is the same as the value stored in powersAvailable then execute this section
 		if(chosenPower == powersAvailable)
 		{
-			// Turns on the sticky grenade king power 
-			powerStickyGrenades = true;			
-
-			// Specifies which special weapon the king should be given
-			kingWeapon = "weapon_hegrenade";
-		
-			// Gives the king a unique weapon if the current power requires one
-			CreateTimer(0.1, Timer_GiveKingUniqueWeapon, client);
+			// Gives the client an infinite amount of grenades and let the grenades stick to walls, objects and players
+			PowerStickyGrenades(client);
 
 			// 
 			PrintToChatAll("Power Sticky Grenades - [ %i | %i ]", chosenPower, powersAvailable);
 		}
 	}
 
-	// If the cvar for the Bumpmine power is enabled then execute this section
-	if(cvar_PowerAxe)
-	{
-		// Adds +1 to the current value of the powersAvailable variable
-		powersAvailable++;
-
-		// If the value contained within chosenPower is the same as the value stored in powersAvailable then execute this section
-		if(chosenPower == powersAvailable)
-		{
-			//
-			PrintToChatAll("Power Axe - [ %i | %i ]", chosenPower, powersAvailable);
-		}
-	}
-
-	// If the cvar for the Bumpmine power is enabled then execute this section
-	if(cvar_PowerFlashbangs)
-	{
-		// Adds +1 to the current value of the powersAvailable variable
-		powersAvailable++;
-
-		// If the value contained within chosenPower is the same as the value stored in powersAvailable then execute this section
-		if(chosenPower == powersAvailable)
-		{
-			// 
-			PrintToChatAll("Power Flashbang - [ %i | %i ]", chosenPower, powersAvailable);
-		}
-	}
+	// Plays the sound file that is specific to that of the newly acquired power
+	CreateTimer(2.0, Timer_PlayPowerSpecificSound, client);
 
 	return Plugin_Continue;
 }
@@ -2862,8 +2856,8 @@ public int countAvailablePowers()
 	// Creates a variable called powersAvailable and set it to 0
 	int powersAvailable = 0;
 
-	// If the cvar for the Bumpmine power is enabled then execute this section
-	if(cvar_PowerBumpmines)
+	// If the cvar for the impregnable armor power is enabled then execute this section
+	if(cvar_PowerImpregnableArmor)
 	{
 		// Adds +1 to the current value of the powersAvailable variable
 		powersAvailable++;
@@ -2883,20 +2877,6 @@ public int countAvailablePowers()
 		powersAvailable++;
 	}
 
-	// If the cvar for the Bumpmine power is enabled then execute this section
-	if(cvar_PowerAxe)
-	{
-		// Adds +1 to the current value of the powersAvailable variable
-		powersAvailable++;
-	}
-
-	// If the cvar for the Bumpmine power is enabled then execute this section
-	if(cvar_PowerFlashbangs)
-	{
-		// Adds +1 to the current value of the powersAvailable variable
-		powersAvailable++;
-	}
-
 	// Returns the value of our powersAvailable variable
 	return powersAvailable;
 }
@@ -2908,11 +2888,18 @@ public void ResetPreviousPower()
 	// Changes the unique weapon the king will receive to be nothing
 	kingWeapon = "";
 
-	// If the currently activ power is sticky grenades then execute this section
+	// If the currently active power is sticky grenades then execute this section
 	if(powerStickyGrenades)
 	{
 		// Disables the sticky grenade power
 		powerStickyGrenades = false;
+	}
+
+	// If the currently active power is impregnable armor then execute this section
+	else if(powerImpregnableArmor)
+	{
+		// Turns off the impregnable armor king power 
+		powerImpregnableArmor = 0;
 	}
 }
 
@@ -2934,7 +2921,7 @@ public Action Timer_GiveKingUniqueWeapon(Handle timer, int client)
 	// Gives the client the specified weapon
 	GivePlayerItem(client, kingWeapon);
 
-	// If the currently activ power is sticky grenades then execute this section
+	// If the currently active power is sticky grenades then execute this section
 	if(powerStickyGrenades)
 	{
 		// Changes the player's amount of high explosive grenades to 10
@@ -2945,10 +2932,197 @@ public Action Timer_GiveKingUniqueWeapon(Handle timer, int client)
 }
 
 
+// This happens when the round starts
+public void RemoveKingPowerEffects()
+{
+	// If the cvar_KingPowerChooser is not enabled then execute this section
+	if(!cvar_KingPowerChooser)
+	{
+		return;
+	}
+
+	// Loops through all of the clients
+	for (int client = 1; client <= MaxClients; client++)
+	{
+		// If the client does not meet our validation criteria then execute this section
+		if(!IsValidClient(client))
+		{
+			continue;
+		}
+
+		// If the client is not a bot then execute this section
+		if(IsFakeClient(client))
+		{
+			continue;
+		}
+
+		// If the currently active power is impregnable armor then execute this section
+		if(powerImpregnableArmor)
+		{
+			// Removes the screen overlay if the client is the king and impregnable armor is currently active
+			RemoveScreenOverlay(client);
+		}
+	}
+}
+
+
+// This happens 2.0 seconds after a player becomes the king and is about to acquire a new power
+public Action Timer_PlayPowerSpecificSound(Handle timer, int client)
+{
+	// If the client does not meet our validation criteria then execute this section
+	if(!IsValidClient(client))
+	{
+		return Plugin_Continue;
+	}
+
+	// If the client is not the king then execute this section
+	if(!isPlayerKing[client])
+	{
+		return Plugin_Continue;
+	}
+
+	// If the king is a bot then execute this section
+	if(IsFakeClient(client))
+	{
+		return Plugin_Continue;
+	}
+
+	// If the sound is not already precached then execute this section
+	if(!IsSoundPrecached(powerSoundName))
+	{	
+		// Precaches the sound file
+		PrecacheSound(powerSoundName, true);
+	}
+
+	// Emits a sound to the specified client that only they can hear
+	EmitSoundToClient(client, powerSoundName, SOUND_FROM_PLAYER, SNDCHAN_AUTO, SNDLEVEL_NORMAL, SND_NOFLAGS, 1.00, SNDPITCH_NORMAL, -1, NULL_VECTOR, NULL_VECTOR, true, 0.0);
+	
+	return Plugin_Continue;
+}
+
+
+
+/////////////////////////////////
+// - Power Impregnable Armor - //
+/////////////////////////////////
+
+
+// This happens when a high explosive grenade has been spawned
+public void PowerImpregnableArmor(int client)
+{
+	// If the king is not a bot then execute this section
+	if(!IsFakeClient(client))
+	{
+		// Applies a screen overlay to the player
+		ClientCommand(client, "r_screenoverlay kingmod/overlays/power_impregnablearmor.vmt");
+
+		// If the sound is not already precached then execute this section
+		if(!IsSoundPrecached("items/nvg_on.wav"))
+		{	
+			// Precaches the sound file
+			PrecacheSound("items/nvg_on.wav", true);
+		}
+
+		// Emits a sound to the specified client that only they can hear
+		EmitSoundToClient(client, "items/nvg_on.wav", SOUND_FROM_PLAYER, SNDCHAN_AUTO, SNDLEVEL_NORMAL, SND_NOFLAGS, 1.00, SNDPITCH_NORMAL, -1, NULL_VECTOR, NULL_VECTOR, true, 0.0);
+	}
+
+	// If the Phoenix heavy assault suit player model is not precached already then execute this section
+	if(!IsModelPrecached("models/player/custom_player/legacy/tm_phoenix_heavy.mdl"))
+	{
+		// Precaches the phoenix heavy assault suit player model
+		PrecacheModel("models/player/custom_player/legacy/tm_phoenix_heavy.mdl");
+	}
+
+	// If the phoenix heavy assault suit sleeve & glove model is not precached already then execute this section
+	if(!IsModelPrecached("models/weapons/v_models/arms/phoenix_heavy/v_sleeve_phoenix_heavy.mdl"))
+	{
+		// Precaches the phoneix heavy assault suit sleeve & glove model
+		PrecacheModel("models/weapons/v_models/arms/phoenix_heavy/v_sleeve_phoenix_heavy.mdl");
+	}
+
+	// Gives the king a heavy assault suit
+	GivePlayerItem(client, "item_heavyassaultsuit");
+
+	// Changes the player's player model to match the assault suit model
+	SetEntityModel(client, "models/player/custom_player/legacy/tm_phoenix_heavy.mdl");
+
+	// Changes the player's arm model to the phoenix heavy assault suit sleeve model
+	SetEntPropString(client, Prop_Send, "m_szArmsModel", "models/player/custom_player/legacy/tm_phoenix_heavy.mdl");
+
+	// Changes the name of the path for the sound that is will be played when the player acquires the specific power
+	powerSoundName = "kingmod/power_impregnablearmor.mp3";
+
+	// Changes the content of the nameOfPower variable to reflect which power the king acquired
+	nameOfPower = "Impregnable Armor";
+
+	// Turns on the impregnable armor king power 
+	powerImpregnableArmor = GetRandomInt(1, 3);
+
+	// If the value stored within the powerImpregnableArmor is 1 execute this section
+	if(powerImpregnableArmor == 1)
+	{
+		// Changes the content of the nameOfTier variable to reflect which tier of the power the king acquired
+		nameOfTier = "Tier A";
+
+		// Changes the armor value of the client to 200
+		SetEntProp(client, Prop_Data, "m_ArmorValue", 200);
+	}
+
+	// If the value stored within the powerImpregnableArmor is 2 execute this section
+	if(powerImpregnableArmor == 2)
+	{
+		// Changes the content of the nameOfTier variable to reflect which tier of the power the king acquired
+		nameOfTier = "Tier B";
+
+		// Changes the armor value of the client to 165
+		SetEntProp(client, Prop_Data, "m_ArmorValue", 165);
+	}
+
+	// If the value stored within the powerImpregnableArmor is 3 execute this section
+	if(powerImpregnableArmor == 3)
+	{
+		// Changes the content of the nameOfTier variable to reflect which tier of the power the king acquired
+		nameOfTier = "Tier C";
+
+		// Changes the armor value of the client to 130
+		SetEntProp(client, Prop_Data, "m_ArmorValue", 130);
+	}
+}
+
+
+// This happens when a player spawns or when the king dies
+public void RemoveScreenOverlay(int client)
+{
+	// Removes the screen overlay from the client
+	ClientCommand(client, "r_screenoverlay 0");
+}
+
+
 
 ///////////////////////////
 // - Power Sticky Nade - //
 ///////////////////////////
+
+
+// This happens when a king acquires the sticky grenade power
+public void PowerStickyGrenades(int client)
+{
+	// Turns on the sticky grenade king power 
+	powerStickyGrenades = true;
+
+	// Changes the content of the nameOfPower variable to reflect which power the king acquired
+	nameOfPower = "Impregnable Armor";
+	
+	// Changes the content of the nameOfTier variable to reflect which tier of the power the king acquired
+	nameOfTier = "Tier A";
+	
+	// Specifies which special weapon the king should be given
+	kingWeapon = "weapon_hegrenade";
+
+	// Gives the king a unique weapon if the current power requires one
+	CreateTimer(0.1, Timer_GiveKingUniqueWeapon, client);
+}
 
 
 // This happens when a new entity is created
@@ -3203,23 +3377,39 @@ public Action Command_DeveloperMenu(int client, int args)
 
 public void DownloadAndPrecacheFiles()
 {
-	// Adds our custom sound files to the download tables
+	// Weapon Restriction
 	AddFileToDownloadsTable("sound/kingmod/sfx_restrictedweapon.mp3");
-
-	// Precaches our sound files
 	PrecacheSound("kingmod/sfx_restrictedweapon.mp3");
 
 
+	// Crown Model
 	AddFileToDownloadsTable("materials/models/props/vip.vmt");
 	AddFileToDownloadsTable("materials/models/props/vip.vtf");
 	AddFileToDownloadsTable("models/props/crown.dx90.vtx");
 	AddFileToDownloadsTable("models/props/crown.mdl");
 	AddFileToDownloadsTable("models/props/crown.vvd");
-
 	PrecacheModel("models/props/crown.mdl");
 
+
+	// Visual Effect Sprites
 	AddFileToDownloadsTable("materials/kingmod/sprites/lgtning.vtf");
 	AddFileToDownloadsTable("materials/kingmod/sprites/lgtning.vmt");
-
 	effectSprite = PrecacheModel("kingmod/sprites/lgtning.vmt");
+
+
+	// Power Chooser System
+	AddFileToDownloadsTable("sound/kingmod/power_acquiringpower.mp3");
+	PrecacheSound("kingmod/power_acquiringpower.mp3");
+
+
+	// Power - Impregnable Armor
+	AddFileToDownloadsTable("materials/kingmod/overlays/power_assaultsuit.vtf");
+	AddFileToDownloadsTable("materials/kingmod/overlays/power_assaultsuit.vmt");
+	AddFileToDownloadsTable("sound/kingmod/power_impregnablearmor.mp3");
+	PrecacheModel("kingmod/overlays/power_assaultsuit.vtf");
+	PrecacheModel("kingmod/overlays/power_assaultsuit.vmt");
+	PrecacheModel("models/player/custom_player/legacy/tm_phoenix_heavy.mdl");
+	PrecacheModel("models/weapons/v_models/arms/phoenix_heavy/v_sleeve_phoenix_heavy.mdl");
+	PrecacheSound("kingmod/power_impregnablearmor.mp3");
+	PrecacheSound("items/nvg_on.wav");
 }

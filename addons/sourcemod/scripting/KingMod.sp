@@ -39,7 +39,7 @@ bool cvar_EffectRing = true;
 bool cvar_KingPowerChooser = true;
 bool cvar_PowerBumpmines = true;
 bool cvar_PowerSpeed = true;
-bool cvar_PowerArmor = true;
+bool cvar_PowerStickyGrenades = true;
 bool cvar_PowerAxe = true;
 bool cvar_PowerFlashbangs = true;
 
@@ -54,6 +54,14 @@ float cvar_ImmobilityTime = 3.00;
 float cvar_SpawnProtectionDuration = 3.0;
 float cvar_RecoveryCooldownDuration = 10.00;
 float cvar_HealthshotExpirationTime = 10.0;
+
+
+
+////////////////////////////////
+// - Global Power Variables - //
+////////////////////////////////
+
+bool powerStickyGrenades = false;
 
 
 //////////////////////////
@@ -97,6 +105,7 @@ float platformLocation[3];
 
 // Global Characters
 char kingName[64];
+char kingWeapon[64];
 char colorCombination[32];
 
 char PlayerClanTag[MAXPLAYERS + 1][14];
@@ -386,6 +395,16 @@ public Action OnWeaponCanUse(int client, int weapon)
 		if(StrEqual(ClassName, "weapon_knifegg", false))
 		{
 			return Plugin_Continue;
+		}
+		
+		// If the king's current power is the sticky grenades power then execute this section
+		if(powerStickyGrenades)
+		{
+			// If the weapon is a high explosive grenad then excute this section
+			if(StrEqual(ClassName, "weapon_hegrenade", false))
+			{
+				return Plugin_Continue;
+			}
 		}
 	}
 
@@ -958,6 +977,9 @@ public Action Event_WeaponFire(Handle event, const char[] name, bool dontBroadca
 	// Grants a random amount of health when using the healthshot
 	InjectHealthshot(client); 
 
+	// Gives the player grenades after having thrown
+	WeaponFireStickyGrenades(client);
+
 	// If the player is no longer spawnprotected then execute this section
 	if(!isPlayerProtected[client])
 	{
@@ -969,7 +991,6 @@ public Action Event_WeaponFire(Handle event, const char[] name, bool dontBroadca
 
 	return Plugin_Continue;
 }
-
 
 
 
@@ -2092,6 +2113,16 @@ public Action Timer_CleanFloor(Handle timer)
 			continue;
 		}
 
+		// If the king's current power is the sticky grenades power then execute this section
+		if(powerStickyGrenades)
+		{
+			// If the entity is a high explosive grenade then execute this section
+			if(StrEqual(className, "weapon_hegrenade", false))
+			{
+				continue;
+			}
+		}
+
 		// If the entity has an ownership relation to somebody or something, then execute this section
 		if(GetEntDataEnt2(entity, weaponOwner) != -1)
 		{
@@ -2700,7 +2731,6 @@ public Action Timer_TeslaEffectKill(Handle timer, int edict)
 
 
 
-
 /////////////////////////////////////////
 // - Power Chooser Related Functions - //
 /////////////////////////////////////////
@@ -2714,6 +2744,9 @@ public Action ChooseKingPower(int client)
 	{
 		return Plugin_Continue;
 	}
+
+	// Resets all power spcific variables back to their default values 
+	ResetPreviousPower();
 
 	// Creates a variable called powersAvailable and set it to the same value as the amount of enabled powers
 	int powersAvailable = countAvailablePowers();
@@ -2732,8 +2765,8 @@ public Action ChooseKingPower(int client)
 		return Plugin_Continue;
 	}
 
-	// Picks a value between 0 to the value stored within our powersAvailable variable
-	int chosenPower = GetRandomInt(0, powersAvailable);
+	// Picks a value between 1 to the value stored within our powersAvailable variable
+	int chosenPower = GetRandomInt(1, powersAvailable);
 
 	// Resets the value of powersAvailable back to 0
 	powersAvailable = 0;
@@ -2767,16 +2800,27 @@ public Action ChooseKingPower(int client)
 	}
 
 	// If the cvar for the Bumpmine power is enabled then execute this section
-	if(cvar_PowerArmor)
+	if(cvar_PowerStickyGrenades)
 	{
 		// Adds +1 to the current value of the powersAvailable variable
 		powersAvailable++;
 
+		PrintToChatAll("Debug Power - PA %i | C %i", powersAvailable, chosenPower);
+
 		// If the value contained within chosenPower is the same as the value stored in powersAvailable then execute this section
 		if(chosenPower == powersAvailable)
 		{
+			// Turns on the sticky grenade king power 
+			powerStickyGrenades = true;			
+
+			// Specifies which special weapon the king should be given
+			kingWeapon = "weapon_hegrenade";
+		
+			// Gives the king a unique weapon if the current power requires one
+			CreateTimer(0.1, Timer_GiveKingUniqueWeapon, client);
+
 			// 
-			PrintToChatAll("Power Armor - [ %i | %i ]", chosenPower, powersAvailable);
+			PrintToChatAll("Power Sticky Grenades - [ %i | %i ]", chosenPower, powersAvailable);
 		}
 	}
 
@@ -2832,8 +2876,8 @@ public int countAvailablePowers()
 		powersAvailable++;
 	}
 
-	// If the cvar for the Bumpmine power is enabled then execute this section
-	if(cvar_PowerArmor)
+	// If the cvar for the sticky grenades power is enabled then execute this section
+	if(cvar_PowerStickyGrenades)
 	{
 		// Adds +1 to the current value of the powersAvailable variable
 		powersAvailable++;
@@ -2857,6 +2901,214 @@ public int countAvailablePowers()
 	return powersAvailable;
 }
 
+
+// This happens when a king is about to receive a new power
+public void ResetPreviousPower()
+{
+	// Changes the unique weapon the king will receive to be nothing
+	kingWeapon = "";
+
+	// If the currently activ power is sticky grenades then execute this section
+	if(powerStickyGrenades)
+	{
+		// Disables the sticky grenade power
+		powerStickyGrenades = false;
+	}
+}
+
+
+// This happens 0.1 second after a player becomes the king
+public Action Timer_GiveKingUniqueWeapon(Handle timer, int client)
+{
+	// If the client does not meet our validation criteria then execute this section
+	if(!IsValidClient(client))
+	{
+		return Plugin_Continue;
+	}
+
+	if(StrEqual(kingWeapon, "", false))
+	{
+		return Plugin_Continue;
+	}
+
+	// Gives the client the specified weapon
+	GivePlayerItem(client, kingWeapon);
+
+	// If the currently activ power is sticky grenades then execute this section
+	if(powerStickyGrenades)
+	{
+		// Changes the player's amount of high explosive grenades to 10
+		SetEntProp(client, Prop_Send, "m_iAmmo", 10, _, 14);
+	}
+
+	return Plugin_Continue;
+}
+
+
+
+///////////////////////////
+// - Power Sticky Nade - //
+///////////////////////////
+
+
+// This happens when a new entity is created
+public void OnEntityCreated(int entity, const char[] classname)
+{
+	// If the king's current power is not the sticky grenades power then execute this section
+	if(!powerStickyGrenades)
+	{
+		return;
+	}
+
+	// If the entity that was created is a high explosive grenade projectile then execute this section
+	if(!StrEqual(classname, "hegrenade_projectile", false))
+	{
+		return;
+	}
+
+	// Adds a hook to the high explosive grenade after it has been spawned allowing us to alter the grenade's behavior
+	SDKHook(entity, SDKHook_SpawnPost, entity_HEGrenadeSpawned);
+}
+
+
+// This happens when a high explosive grenade has been spawned
+public Action entity_HEGrenadeSpawned(int entity)
+{
+	// If the entity does not meet our criteria validation then execute this section
+	if(!IsValidEntity(entity))
+	{
+		return Plugin_Continue;
+	}
+
+	// Obtains and stores the entity owner offset within our client variable 
+	int client = GetEntPropEnt(entity, Prop_Data, "m_hOwnerEntity");
+
+	// If the client does not meet our validation criteria then execute this section
+	if(!IsValidClient(client))
+	{
+		return Plugin_Continue;
+	}
+
+	// If the client is not the king then execute this section
+	if(!isPlayerKing[client])
+	{
+		return Plugin_Continue;
+	}
+
+	// Changes the maximum damage dealt by the grenade to 120
+	SetEntPropFloat(entity, Prop_Data, "m_flDamage", 120.0);
+
+	// Adds a hook to our grenade entity to notify of us when the grenade will touch something
+	SDKHook(entity, SDKHook_StartTouch, OnStartTouchHEGrenade);
+
+	return Plugin_Continue;
+}
+
+
+// This happens when a high explosive grenade touches something while a king possesses the sticky grenade power
+public Action OnStartTouchHEGrenade(int entity, int client)
+{
+	// If the entity does not meet our criteria validation then execute this section
+	if(!IsValidEntity(entity))
+	{
+		return Plugin_Continue;
+	}
+
+	// If the client meets our validation criteria then execute this section
+	if(IsValidClient(client))
+	{
+		// Changes the collisiongroup of the high explosive grenade
+		SetEntProp(entity, Prop_Send, "m_CollisionGroup", 2);
+
+		// Changes the maximum damage dealt by the grenade to 500
+		SetEntPropFloat(entity, Prop_Data, "m_flDamage", 500.0);
+
+		// Changes the size of the entity
+		SetEntPropFloat(entity, Prop_Send, "m_flModelScale", 4.50);
+
+		// Changes the entity's move type to be none making it immobile
+		SetEntityMoveType(entity, MOVETYPE_NONE);
+
+		// Changes the variantstring to !activator
+		SetVariantString("!activator");
+		
+		// Changes the parent of entity to that of the player that was struck by the grenade
+		AcceptEntityInput(entity, "SetParent", client);
+
+		// Obtains and stores the entity owner's index within our entityOwner variable
+		int entityOwner = GetEntPropEnt(entity, Prop_Data, "m_hOwnerEntity");
+
+		// If the entityOwner does not meet our validation criteria then execute this section
+		if(!IsValidClient(entityOwner))
+		{
+			return Plugin_Continue;
+		}
+
+		// If the sound is not already precached then execute this section
+		if(!IsSoundPrecached("kingmod/oh_shit.mp3"))
+		{	
+			// Precaches the sound file
+			PrecacheSound("kingmod/oh_shit.mp3", true);
+		}
+
+		// Emits a sound to the specified client that only they can hear
+		EmitSoundToClient(client, "kingmod/oh_shit.mp3", SOUND_FROM_PLAYER, SNDCHAN_AUTO, SNDLEVEL_NORMAL, SND_NOFLAGS, 1.00, SNDPITCH_NORMAL, -1, NULL_VECTOR, NULL_VECTOR, true, 0.0);
+		
+		// Emits a sound to the specified client that only they can hear
+		EmitSoundToClient(entityOwner, "kingmod/oh_shit.mp3", SOUND_FROM_PLAYER, SNDCHAN_AUTO, SNDLEVEL_NORMAL, SND_NOFLAGS, 1.00, SNDPITCH_NORMAL, -1, NULL_VECTOR, NULL_VECTOR, true, 0.0);
+	}
+
+	else if(GetEntityMoveType(entity) != MOVETYPE_NONE)
+	{
+		// Changes the entity's move type to be none making it immobile
+		SetEntityMoveType(entity, MOVETYPE_NONE);
+	}
+
+	// Removes the hook that we had attached to the grenade
+	SDKUnhook(entity, SDKHook_StartTouch, OnStartTouchHEGrenade);
+
+	return Plugin_Continue;
+}
+
+
+// This happens when a player uses the left attack with their knife or weapon
+public Action WeaponFireStickyGrenades(int client)
+{
+	// If the king's current power is not the sticky grenades power then execute this section
+	if(!powerStickyGrenades)
+	{
+		return Plugin_Continue;
+	}
+
+	// Obtains the name of the player's weapon and store it within our variable entity
+	int entity = GetEntPropEnt(client, Prop_Send, "m_hActiveWeapon");
+
+	// If the entity does not meet our criteria validation then execute this section
+	if(!IsValidEntity(entity))
+	{
+		return Plugin_Continue;
+	}
+
+	// Creates a variable which we will use to store data within
+	char className[64];
+
+	// Obtains the entity's class name and store it within our className variable
+	GetEntityClassname(entity, className, sizeof(className));
+
+	// If the entity is not a high explosive grenade then execute this section
+	if(!StrEqual(className, "weapon_hegrenade", false))
+	{
+		return Plugin_Continue;
+	}
+
+	// Gives the client the specified weapon
+	GivePlayerItem(client, "weapon_hegrenade");
+
+	// Changes the player's amount of high explosive grenades to 10
+	SetEntProp(client, Prop_Send, "m_iAmmo", 10, _, 14);
+
+	return Plugin_Continue;
+}
 
 
 

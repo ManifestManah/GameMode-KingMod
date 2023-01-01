@@ -2121,7 +2121,7 @@ public Action Timer_UpdateTeamScoreHud(Handle timer)
 
 				// Formats the message that we wish to send to the player and store it within our message_string variable
 				Format(hudMessage, 1024, "%s\n<font color='#fbb227'>---------------------</font>", hudMessage);
-				Format(hudMessage, 1024, "%s\n<font color='#32CD32'>Acquiring Power</font>", hudMessage);
+				Format(hudMessage, 1024, "%s\n<font color='#33E0FF'>Acquiring Power</font>", hudMessage);
 				Format(hudMessage, 1024, "%s\n<font color='#fbb227'>---------------------</font>", hudMessage);
 			}
 
@@ -2133,7 +2133,7 @@ public Action Timer_UpdateTeamScoreHud(Handle timer)
 
 				// Formats the message that we wish to send to the player and store it within our message_string variable
 				Format(hudMessage, 1024, "%s\n<font color='#fbb227'>%s</font>", hudMessage, dottedLine);
-				Format(hudMessage, 1024, "%s\n<font color='#32CD32'>%s - %s</font>", hudMessage, nameOfPower, nameOfTier);
+				Format(hudMessage, 1024, "%s\n<font color='#33E0FF'>%s - %s</font>", hudMessage, nameOfPower, nameOfTier);
 				Format(hudMessage, 1024, "%s\n<font color='#fbb227'>%s</font>", hudMessage, dottedLine);
 			}
 		}

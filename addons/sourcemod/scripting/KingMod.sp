@@ -2567,14 +2567,14 @@ public Action Timer_UnfreezeKing(Handle timer, int client)
 	else if(powerMovementSpeed == 1)
 	{
 		// Changes the movement speed of the player to 200% of the normal movement speed
-		SetEntPropFloat(client, Prop_Data, "m_flLaggedMovementValue", 2.00);
+		SetEntPropFloat(client, Prop_Data, "m_flLaggedMovementValue", 1.80);
 	}
 
 	// If the value stored within the powerMovementSpeed is 2 execute this section
 	else if(powerMovementSpeed == 2)
 	{
 		// Changes the movement speed of the player to 175% of the normal movement speed
-		SetEntPropFloat(client, Prop_Data, "m_flLaggedMovementValue", 1.70);
+		SetEntPropFloat(client, Prop_Data, "m_flLaggedMovementValue", 1.60);
 	}
 
 	// If the value stored within the powerMovementSpeed is 3 execute this section
@@ -3316,14 +3316,14 @@ public void PowerMovementSpeed()
 		if(powerMovementSpeed == 1)
 		{
 			// Changes the movement speed of the player to 200% of the normal movement speed
-			SetEntPropFloat(client, Prop_Data, "m_flLaggedMovementValue", 2.00);
+			SetEntPropFloat(client, Prop_Data, "m_flLaggedMovementValue", 1.80);
 		}
 
 		// If the value stored within the powerMovementSpeed is 2 execute this section
 		else if(powerMovementSpeed == 2)
 		{
 			// Changes the movement speed of the player to 175% of the normal movement speed
-			SetEntPropFloat(client, Prop_Data, "m_flLaggedMovementValue", 1.70);
+			SetEntPropFloat(client, Prop_Data, "m_flLaggedMovementValue", 1.60);
 		}
 
 		// If the value stored within the powerMovementSpeed is 3 execute this section
@@ -3365,14 +3365,14 @@ public void PowerMovementSpeedSpawn(int client)
 	if(powerMovementSpeed == 1)
 	{
 		// Changes the movement speed of the player to 200% of the normal movement speed
-		SetEntPropFloat(client, Prop_Data, "m_flLaggedMovementValue", 2.00);
+		SetEntPropFloat(client, Prop_Data, "m_flLaggedMovementValue", 1.80);
 	}
 
 	// If the value stored within the powerMovementSpeed is 2 execute this section
 	else if(powerMovementSpeed == 2)
 	{
 		// Changes the movement speed of the player to 175% of the normal movement speed
-		SetEntPropFloat(client, Prop_Data, "m_flLaggedMovementValue", 1.70);
+		SetEntPropFloat(client, Prop_Data, "m_flLaggedMovementValue", 1.60);
 	}
 
 	// If the value stored within the powerMovementSpeed is 3 execute this section

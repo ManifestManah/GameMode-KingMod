@@ -37,7 +37,7 @@ bool cvar_EffectRing = true;
 bool cvar_KingPowerChooser = true;
 
 bool cvar_PowerImpregnableArmor = true;
-bool cvar_PowerSpeed = false;
+bool cvar_PowerSpeed = true;
 bool cvar_PowerStickyGrenades = true;
 
 int cvar_PointsNormalKill = 1;
@@ -90,6 +90,7 @@ int mapHasMinimapHidden = 0;
 int kingRecoveryCounter = 0;
 int effectSprite = 0;
 int weaponOwner = -1;
+int kingIsAcquiringPower = 0;
 
 int colorRGB[3];
 int PlayerSpawnCount[MAXPLAYERS+1] = {0, ...};
@@ -109,6 +110,7 @@ char colorCombination[32];
 
 char nameOfPower[64];
 char nameOfTier[16];
+char dottedLine[128];
 char powerSoundName[128];
 
 char PlayerClanTag[MAXPLAYERS + 1][14];
@@ -2087,6 +2089,34 @@ public Action Timer_UpdateTeamScoreHud(Handle timer)
 			Format(hudMessage, 1024, "%s\n<font color='#fbb227'>This weapon is restricted for you</font>", hudMessage);
 		}
 
+		// If the player is the king then execute this section
+		if(isPlayerKing[client])
+		{
+			// If the king is in the process of acquiring his new power then execute this section
+			if(kingIsAcquiringPower == 1)
+			{
+				// Resets the contents of the hudMessage variable
+				hudMessage = "";
+
+				// Formats the message that we wish to send to the player and store it within our message_string variable
+				Format(hudMessage, 1024, "%s\n<font color='#fbb227'>---------------------</font>", hudMessage);
+				Format(hudMessage, 1024, "%s\n<font color='#32CD32'>Acquiring Power</font>", hudMessage);
+				Format(hudMessage, 1024, "%s\n<font color='#fbb227'>---------------------</font>", hudMessage);
+			}
+
+			// If the king has acquired his new power then execute this section
+			else if(kingIsAcquiringPower == 2)
+			{
+				// Resets the contents of the hudMessage variable
+				hudMessage = "";
+
+				// Formats the message that we wish to send to the player and store it within our message_string variable
+				Format(hudMessage, 1024, "%s\n<font color='#fbb227'>%s</font>", hudMessage, dottedLine);
+				Format(hudMessage, 1024, "%s\n<font color='#32CD32'>%s - %s</font>", hudMessage, nameOfPower, nameOfTier);
+				Format(hudMessage, 1024, "%s\n<font color='#fbb227'>%s</font>", hudMessage, dottedLine);
+			}
+		}
+
 		// Displays the contents of our hudMessage variable for the client to see in the hint text area of their screen 
 		PrintHintText(client, hudMessage);
 	}
@@ -2777,6 +2807,12 @@ public Action ChooseKingPower(int client)
 		return Plugin_Continue;
 	}
 
+	// Changes the kingIsAcquiringPower to 1 to indicate that the king is about to acquire his power
+	kingIsAcquiringPower = 1;
+
+	// Calls upon the Timer_UpdateTeamScoreHud function to update the HUD
+	CreateTimer(0.0, Timer_UpdateTeamScoreHud, _, TIMER_FLAG_NO_MAPCHANGE);
+
 	// If the sound is not already precached then execute this section
 	if(!IsSoundPrecached("kingmod/power_acquiringpower.mp3"))
 	{	
@@ -2811,7 +2847,7 @@ public Action ChooseKingPower(int client)
 	}
 
 	// If the cvar for the Bumpmine power is enabled then execute this section
-	else if(cvar_PowerSpeed)
+	if(cvar_PowerSpeed)
 	{
 		// Adds +1 to the current value of the powersAvailable variable
 		powersAvailable++;
@@ -2819,13 +2855,22 @@ public Action ChooseKingPower(int client)
 		// If the value contained within chosenPower is the same as the value stored in powersAvailable then execute this section
 		if(chosenPower == powersAvailable)
 		{
+			// Changes the content of the dottedLine variable to match the length of the name of power and tier
+			dottedLine = "-------------------------------";
+
+			// Changes the content of the nameOfPower variable to reflect which power the king acquired
+			nameOfPower = "Movement Speed";
+			
+			// Changes the content of the nameOfTier variable to reflect which tier of the power the king acquired
+			nameOfTier = "Tier A";
+
 			// 
-			PrintToChatAll("Power Speed - [ %i | %i ]", chosenPower, powersAvailable);
+			PrintToChatAll("Movement Speed - [ %i | %i ]", chosenPower, powersAvailable);
 		}
 	}
 
 	// If the cvar for the Bumpmine power is enabled then execute this section
-	else if(cvar_PowerStickyGrenades)
+	if(cvar_PowerStickyGrenades)
 	{
 		// Adds +1 to the current value of the powersAvailable variable
 		powersAvailable++;
@@ -2845,6 +2890,12 @@ public Action ChooseKingPower(int client)
 
 	// Plays the sound file that is specific to that of the newly acquired power
 	CreateTimer(2.0, Timer_PlayPowerSpecificSound, client);
+
+	// Changes the power acquisition state to 2 to make the hud display the newly acquired power to the king
+	CreateTimer(2.0, Timer_InitializePowerAcquisition, client);
+
+	// Changes the power acquisition state back to 0 to make the hud show the normal information to the king again
+	CreateTimer(6.0, Timer_FinalizePowerAcquisition, client);
 
 	return Plugin_Continue;
 }
@@ -3001,6 +3052,68 @@ public Action Timer_PlayPowerSpecificSound(Handle timer, int client)
 }
 
 
+// This happens 2.5 seconds after a player becomes the king and is about to acquire a new power
+public Action Timer_InitializePowerAcquisition(Handle timer, int client)
+{
+	// If the client does not meet our validation criteria then execute this section
+	if(!IsValidClient(client))
+	{
+		return Plugin_Continue;
+	}
+
+	// If the client is not the king then execute this section
+	if(!isPlayerKing[client])
+	{
+		return Plugin_Continue;
+	}
+
+	// If the king is a bot then execute this section
+	if(IsFakeClient(client))
+	{
+		return Plugin_Continue;
+	}
+
+	// Changes the kingIsAcquiringPower to 2 to indicate that the king is has acquired his power
+	kingIsAcquiringPower = 2;
+
+	// Calls upon the Timer_UpdateTeamScoreHud function to update the HUD
+	CreateTimer(0.0, Timer_UpdateTeamScoreHud, _, TIMER_FLAG_NO_MAPCHANGE);
+
+	return Plugin_Continue;
+}
+
+
+// This happens 5.5 seconds after a player becomes the king and is about to acquire a new power
+public Action Timer_FinalizePowerAcquisition(Handle timer, int client)
+{
+	// If the client does not meet our validation criteria then execute this section
+	if(!IsValidClient(client))
+	{
+		return Plugin_Continue;
+	}
+
+	// If the client is not the king then execute this section
+	if(!isPlayerKing[client])
+	{
+		return Plugin_Continue;
+	}
+
+	// If the king is a bot then execute this section
+	if(IsFakeClient(client))
+	{
+		return Plugin_Continue;
+	}
+	
+	// Changes the kingIsAcquiringPower to 0 to indicate that the king has finished the acquiring power part
+	kingIsAcquiringPower = 0;
+
+	// Calls upon the Timer_UpdateTeamScoreHud function to update the HUD
+	CreateTimer(0.0, Timer_UpdateTeamScoreHud, _, TIMER_FLAG_NO_MAPCHANGE);
+
+	return Plugin_Continue;
+}
+
+
 
 /////////////////////////////////
 // - Power Impregnable Armor - //
@@ -3047,11 +3160,11 @@ public void PowerImpregnableArmor(int client)
 	// Changes the player's player model to match the assault suit model
 	SetEntityModel(client, "models/player/custom_player/legacy/tm_phoenix_heavy.mdl");
 
-	// Changes the player's arm model to the phoenix heavy assault suit sleeve model
-	SetEntPropString(client, Prop_Send, "m_szArmsModel", "models/player/custom_player/legacy/tm_phoenix_heavy.mdl");
-
 	// Changes the name of the path for the sound that is will be played when the player acquires the specific power
 	powerSoundName = "kingmod/power_impregnablearmor.mp3";
+
+	// Changes the content of the dottedLine variable to match the length of the name of power and tier
+	dottedLine = "----------------------------------";
 
 	// Changes the content of the nameOfPower variable to reflect which power the king acquired
 	nameOfPower = "Impregnable Armor";
@@ -3111,8 +3224,11 @@ public void PowerStickyGrenades(int client)
 	// Turns on the sticky grenade king power 
 	powerStickyGrenades = true;
 
+	// Changes the content of the dottedLine variable to match the length of the name of power and tier
+	dottedLine = "------------------------------";
+
 	// Changes the content of the nameOfPower variable to reflect which power the king acquired
-	nameOfPower = "Impregnable Armor";
+	nameOfPower = "Sticky Grenades";
 	
 	// Changes the content of the nameOfTier variable to reflect which tier of the power the king acquired
 	nameOfTier = "Tier A";

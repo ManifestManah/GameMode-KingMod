@@ -37,7 +37,7 @@ bool cvar_EffectRing = true;
 bool cvar_KingPowerChooser = true;
 
 bool cvar_PowerImpregnableArmor = true;
-bool cvar_PowerSpeed = true;
+bool cvar_PowerMovementSpeed = true;
 bool cvar_PowerStickyGrenades = true;
 
 int cvar_PointsNormalKill = 1;
@@ -60,7 +60,7 @@ float cvar_HealthshotExpirationTime = 10.0;
 bool powerStickyGrenades = false;
 
 int powerImpregnableArmor = 0;
-
+int powerMovementSpeed = 0;
 
 
 //////////////////////////
@@ -542,6 +542,9 @@ public Action Event_PlayerSpawn(Handle event, const char[] name, bool dontBroadc
 		return Plugin_Continue;
 	}
 
+	// Grants the player increased movement speed i the movement speed power is active
+	PowerMovementSpeedSpawn(client);
+
 	// Strips the client of all their weapons
 	StripPlayerOfWeapons(client);
 
@@ -610,8 +613,14 @@ public Action Event_PlayerDeath(Handle event, const char[] name, bool dontBroadc
 		// Changes the killed player's king status to false
 		isPlayerKing[client] = false;
 
+		// Resets all power spcific variables back to their default values 
+		ResetPreviousPower();
+
 		// Removes the screen overlay if the client is the king and impregnable armor is currently active
 		RemoveScreenOverlay(client);
+
+		// Resets the movement speed of all the players if the current power is movement speed 
+		RemovePowerMovementSpeed();
 
 		// Removes any currently present king crowns from the game
 		RemoveCrownEntity();
@@ -644,9 +653,6 @@ public Action Event_PlayerDeath(Handle event, const char[] name, bool dontBroadc
 			isPlayerKing[attacker] = true;
 			PrintToChat(attacker, "Debug: You stole the king title from the enemy that died");
 
-			// Removes the screen overlay if the client is the king and impregnable armor is currently active
-			RemoveScreenOverlay(client);
-
 			// Removes any currently present king crowns from the game
 			RemoveCrownEntity();
 
@@ -665,13 +671,19 @@ public Action Event_PlayerDeath(Handle event, const char[] name, bool dontBroadc
 			// Decides which powers can be chosen, and picks a power from the list for the new king
 			ChooseKingPower(attacker);
 
+			// Removes the screen overlay if the client is the king and impregnable armor is currently active
+			RemoveScreenOverlay(client);
+
+			// Resets the movement speed of all the players if the current power is movement speed 
+			RemovePowerMovementSpeed();
+
 			// Strips the client of all their weapons
 			StripPlayerOfWeapons(attacker);
 
 			// After 0.1 seconds gives the player a golden knife
 			CreateTimer(0.1, Timer_GiveGoldenKnife, attacker, TIMER_FLAG_NO_MAPCHANGE);
 
-			// If the map have been configured to have platform support then execute this section
+			// If the map has been configured to have platform support then execute this section
 			if(mapHasPlatformSupport)
 			{
 				// Teleports the client to the specified location of the map's platform
@@ -759,13 +771,19 @@ public Action Event_PlayerDeath(Handle event, const char[] name, bool dontBroadc
 	// Decides which powers can be chosen, and picks a power from the list for the new king
 	ChooseKingPower(attacker);
 
+	// Removes the screen overlay if the client is the king and impregnable armor is currently active
+	RemoveScreenOverlay(client);
+
+	// Resets the movement speed of all the players if the current power is movement speed 
+	RemovePowerMovementSpeed();
+
 	// Strips the client of all their weapons
 	StripPlayerOfWeapons(attacker);
 
 	// After 0.1 seconds gives the player a golden knife
 	CreateTimer(0.1, Timer_GiveGoldenKnife, attacker, TIMER_FLAG_NO_MAPCHANGE);
 
-	// If the map have been configured to have platform support then execute this section
+	// If the map has been configured to have platform support then execute this section
 	if(mapHasPlatformSupport)
 	{
 		// Teleports the client to the specified location of the map's platform
@@ -809,6 +827,9 @@ public Action Event_PlayerDeath(Handle event, const char[] name, bool dontBroadc
 // This happens when the round starts 
 public Action Event_RoundStart(Handle event, const char[] name, bool dontBroadcast)
 {
+	// Changes all power related variables from active to inactive
+	ResetPreviousPower();
+
 	// Removes any power related effects that may elsewise be able to transfer over from the previous round
 	RemoveKingPowerEffects();
 
@@ -2535,8 +2556,33 @@ public Action Timer_UnfreezeKing(Handle timer, int client)
 		return Plugin_Continue;
 	}
 
-	// Changes the movement speed of the player to 1.0 essentially returning their movement to the normal speed
-	SetEntPropFloat(client, Prop_Data, "m_flLaggedMovementValue", 1.0);
+	// If the value stored within the powerMovementSpeed is 0 execute this section
+	if(powerMovementSpeed == 0)
+	{
+		// Changes the movement speed of the player to 1.0 essentially returning their movement to the normal speed
+		SetEntPropFloat(client, Prop_Data, "m_flLaggedMovementValue", 1.0);
+	}
+
+	// If the value stored within the powerMovementSpeed is 1 execute this section
+	else if(powerMovementSpeed == 1)
+	{
+		// Changes the movement speed of the player to 200% of the normal movement speed
+		SetEntPropFloat(client, Prop_Data, "m_flLaggedMovementValue", 2.00);
+	}
+
+	// If the value stored within the powerMovementSpeed is 2 execute this section
+	else if(powerMovementSpeed == 2)
+	{
+		// Changes the movement speed of the player to 175% of the normal movement speed
+		SetEntPropFloat(client, Prop_Data, "m_flLaggedMovementValue", 1.70);
+	}
+
+	// If the value stored within the powerMovementSpeed is 3 execute this section
+	else if(powerMovementSpeed == 3)
+	{
+		// Changes the movement speed of the player to 150% of the normal movement speed
+		SetEntPropFloat(client, Prop_Data, "m_flLaggedMovementValue", 1.40);
+	}
 
 	return Plugin_Continue;
 }
@@ -2847,7 +2893,7 @@ public Action ChooseKingPower(int client)
 	}
 
 	// If the cvar for the Bumpmine power is enabled then execute this section
-	if(cvar_PowerSpeed)
+	if(cvar_PowerMovementSpeed)
 	{
 		// Adds +1 to the current value of the powersAvailable variable
 		powersAvailable++;
@@ -2855,14 +2901,8 @@ public Action ChooseKingPower(int client)
 		// If the value contained within chosenPower is the same as the value stored in powersAvailable then execute this section
 		if(chosenPower == powersAvailable)
 		{
-			// Changes the content of the dottedLine variable to match the length of the name of power and tier
-			dottedLine = "-------------------------------";
-
-			// Changes the content of the nameOfPower variable to reflect which power the king acquired
-			nameOfPower = "Movement Speed";
-			
-			// Changes the content of the nameOfTier variable to reflect which tier of the power the king acquired
-			nameOfTier = "Tier A";
+			// INcreases the movement speed of all the players
+			PowerMovementSpeed();
 
 			// 
 			PrintToChatAll("Movement Speed - [ %i | %i ]", chosenPower, powersAvailable);
@@ -2914,8 +2954,8 @@ public int countAvailablePowers()
 		powersAvailable++;
 	}
 
-	// If the cvar for the Bumpmine power is enabled then execute this section
-	if(cvar_PowerSpeed)
+	// If the cvar for the Movement Speed power is enabled then execute this section
+	if(cvar_PowerMovementSpeed)
 	{
 		// Adds +1 to the current value of the powersAvailable variable
 		powersAvailable++;
@@ -2933,7 +2973,7 @@ public int countAvailablePowers()
 }
 
 
-// This happens when a king is about to receive a new power
+// This happens when a king is about to receive a new power and when a round starts
 public void ResetPreviousPower()
 {
 	// Changes the unique weapon the king will receive to be nothing
@@ -2947,10 +2987,17 @@ public void ResetPreviousPower()
 	}
 
 	// If the currently active power is impregnable armor then execute this section
-	else if(powerImpregnableArmor)
+	if(powerImpregnableArmor)
 	{
 		// Turns off the impregnable armor king power 
 		powerImpregnableArmor = 0;
+	}
+
+	// If the currently active power is movement speed then execute this section
+	if(powerMovementSpeed)
+	{
+		// Turns off the movement speed king power 
+		powerMovementSpeed = 0;
 	}
 }
 
@@ -3120,7 +3167,7 @@ public Action Timer_FinalizePowerAcquisition(Handle timer, int client)
 /////////////////////////////////
 
 
-// This happens when a high explosive grenade has been spawned
+// This happens when a king acquires the impregnable armor power
 public void PowerImpregnableArmor(int client)
 {
 	// If the king is not a bot then execute this section
@@ -3209,6 +3256,131 @@ public void RemoveScreenOverlay(int client)
 {
 	// Removes the screen overlay from the client
 	ClientCommand(client, "r_screenoverlay 0");
+}
+
+
+//////////////////////////////
+// - Movement Speed Power - //
+//////////////////////////////
+
+
+// This happens when a king acquires the movement speed power 
+public void PowerMovementSpeed()
+{
+	// Changes the name of the path for the sound that is will be played when the player acquires the specific power
+	powerSoundName = "kingmod/power_movementspeed.mp3";
+
+	// Changes the content of the dottedLine variable to match the length of the name of power and tier
+	dottedLine = "-------------------------------";
+
+	// Changes the content of the nameOfPower variable to reflect which power the king acquired
+	nameOfPower = "Movement Speed";
+	
+	// Changes the content of the nameOfTier variable to reflect which tier of the power the king acquired
+	nameOfTier = "Tier A";
+
+	// Turns on the movement speed king power 
+	powerMovementSpeed = GetRandomInt(1, 3);
+
+	// If the value stored within the powerMovementSpeed is 1 execute this section
+	if(powerMovementSpeed == 1)
+	{
+		// Changes the content of the nameOfTier variable to reflect which tier of the power the king acquired
+		nameOfTier = "Tier A";
+	}
+
+	// If the value stored within the powerMovementSpeed is 2 execute this section
+	else if(powerMovementSpeed == 2)
+	{
+		// Changes the content of the nameOfTier variable to reflect which tier of the power the king acquired
+		nameOfTier = "Tier B";
+	}
+
+	// If the value stored within the powerMovementSpeed is 3 execute this section
+	else if(powerMovementSpeed == 3)
+	{
+		// Changes the content of the nameOfTier variable to reflect which tier of the power the king acquired
+		nameOfTier = "Tier C";
+	}
+
+	// Loops through all of the clients
+	for (int client = 1; client <= MaxClients; client++)
+	{
+		// If the client does not meet our validation criteria then execute this section
+		if(!IsValidClient(client))
+		{
+			continue;
+		}
+
+		// If the value stored within the powerMovementSpeed is 1 execute this section
+		if(powerMovementSpeed == 1)
+		{
+			// Changes the movement speed of the player to 200% of the normal movement speed
+			SetEntPropFloat(client, Prop_Data, "m_flLaggedMovementValue", 2.00);
+		}
+
+		// If the value stored within the powerMovementSpeed is 2 execute this section
+		else if(powerMovementSpeed == 2)
+		{
+			// Changes the movement speed of the player to 175% of the normal movement speed
+			SetEntPropFloat(client, Prop_Data, "m_flLaggedMovementValue", 1.70);
+		}
+
+		// If the value stored within the powerMovementSpeed is 3 execute this section
+		else if(powerMovementSpeed == 3)
+		{
+			// Changes the movement speed of the player to 150% of the normal movement speed
+			SetEntPropFloat(client, Prop_Data, "m_flLaggedMovementValue", 1.40);
+		}
+	}
+}
+
+
+// This happens when the movement speed power is no longer active
+public void RemovePowerMovementSpeed()
+{
+	// Loops through all of the clients
+	for (int client = 1; client <= MaxClients; client++)
+	{
+		// If the client does not meet our validation criteria then execute this section
+		if(!IsValidClient(client))
+		{
+			continue;
+		}
+
+		// If the value stored within the powerMovementSpeed is 0 execute this section
+		if(powerMovementSpeed == 0)
+		{
+			// Changes the movement speed of the player to 200% of the normal movement speed
+			SetEntPropFloat(client, Prop_Data, "m_flLaggedMovementValue", 1.00);
+		}
+	}
+}
+
+
+// Changes the player's movement speed upon spawning if the movement speed power is active
+public void PowerMovementSpeedSpawn(int client)
+{
+	// If the value stored within the powerMovementSpeed is 1 execute this section
+	if(powerMovementSpeed == 1)
+	{
+		// Changes the movement speed of the player to 200% of the normal movement speed
+		SetEntPropFloat(client, Prop_Data, "m_flLaggedMovementValue", 2.00);
+	}
+
+	// If the value stored within the powerMovementSpeed is 2 execute this section
+	else if(powerMovementSpeed == 2)
+	{
+		// Changes the movement speed of the player to 175% of the normal movement speed
+		SetEntPropFloat(client, Prop_Data, "m_flLaggedMovementValue", 1.70);
+	}
+
+	// If the value stored within the powerMovementSpeed is 3 execute this section
+	else if(powerMovementSpeed == 3)
+	{
+		// Changes the movement speed of the player to 150% of the normal movement speed
+		SetEntPropFloat(client, Prop_Data, "m_flLaggedMovementValue", 1.40);
+	}
 }
 
 
@@ -3528,4 +3700,8 @@ public void DownloadAndPrecacheFiles()
 	PrecacheModel("models/weapons/v_models/arms/phoenix_heavy/v_sleeve_phoenix_heavy.mdl");
 	PrecacheSound("kingmod/power_impregnablearmor.mp3");
 	PrecacheSound("items/nvg_on.wav");
+
+	// Power - Movement Sped
+	AddFileToDownloadsTable("sound/kingmod/power_movementspeed.mp3");
+	PrecacheSound("kingmod/power_movementspeed.mp3");
 }

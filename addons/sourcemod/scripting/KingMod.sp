@@ -3737,7 +3737,7 @@ public void PowerScoutNoScope(int client)
 	powerScoutNoScope = true;
 
 	// Changes the name of the path for the sound that is will be played when the player acquires the specific power
-	powerSoundName = "kingmod/power_impregnablearmor.mp3";
+	powerSoundName = "kingmod/power_scoutnoscope.mp3";
 
 	// Changes the content of the dottedLine variable to match the length of the name of power and tier
 	dottedLine = "------------------------------";
@@ -4187,4 +4187,12 @@ public void DownloadAndPrecacheFiles()
 	// Power - Movement Sped
 	AddFileToDownloadsTable("sound/kingmod/power_movementspeed.mp3");
 	PrecacheSound("kingmod/power_movementspeed.mp3");
+
+	// Power - Movement Sped
+	AddFileToDownloadsTable("sound/kingmod/power_scoutnoscope.mp3");
+	PrecacheSound("kingmod/power_scoutnoscope.mp3");
+
+	// Power - Movement Sped
+	AddFileToDownloadsTable("sound/kingmod/power_carpetbombingflashbangs.mp3");
+	PrecacheSound("kingmod/power_carpetbombingflashbangs.mp3");
 }

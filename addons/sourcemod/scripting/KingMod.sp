@@ -46,6 +46,8 @@ int cvar_PointsNormalKill = 1;
 int cvar_PointsKingKill = 3;
 int cvar_DropChance = 33;
 int cvar_KingHealth = 200;
+int cvar_SentryGunHealth = 999; // Please note setting this to 999 or above will turn the sentry guns invulnerable
+int cvar_SentryGunVolumePercentage = 12;
 
 float cvar_RespawnTime = 1.50;
 float cvar_ImmobilityTime = 3.00;
@@ -95,7 +97,6 @@ int pointCounterCT = 0;
 int mapHasMinimapHidden = 0;
 int kingRecoveryCounter = 0;
 int effectSprite = 0;
-int weaponOwner = -1;
 int kingIsAcquiringPower = 0;
 
 int colorRGB[3];
@@ -123,6 +124,9 @@ char powerSoundName[128];
 char PlayerClanTag[MAXPLAYERS + 1][14];
 
 
+// Global ConVars
+ConVar conVarCheats;
+
 
 //////////////////////////
 // - Forwards & Hooks - //
@@ -132,6 +136,18 @@ char PlayerClanTag[MAXPLAYERS + 1][14];
 // This happens when the plugin is loaded
 public void OnPluginStart()
 {
+	// Finds the sv_cheats convar and store it within our conVarCheats value
+	conVarCheats = FindConVar("sv_cheats");
+
+	// Obtains the flags related to the sv_cheat convar
+	int notifyFlag = GetConVarFlags(conVarCheats);
+
+	// Changes the notify status for the sv_cheats to not notify about value changes
+	notifyFlag &= ~FCVAR_NOTIFY;
+
+	// Sets the convar flag to the new rule that we applied for our convar
+	SetConVarFlags(conVarCheats, notifyFlag);
+
 	// Adds a command only available to administrators with the Root flag
 	RegAdminCmd("sm_platform", Command_DeveloperMenu, ADMFLAG_ROOT);
 
@@ -147,14 +163,17 @@ public void OnPluginStart()
 	// Calls upon our CommandListenerJoinTeam function whenever a player changes team
 	AddCommandListener(CommandListenerJoinTeam, "jointeam");
 
-	// Obtains and stores the entity owner offset within our weaponOwner variable 
-	weaponOwner = FindSendPropInfo("CBaseCombatWeapon", "m_hOwnerEntity");
+	// Creates a sound hook to reduce the sound produced when sentry guns shoot
+	AddNormalSoundHook(SoundHookSentryGuns);
 
 	// Creates a timer that will check if people are on fire and at low health every 0.5 seconds
 	PowerNapalmStartTimer();
 
 	// Creates a timer that will update the team score hud every 1.0 second
 	CreateTimer(1.0, Timer_UpdateTeamScoreHud, _, TIMER_REPEAT);
+
+	// Creates a timer that will modify the env_gunfire used by the sentry guns once every 1.0 second  
+	CreateTimer(1.0, SentryGunModifyGunFire, _, TIMER_REPEAT);
 
 	// Creates a timer that will remove dropped items and weapons from the map every 2.5 seconds
 	CreateTimer(2.5, Timer_CleanFloor, _, TIMER_REPEAT);
@@ -224,6 +243,9 @@ public void OnClientPostAdminCheck(int client)
 	// Adds a hook to the client which will let us track when the client uses their weapon's scope
 	SDKHook(client, SDKHook_PreThink, OnPreThink);
 
+	// Adds a hook to the client which will let us track when the client takes damage and remains alive
+	SDKHook(client, SDKHook_OnTakeDamageAlive, OnTakeDamageAlive); 
+
 	// Attempts to auto-assign the player to the team at a disadvantage after the mp_force_pick_time duration
 	AutoJoinTeam(client);
 }
@@ -259,6 +281,9 @@ public void OnClientDisconnect(int client)
 
 	// Removes the hook that we added to track when the client is using their weapon's scope
 	SDKUnhook(client, SDKHook_PreThink, OnPreThink);
+
+	// Removes the hook that we added to track when the player takes damage and remains alive
+	SDKUnhook(client, SDKHook_OnTakeDamageAlive, OnTakeDamageAlive); 
 
 	// If the client is not the current king then execute this section
 	if(!isPlayerKing[client])
@@ -573,6 +598,68 @@ public Action OnWeaponCanSwitchTo(int client, int weapon)
 	}
 
 	return Plugin_Handled;
+}
+
+
+// This happens when the player takes damage but still remains alive
+public Action OnTakeDamageAlive(int victim, int &attacker, int &inflictor, float &damage, int &damagetype, int &weapon, float damageForce[3], float damagePosition[3])
+{
+	// If the victim does not meet our validation criteria then execute this section
+	if(!IsValidClient(victim))
+	{
+		return Plugin_Continue;
+	}
+
+	// If the attacker does meet our validation criteria then execute this section
+	if(IsValidClient(attacker))
+	{
+		return Plugin_Continue;
+	}
+
+	// Creates a variable which we will use to store data within
+	char className[64];
+
+	// Obtains the classname of the attacker entity and store it within our className variable
+	GetEntityClassname(attacker, className, sizeof(className));
+
+	// If the classname is env_gunfire then execute this section
+	if(!StrEqual(className, "env_gunfire"))
+	{
+		return Plugin_Continue;
+	}
+
+	// Changes the damage dealt by the dronegun's attacks to 65% of the normal damage
+	damage = (damage / 100) * 65;
+
+	return Plugin_Changed;
+}
+
+
+// This happens when the plugin is loaded
+public Action SoundHookSentryGuns(int clients[64], int& numClients, char sample[PLATFORM_MAX_PATH], int& entity, int& channel, float& volume, int& level, int& pitch, int& flags)
+{
+	// If the entity meets our entity criteria of validation then execute this section
+	if(!IsValidEntity(entity))
+	{
+		return Plugin_Continue;
+	}
+
+	// Creates a variable which we will use to store data within
+	char className[64];
+
+	// Obtains the classname of the entity and store it within our className variable
+	GetEntityClassname(entity, className, sizeof(className));
+	
+	// If the entity's classname is anything else than dronegun then execute this section
+	if(!StrEqual(className, "dronegun", false))
+	{
+		return Plugin_Continue;
+	}
+
+	// Changes the volume of the dronegun to (12% default) of the normal volume
+	volume = (volume / 100) * cvar_SentryGunVolumePercentage;
+	
+	return Plugin_Changed;
 }
 
 
@@ -906,6 +993,9 @@ public Action Event_RoundStart(Handle event, const char[] name, bool dontBroadca
 	// Changes all power related variables from active to inactive
 	ResetPreviousPower();
 
+	// Changes the health of any sentry gun placed on the map
+	ChangeSentryGunHealth();
+
 	// Checks if the current map has been configured to have platform support included 
 	CheckForPlatformSupport();
 
@@ -1154,6 +1244,9 @@ public void LateLoadSupport()
 
 		// Adds a hook to the client which will let us track when the client uses their weapon's scope
 		SDKHook(client, SDKHook_PreThink, OnPreThink);
+
+		// Adds a hook to the client which will let us track when the client takes damage and remains alive
+		SDKHook(client, SDKHook_OnTakeDamageAlive, OnTakeDamageAlive); 
 	}
 }
 
@@ -1182,6 +1275,36 @@ public void RestartGameConvarChanged(Handle cvar, const char[] oldVal, const cha
 		restartGame.IntValue = 0;
 
 		PrintToChatAll("King Mod: Please try not to use mp_restartgame, change the map instead.");
+	}
+}
+
+
+// This happens every time a new round starts
+public void ChangeSentryGunHealth()
+{
+	// Loops through all entities that are currently in the game
+	for (int entity = MaxClients + 1; entity <= GetMaxEntities(); entity++)
+	{
+		// If the entity does not meet our criteria of validation then execute this section
+		if(!IsValidEntity(entity))
+		{
+			continue;
+		}
+
+		// Creates a variable which we will use to store data within
+		char className[64];
+
+		// Obtains the entity's class name and store it within our className variable
+		GetEntityClassname(entity, className, sizeof(className));
+
+		// If the entity is a healthshot then execute this section
+		if(!StrEqual(className, "dronegun"))
+		{	
+			continue;
+		}
+
+		// Changes the sentry gun's health
+		SetEntityHealth(entity, cvar_SentryGunHealth);
 	}
 }
 
@@ -2241,6 +2364,57 @@ public Action Timer_UpdateTeamScoreHud(Handle timer)
 }
 
 
+// This happens once every 1.0 seconds once the plugin has been loaded
+public Action SentryGunModifyGunFire(Handle timer)
+{
+	// Creats a variable to store our information within and sets it to false
+	bool isCheatsEnabled = false;
+
+	// If the server already have sv_cheats enabled then execute this section
+	if(conVarCheats.IntValue > 0)
+	{
+		isCheatsEnabled = true;
+	}
+
+	// Loops through all of the clients
+	for (int client = 1; client <= MaxClients; client++)
+	{
+		// If the client does not meet our validation criteria then execute this section
+		if(!IsValidClient(client))
+		{
+			continue;
+		}
+
+		// If the client is not a bot then execute this section
+		if(!IsFakeClient(client))
+		{
+			continue;
+		}
+
+		// If sv_cheats are not currently enabled then execute this section
+		if(!isCheatsEnabled)
+		{
+			// Changes the sv_cheats convar to 1
+			conVarCheats.IntValue = 1;
+		}
+
+		// Performs a fake client command to target all env_gunfire entities and modify their weapon name  
+		FakeClientCommand(client, "ent_fire env_gunfire addoutput \"weaponname weapon_shield\"");
+		
+		// If sv_cheats are not currently enabled then execute this section
+		if(!isCheatsEnabled)
+		{
+			// Changes the sv_cheats convar back to 0
+			conVarCheats.IntValue = 0;
+		}
+
+		return Plugin_Continue;
+	}
+	
+	return Plugin_Continue;
+}
+
+
 // This happens every 2.5 seconds and is used to remove items and weapons lying around in the mapr
 public Action Timer_CleanFloor(Handle timer)
 {
@@ -2291,10 +2465,10 @@ public Action Timer_CleanFloor(Handle timer)
 			}
 		}
 
-		// If the entity has an ownership relation to somebody or something, then execute this section
-		if(GetEntDataEnt2(entity, weaponOwner) != -1)
+		// If the entity has an ownership relation then execute this section
+		if(GetEntPropEnt(entity, Prop_Data, "m_hOwnerEntity") != -1)
 		{
-			continue;
+			return Plugin_Continue;
 		}
 
 		PrintToChatAll("Debug removed weapon %s", className);

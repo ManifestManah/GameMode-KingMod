@@ -35,11 +35,11 @@ bool cvar_EffectTesla = true;
 bool cvar_EffectRing = true;
 bool cvar_KingPowerChooser = true;
 
-bool cvar_PowerImpregnableArmor = true;
-bool cvar_PowerMovementSpeed = true;
-bool cvar_PowerStickyGrenades = true;
-bool cvar_PowerScoutNoScope = true;
-bool cvar_PowerCarpetBombingFlashbangs = true;
+bool cvar_PowerImpregnableArmor = false;
+bool cvar_PowerMovementSpeed = false;
+bool cvar_PowerStickyGrenades = false;
+bool cvar_PowerScoutNoScope = false;
+bool cvar_PowerCarpetBombingFlashbangs = false;
 bool cvar_PowerNapalm = true;
 
 int cvar_PointsNormalKill = 1;
@@ -88,6 +88,7 @@ bool cooldownWeaponSwapMessage[MAXPLAYERS + 1] = {false,...};
 
 
 // Global Integers
+int kingIndex = 0;
 int kingIsOnTeam = 0;
 int pointCounterT = 0;
 int pointCounterCT = 0;
@@ -100,6 +101,7 @@ int kingIsAcquiringPower = 0;
 int colorRGB[3];
 int PlayerSpawnCount[MAXPLAYERS+1] = {0, ...};
 int playerHealthPreInjection[MAXPLAYERS+1] = {0, ...};
+int powerNapalmDamageTaken[MAXPLAYERS+1] = {0, ...};
 
 int EntityOwner[2049] = {-1, ...};
 
@@ -147,6 +149,9 @@ public void OnPluginStart()
 
 	// Obtains and stores the entity owner offset within our weaponOwner variable 
 	weaponOwner = FindSendPropInfo("CBaseCombatWeapon", "m_hOwnerEntity");
+
+	// Creates a timer that will check if people are on fire and at low health every 0.5 seconds
+	PowerNapalmStartTimer();
 
 	// Creates a timer that will update the team score hud every 1.0 second
 	CreateTimer(1.0, Timer_UpdateTeamScoreHud, _, TIMER_REPEAT);
@@ -429,7 +434,7 @@ public Action OnWeaponCanUse(int client, int weapon)
 			}
 		}
 
-		// If the king's current power is the carpet bombing flashbangs power then execute this section
+		// If the king's current power is the scout no scope power then execute this section
 		if(powerScoutNoScope)
 		{
 			// If the weapon is a ssg08 then excute this section
@@ -439,11 +444,21 @@ public Action OnWeaponCanUse(int client, int weapon)
 			}
 		}
 
-		// If the king's current power is not the flashbang power then execute this section
+		// If the king's current power is the carpet bombing flashbangs power then execute this section
 		if(powerCarpetBombingFlashbangs)
 		{
 			// If the weapon is a flashbang then excute this section
 			if(StrEqual(ClassName, "weapon_flashbang", false))
+			{
+				return Plugin_Continue;
+			}
+		}
+
+		// If the king's current power is the napalm power then execute this section
+		if(powerNapalm)
+		{
+			// If the weapon is a molotov then excute this section
+			if(StrEqual(ClassName, "weapon_molotov", false))
 			{
 				return Plugin_Continue;
 			}
@@ -610,6 +625,9 @@ public Action Event_PlayerDeath(Handle event, const char[] name, bool dontBroadc
 		return Plugin_Continue;
 	}
 
+	// Resets the client's inferno stacks back to 0 if the currently active power is napalm 
+	ResetNapalmStacks(client);
+
 	// Gives the client a (33% default) chance to drop a healthshot where they stood upon dying
 	DropHealthShot(client);
 
@@ -641,8 +659,14 @@ public Action Event_PlayerDeath(Handle event, const char[] name, bool dontBroadc
 			return Plugin_Continue;
 		}
 
+		// Changes the index of the king back to 0
+		kingIndex = 0;
+
 		// Changes the killed player's king status to false
 		isPlayerKing[client] = false;
+
+		// Extinguishes the flames of all clients currently on fire if the current power is napalm 
+		RemoveNapalmFromVictims();
 
 		// Resets all power spcific variables back to their default values 
 		ResetPreviousPower();
@@ -682,6 +706,9 @@ public Action Event_PlayerDeath(Handle event, const char[] name, bool dontBroadc
 		// If the client is the current king then execute this section
 		if(isPlayerKing[client])
 		{
+			// Changes the index of the king to that of the value stored within the attacker variable
+			kingIndex = attacker;
+
 			// Changes the killed player's king status to false
 			isPlayerKing[client] = false;
 			PrintToChat(client, "Debug: You lost your kingship as you were killed");
@@ -704,6 +731,9 @@ public Action Event_PlayerDeath(Handle event, const char[] name, bool dontBroadc
 
 			// Changes the health of the player to (200 default)
 			SetEntProp(attacker, Prop_Send, "m_iHealth", cvar_KingHealth, 1);
+
+			// Extinguishes the flames of all clients currently on fire if the current power is napalm 
+			RemoveNapalmFromVictims();
 
 			// Decides which powers can be chosen, and picks a power from the list for the new king
 			ChooseKingPower(attacker);
@@ -789,6 +819,9 @@ public Action Event_PlayerDeath(Handle event, const char[] name, bool dontBroadc
 		}
 	}
 
+	// Changes the index of the king to that of the value stored within the attacker variable
+	kingIndex = attacker;
+
 	// Changes the attacking player's king status to true
 	isPlayerKing[attacker] = true;
 	PrintToChat(attacker, "Debug: You became the new king");
@@ -804,6 +837,9 @@ public Action Event_PlayerDeath(Handle event, const char[] name, bool dontBroadc
 
 	// Changes the health of the player to (200 default)
 	SetEntProp(attacker, Prop_Send, "m_iHealth", cvar_KingHealth, 1);
+
+	// Extinguishes the flames of all clients currently on fire if the current power is napalm 
+	RemoveNapalmFromVictims();
 
 	// Decides which powers can be chosen, and picks a power from the list for the new king
 	ChooseKingPower(attacker);
@@ -875,6 +911,9 @@ public Action Event_RoundStart(Handle event, const char[] name, bool dontBroadca
 
 	// Changes the gameInProgress state to true
 	gameInProgress = true;
+
+	// Changes the index of the king back to 0
+	kingIndex = 0;
 
 	// Changes the indicator of which team the King is currently on to be on no team
 	kingIsOnTeam = 0;
@@ -1049,11 +1088,14 @@ public Action Event_WeaponFire(Handle event, const char[] name, bool dontBroadca
 	// Grants a random amount of health when using the healthshot
 	InjectHealthshot(client); 
 
-	// Gives the player high explosive grenades after having thrown
+	// Gives the player high explosive grenades after having thrown their previous one
 	WeaponFireStickyGrenades(client);
 
-	// Gives the player a flashbang after having thrown
+	// Gives the player a flashbang after having thrown their previous one
 	WeaponFireCarpetBombingFlashbang(client);
+
+	// Gives the player a molotov after having thrown their previous one
+	WeaponFireNapalm(client);
 
 	// If the player is no longer spawnprotected then execute this section
 	if(!isPlayerProtected[client])
@@ -3052,7 +3094,7 @@ public Action ChooseKingPower(int client)
 		if(chosenPower == powersAvailable)
 		{
 			// Gives the client an infinite amount of molotovs, the fire from the molotovs will cause players to catch on fire
-			powerNapalm(client);
+			PowerNapalm(client);
 
 			// 
 			PrintToChatAll("Power Napalm - [ %i | %i ]", chosenPower, powersAvailable);
@@ -3206,6 +3248,13 @@ public Action Timer_GiveKingUniqueWeapon(Handle timer, int client)
 		SetEntProp(client, Prop_Send, "m_iAmmo", 25, _, 15);
 	}
 
+	// If the currently active power is napalm then execute this section
+	if(powerNapalm)
+	{
+		// Changes the player's amount of molotovs to 25
+		SetEntProp(client, Prop_Send, "m_iAmmo", 10, _, 17);
+	}
+
 	return Plugin_Continue;
 }
 
@@ -3240,6 +3289,9 @@ public void RemoveKingPowerEffects()
 			// Removes the screen overlay if the client is the king and impregnable armor is currently active
 			RemoveScreenOverlay(client);
 		}
+
+		// Resets the client's inferno stacks back to 0 if the active powr is napalm 
+		ResetNapalmStacks(client);
 	}
 }
 
@@ -3857,12 +3909,12 @@ public Action preventPlayerFromScoping(int client)
 
 
 
-///////////////////////////////////
-// - Carpet Bombing Flashbangs - //
-///////////////////////////////////
+/////////////////////////////////////////
+// - Power Carpet Bombing Flashbangs - //
+/////////////////////////////////////////
 
 
-// This happens when a king acquires the movement speed power 
+// This happens when a king acquires the carpet bombing flashbangs power 
 public void PowerCarpetBombingFlashbangs(int client)
 {
 	// Changes the name of the path for the sound that is will be played when the player acquires the specific power
@@ -3872,7 +3924,7 @@ public void PowerCarpetBombingFlashbangs(int client)
 	dottedLine = "---------------------------------------------";
 
 	// Changes the content of the nameOfPower variable to reflect which power the king acquired
-	nameOfPower = "Power Bombing Flashbangs";
+	nameOfPower = "Carpet Bombing Flashbangs";
 	
 	// Specifies which special weapon the king should be given
 	kingWeapon = "weapon_flashbang";
@@ -3880,7 +3932,7 @@ public void PowerCarpetBombingFlashbangs(int client)
 	// Gives the king a unique weapon if the current power requires one
 	CreateTimer(0.25, Timer_GiveKingUniqueWeapon, client);
 
-	// Turns on the Power Bombing Flashbangs king power 
+	// Turns on the power Carpet Bombing Flashbangs king power 
 	powerCarpetBombingFlashbangs = GetRandomInt(1, 3);
 
 	// If the value stored within the powerCarpetBombingFlashbangs is 1 execute this section
@@ -4048,12 +4100,6 @@ public Action Timer_RemoveFlashBangEntity(Handle timer, int entity)
 // This happens when the player takes damage
 public Action OnDamageTaken(int client, int &attacker, int &inflictor, float &damage, int &damagetype) 
 {
-	// If the king's current power is not the carpet bombing flashbang power then execute this section
-	if(!powerCarpetBombingFlashbangs)
-	{
-		return Plugin_Continue;
-	}
-
 	// If the client does not meet our validation criteria then execute this section
 	if(!IsValidClient(client))
 	{
@@ -4084,16 +4130,311 @@ public Action OnDamageTaken(int client, int &attacker, int &inflictor, float &da
 	// Obtains the classname of the inflictor entity and store it within our classname variable
 	GetEdictClassname(inflictor, classname, sizeof(classname));
 
-	// If the inflictor entity is not a flashbang then execute this section
-	if(StrEqual(classname, "flashbang_projectile", false))
+	// If the king's current power is not the carpet bombing flashbang power then execute this section
+	if(powerCarpetBombingFlashbangs)
 	{
-		// Changes the amount of damage to 1337
-		damage = 1337.0;
+		// If the inflictor entity is a flashbang projectile then execute this section
+		if(StrEqual(classname, "flashbang_projectile", false))
+		{
+			// Changes the amount of damage to 1337
+			damage = 1337.0;
 
-		return Plugin_Changed;
+			return Plugin_Changed;
+		}
+	}
+
+	// If the king's current power is not the napalm power then execute this section
+	if(powerNapalm)
+	{
+		// If the inflictor entity is the fire left behind a molotov or inccendiary grenade then execute this section
+		if(StrEqual(classname, "inferno", false))
+		{
+			// If the molotov's fire have damaged the player 4 times or less then execute this section
+			if(powerNapalmDamageTaken[client] <= 4)
+			{
+				// Adds +1 to the powerNapalmDamageTaken variable
+				powerNapalmDamageTaken[client]++;
+
+				return Plugin_Continue;
+			}
+
+			// if the molotov's fire have damaged the player 5 times then execute this section
+			else if(powerNapalmDamageTaken[client] == 5)
+			{
+				// Sets the player on fire for 60 seconds
+				IgniteEntity(client, 60.0);
+			}
+		}
 	}
 
 	return Plugin_Continue;
+}
+
+
+
+//////////////////////
+// - Power Naplam - //
+//////////////////////
+
+
+// This happens when a king acquires the napalm power 
+public void PowerNapalm(int client)
+{
+	// Turns on the Power Carpet Bombing Flashbangs king power 
+	powerNapalm = true;
+
+	// Changes the name of the path for the sound that is will be played when the player acquires the specific power
+	powerSoundName = "kingmod/power_napalm.mp3";
+
+	// Changes the content of the dottedLine variable to match the length of the name of power and tier
+	dottedLine = "--------------------";
+
+	// Changes the content of the nameOfPower variable to reflect which power the king acquired
+	nameOfPower = "Napalm";
+
+	// Changes the content of the nameOfTier variable to reflect which tier of the power the king acquired
+	nameOfTier = "Tier A";
+
+	// Specifies which special weapon the king should be given
+	kingWeapon = "weapon_molotov";
+
+	// Gives the king a unique weapon if the current power requires one
+	CreateTimer(0.25, Timer_GiveKingUniqueWeapon, client);
+}
+
+
+// This happens when a player dies
+public Action ResetNapalmStacks(int client)
+{
+	// If the king's current power is not the napalm power then execute this section
+	if(!powerNapalm)
+	{
+		return Plugin_Continue;
+	}
+
+	// If the powerNapalmDamageTaken variable 0 then execute this section
+	if(!powerNapalmDamageTaken[client])
+	{
+		return Plugin_Continue;
+	}
+
+	// Resets the powerNapalmDamageTaken variable back to 0
+	powerNapalmDamageTaken[client] = 0;
+
+	return Plugin_Continue;
+}
+
+
+// This happens when a player uses the left attack with their knife or weapon
+public Action WeaponFireNapalm(int client)
+{
+	// If the king's current power is not the napalm power then execute this section
+	if(!powerNapalm)
+	{
+		return Plugin_Continue;
+	}
+
+	// Obtains the name of the player's weapon and store it within our variable entity
+	int entity = GetEntPropEnt(client, Prop_Send, "m_hActiveWeapon");
+
+	// If the entity does not meet our criteria validation then execute this section
+	if(!IsValidEntity(entity))
+	{
+		return Plugin_Continue;
+	}
+
+	// Creates a variable which we will use to store data within
+	char className[64];
+
+	// Obtains the entity's class name and store it within our className variable
+	GetEntityClassname(entity, className, sizeof(className));
+
+	// If the entity is not a molotov then execute this section
+	if(!StrEqual(className, "weapon_molotov", false))
+	{
+		return Plugin_Continue;
+	}
+
+	// Gives the client the specified weapon
+	GivePlayerItem(client, "weapon_molotov");
+
+	// Changes the player's amount of molotovs to 10
+	SetEntProp(client, Prop_Send, "m_iAmmo", 10, _, 17);
+
+	return Plugin_Continue;
+}
+
+
+// This happens when a the plugin is being loaded
+public void PowerNapalmStartTimer()
+{
+	// If the cvar_KingPowerChooser is not enabled then execute this section
+	if(!cvar_KingPowerChooser)
+	{
+		return;
+	}
+
+	// Creates a timer that will check if a playr is below 6 health and is on fire every 0.5 seconds while the napalm power is active
+	CreateTimer(0.5, Timer_PowerNapalmCheckHealth, _, TIMER_REPEAT);
+}
+
+
+// This happens every 0.5 seconds once the plugin has been loaded
+public Action Timer_PowerNapalmCheckHealth(Handle timer)
+{
+	// If the king's current power is not the napalm power then execute this section
+	if(!powerNapalm)
+	{
+		return Plugin_Continue;
+	}
+
+	// Loops through all of the clients
+	for (int client = 1; client <= MaxClients; client++)
+	{
+		// If the client does not meet our validation criteria then execute this section
+		if(!IsValidClient(client))
+		{
+			continue;
+		}
+
+		// If the king does not meet our validation criteria then execute this section
+		if(!IsValidClient(kingIndex))
+		{
+			continue;
+		}
+
+		// If the client is not alive then execute this section
+		if(!IsPlayerAlive(client))
+		{
+			continue;
+		}
+
+		// if the molotov's fire have not damaged the player 5 times then execute this section
+		if(powerNapalmDamageTaken[client] != 5)
+		{
+			continue;
+		}
+
+		PrintToChatAll("Debug - 1");
+
+		// If the client's health is above 6 then execute this section
+		if(GetEntProp(client, Prop_Send, "m_iHealth") > 10)
+		{
+			continue;
+		}
+
+		PrintToChat(client, "KingMod: You died from the severe burns!");
+
+		// Inflicts 50 damage to the client from the king
+		DealDamageToClient(client, kingIndex, 50, "inferno");
+	}
+
+	return Plugin_Continue;
+}
+
+
+// We call upon this function whenever we want to inflict damage upon a player
+public Action DealDamageToClient(int client, int attacker, int damage, const char[] weaponClassName)
+{
+	if(!IsValidClient(client))
+	{
+		return Plugin_Continue;
+	}
+
+	if(!IsValidClient(attacker))
+	{
+		return Plugin_Continue;
+	}
+
+	if(!IsPlayerAlive(client))
+	{
+		return Plugin_Continue;
+	}
+
+	// Creates a point_hurt entity and store it within the pointHurt variable
+	int pointHurt = CreateEntityByName("point_hurt");
+
+	// If the pointHurt  entity meets our criteria of validation then execute this section
+	if(!IsValidEntity(pointHurt))
+	{
+		return Plugin_Continue;
+	}
+
+	PrintToChatAll("Debug - 4");
+
+	// Creates a variable which we will use to store data within
+	char damageString[16];
+
+	// Converts the damage integer to a string value and store it within the damageString variable 
+	IntToString(damage, damageString, 16);
+
+	// Sets the client's targetname to damageVictim
+	DispatchKeyValue(client, "targetname", "damageVictim");
+
+	// Sets the target to receive the damage from the point_hurt to be the target with the name damageVictim
+	DispatchKeyValue(pointHurt, "DamageTarget", "damageVictim");
+	
+	// Defines which type of damage will be inflicted upon the victim
+	DispatchKeyValue(pointHurt, "DamageType", "DMG_GENERIC");
+
+	// Sets the amount of damage that the target should receive
+	DispatchKeyValue(pointHurt, "Damage", damageString);
+	
+	// Defines the weapon that was used to inflict the damage upon the victim
+	DispatchKeyValue(pointHurt, "classname", weaponClassName);
+
+	// Spawns the point-hurt entity in to the world 
+	DispatchSpawn(pointHurt);
+	
+	// Inflicts the damage specified upon the targetname by the attacker
+	AcceptEntityInput(pointHurt, "Hurt", attacker);
+
+	// Sets the client's targetname back to "" 
+	DispatchKeyValue(client, "targetname", "");
+
+	// Kills the point_hurt entity, removing it from the game
+	AcceptEntityInput(pointHurt, "Kill");	
+
+	return Plugin_Continue;
+}
+
+
+// This happens when the king dies while the napalm power is currently active
+public void RemoveNapalmFromVictims()
+{
+	// If the king's current power is not the napalm power then execute this section
+	if(!powerNapalm)
+	{
+		return;
+	}
+
+	// Loops through all of the clients
+	for (int client = 1; client <= MaxClients; client++)
+	{
+		// If the client does not meet our validation criteria then execute this section
+		if(!IsValidClient(client))
+		{
+			continue;
+		}
+
+		// If the client is not alive then execute this section
+		if(!IsPlayerAlive(client))
+		{
+			continue;
+		}
+
+		// if the molotov's fire have not damaged the player 5 times then execute this section
+		if(powerNapalmDamageTaken[client] != 5)
+		{
+			continue;
+		}
+
+		// Finds the effect that is active on the player and store it within the burningFlames variable 
+		int burningFlamees = GetEntPropEnt(client, Prop_Data, "m_hEffectEntity");
+
+		// Changes the duration of the fire to 0.0 thereby extinguishing it
+		SetEntPropFloat(burningFlamees, Prop_Data, "m_flLifetime", 0.0); 
+	}
 }
 
 
@@ -4225,15 +4566,19 @@ public void DownloadAndPrecacheFiles()
 	PrecacheSound("kingmod/power_impregnablearmor.mp3");
 	PrecacheSound("items/nvg_on.wav");
 
-	// Power - Movement Sped
+	// Power - Movement Speed
 	AddFileToDownloadsTable("sound/kingmod/power_movementspeed.mp3");
 	PrecacheSound("kingmod/power_movementspeed.mp3");
 
-	// Power - Movement Sped
+	// Power - Scout No Scope
 	AddFileToDownloadsTable("sound/kingmod/power_scoutnoscope.mp3");
 	PrecacheSound("kingmod/power_scoutnoscope.mp3");
 
-	// Power - Movement Sped
+	// Power - Carpet Bombing Flashbangs
 	AddFileToDownloadsTable("sound/kingmod/power_carpetbombingflashbangs.mp3");
 	PrecacheSound("kingmod/power_carpetbombingflashbangs.mp3");
+
+	// Power - Napalm
+	AddFileToDownloadsTable("sound/kingmod/power_napalm.mp3");
+	PrecacheSound("kingmod/power_napalm.mp3");
 }

@@ -26,7 +26,6 @@ public Plugin myinfo =
 };
 
 
-
 /////////////////////////
 // - Planned Convars - //
 /////////////////////////
@@ -41,6 +40,7 @@ bool cvar_PowerMovementSpeed = true;
 bool cvar_PowerStickyGrenades = true;
 bool cvar_PowerScoutNoScope = true;
 bool cvar_PowerCarpetBombingFlashbangs = true;
+bool cvar_PowerNapalm = true;
 
 int cvar_PointsNormalKill = 1;
 int cvar_PointsKingKill = 3;
@@ -61,6 +61,8 @@ float cvar_HealthshotExpirationTime = 10.0;
 
 bool powerStickyGrenades = false;
 bool powerScoutNoScope = false;
+bool powerNapalm = false;
+
 
 int powerImpregnableArmor = 0;
 int powerMovementSpeed = 0;
@@ -3015,7 +3017,7 @@ public Action ChooseKingPower(int client)
 			PowerScoutNoScope(client);
 
 			// 
-			PrintToChatAll("Power Sticky Grenades - [ %i | %i ]", chosenPower, powersAvailable);
+			PrintToChatAll("Power Scout No Scope - [ %i | %i ]", chosenPower, powersAvailable);
 		}
 	}
 
@@ -3034,10 +3036,28 @@ public Action ChooseKingPower(int client)
 			PowerCarpetBombingFlashbangs(client);
 
 			// 
-			PrintToChatAll("Power Sticky Grenades - [ %i | %i ]", chosenPower, powersAvailable);
+			PrintToChatAll("Power Carpet Bombing Flashbangs - [ %i | %i ]", chosenPower, powersAvailable);
 		}
 	}
 
+	// If the cvar for the Bumpmine power is enabled then execute this section
+	if(cvar_PowerNapalm)
+	{
+		// Adds +1 to the current value of the powersAvailable variable
+		powersAvailable++;
+
+		PrintToChatAll("Debug Power - PA %i | C %i", powersAvailable, chosenPower);
+
+		// If the value contained within chosenPower is the same as the value stored in powersAvailable then execute this section
+		if(chosenPower == powersAvailable)
+		{
+			// Gives the client an infinite amount of molotovs, the fire from the molotovs will cause players to catch on fire
+			powerNapalm(client);
+
+			// 
+			PrintToChatAll("Power Napalm - [ %i | %i ]", chosenPower, powersAvailable);
+		}
+	}
 
 	// Plays the sound file that is specific to that of the newly acquired power
 	CreateTimer(2.0, Timer_PlayPowerSpecificSound, client);
@@ -3093,6 +3113,13 @@ public int countAvailablePowers()
 		powersAvailable++;
 	}
 
+	// If the cvar for the napalm power is enabled then execute this section
+	if(cvar_PowerNapalm)
+	{
+		// Adds +1 to the current value of the powersAvailable variable
+		powersAvailable++;
+	}
+
 	// Returns the value of our powersAvailable variable
 	return powersAvailable;
 }
@@ -3138,6 +3165,13 @@ public void ResetPreviousPower()
 		// Turns off the carpet bombing flashbangs king power 
 		powerCarpetBombingFlashbangs = 0;
 	}
+
+	// If the currently active power is napalm then execute this section
+	if(powerNapalm)
+	{
+		// Turns off the napalm king power 
+		powerNapalm = false;
+	}
 }
 
 
@@ -3163,6 +3197,13 @@ public Action Timer_GiveKingUniqueWeapon(Handle timer, int client)
 	{
 		// Changes the player's amount of high explosive grenades to 10
 		SetEntProp(client, Prop_Send, "m_iAmmo", 10, _, 14);
+	}
+
+	// If the currently active power is carpet bombing flashbangs then execute this section
+	if(powerCarpetBombingFlashbangs)
+	{
+		// Changes the player's amount of flashbangs to 25
+		SetEntProp(client, Prop_Send, "m_iAmmo", 25, _, 15);
 	}
 
 	return Plugin_Continue;

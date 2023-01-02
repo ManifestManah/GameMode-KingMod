@@ -40,7 +40,8 @@ bool cvar_PowerMovementSpeed = false;
 bool cvar_PowerStickyGrenades = false;
 bool cvar_PowerScoutNoScope = false;
 bool cvar_PowerCarpetBombingFlashbangs = false;
-bool cvar_PowerNapalm = true;
+bool cvar_PowerNapalm = false;
+bool cvar_PowerRiot = true;
 
 int cvar_PointsNormalKill = 1;
 int cvar_PointsKingKill = 3;
@@ -56,7 +57,6 @@ float cvar_RecoveryCooldownDuration = 10.00;
 float cvar_HealthshotExpirationTime = 10.0;
 
 
-
 ////////////////////////////////
 // - Global Power Variables - //
 ////////////////////////////////
@@ -64,6 +64,7 @@ float cvar_HealthshotExpirationTime = 10.0;
 bool powerStickyGrenades = false;
 bool powerScoutNoScope = false;
 bool powerNapalm = false;
+bool powerRiot = false;
 
 
 int powerImpregnableArmor = 0;
@@ -124,10 +125,6 @@ char powerSoundName[128];
 char PlayerClanTag[MAXPLAYERS + 1][14];
 
 
-// Global ConVars
-ConVar conVarCheats;
-
-
 //////////////////////////
 // - Forwards & Hooks - //
 //////////////////////////
@@ -137,9 +134,9 @@ ConVar conVarCheats;
 public void OnPluginStart()
 {
 	// Finds the sv_cheats convar and store it within our conVarCheats value
-	conVarCheats = FindConVar("sv_cheats");
+	ConVar conVarCheats = FindConVar("sv_cheats");
 
-	// Obtains the flags related to the sv_cheat convar
+	// Obtains the flags related to the sv_cheats convar
 	int notifyFlag = GetConVarFlags(conVarCheats);
 
 	// Changes the notify status for the sv_cheats to not notify about value changes
@@ -173,7 +170,7 @@ public void OnPluginStart()
 	CreateTimer(1.0, Timer_UpdateTeamScoreHud, _, TIMER_REPEAT);
 
 	// Creates a timer that will modify the env_gunfire used by the sentry guns once every 1.0 second  
-	CreateTimer(1.0, SentryGunModifyGunFire, _, TIMER_REPEAT);
+	CreateTimer(1.0, SentryGunModifyGunFire, _, TIMER_REPEAT || TIMER_FLAG_NO_MAPCHANGE);
 
 	// Creates a timer that will remove dropped items and weapons from the map every 2.5 seconds
 	CreateTimer(2.5, Timer_CleanFloor, _, TIMER_REPEAT);
@@ -488,6 +485,16 @@ public Action OnWeaponCanUse(int client, int weapon)
 				return Plugin_Continue;
 			}
 		}
+
+		// If the currently active power is riot then execute this section
+		if(powerRiot)
+		{
+			// If the weapon is a shield then excute this section
+			if(StrEqual(ClassName, "weapon_shield", false))
+			{
+				return Plugin_Continue;
+			}
+		}
 	}
 
 	// If the weapon's entity name is the same as weapon_knife or weapon_healthshot then execute this section
@@ -681,7 +688,10 @@ public Action Event_PlayerSpawn(Handle event, const char[] name, bool dontBroadc
 		return Plugin_Continue;
 	}
 
-	// Grants the player increased movement speed i the movement speed power is active
+	// Changes the client's health to 1 if the riot power is active
+	PowerRiotChangePlayerHealth(client);
+
+	// Grants the player increased movement speed if the movement speed power is active
 	PowerMovementSpeedSpawn(client);
 
 	// Strips the client of all their weapons
@@ -987,6 +997,12 @@ public Action Event_PlayerDeath(Handle event, const char[] name, bool dontBroadc
 // This happens when the round starts 
 public Action Event_RoundStart(Handle event, const char[] name, bool dontBroadcast)
 {
+	// Changes the gameInProgress state to true
+	gameInProgress = true;
+
+	// Creates a hostage rescue zone if the powerchooser and shield power is enabled, to let players use the shield
+	createHostageZone();
+
 	// Removes any power related effects that may elsewise be able to transfer over from the previous round
 	RemoveKingPowerEffects();
 
@@ -998,9 +1014,6 @@ public Action Event_RoundStart(Handle event, const char[] name, bool dontBroadca
 
 	// Checks if the current map has been configured to have platform support included 
 	CheckForPlatformSupport();
-
-	// Changes the gameInProgress state to true
-	gameInProgress = true;
 
 	// Changes the index of the king back to 0
 	kingIndex = 0;
@@ -1297,7 +1310,7 @@ public void ChangeSentryGunHealth()
 		// Obtains the entity's class name and store it within our className variable
 		GetEntityClassname(entity, className, sizeof(className));
 
-		// If the entity is a healthshot then execute this section
+		// If the entity is a dronegun then execute this section
 		if(!StrEqual(className, "dronegun"))
 		{	
 			continue;
@@ -1792,6 +1805,12 @@ public Action InjectHealthshot(int client)
 // This function is called upon whenever a player is killed
 public Action DropHealthShot(int client)
 {
+	// If the cvar_KingPowerChooser is enabled and the riot power is enabled and the riot power is currently active then execute this section
+	if(cvar_KingPowerChooser && cvar_PowerRiot && powerRiot)
+	{
+		return Plugin_Continue;
+	}
+
 	// If the randomly chosen number is larger than the value of the cvar_DropChance then execute this section
 	if(cvar_DropChance <= GetRandomInt(1, 100))
 	{
@@ -2367,11 +2386,16 @@ public Action Timer_UpdateTeamScoreHud(Handle timer)
 // This happens once every 1.0 seconds once the plugin has been loaded
 public Action SentryGunModifyGunFire(Handle timer)
 {
+	if(!gameInProgress)
+	{
+		return Plugin_Continue;
+	}
+
 	// Creats a variable to store our information within and sets it to false
 	bool isCheatsEnabled = false;
 
 	// If the server already have sv_cheats enabled then execute this section
-	if(conVarCheats.IntValue > 0)
+	if(GetConVarInt(FindConVar("sv_cheats")) != 0)
 	{
 		isCheatsEnabled = true;
 	}
@@ -2395,7 +2419,7 @@ public Action SentryGunModifyGunFire(Handle timer)
 		if(!isCheatsEnabled)
 		{
 			// Changes the sv_cheats convar to 1
-			conVarCheats.IntValue = 1;
+			SetConVar("sv_cheats", "0");
 		}
 
 		// Performs a fake client command to target all env_gunfire entities and modify their weapon name  
@@ -2405,7 +2429,7 @@ public Action SentryGunModifyGunFire(Handle timer)
 		if(!isCheatsEnabled)
 		{
 			// Changes the sv_cheats convar back to 0
-			conVarCheats.IntValue = 0;
+			SetConVar("sv_cheats", "1");
 		}
 
 		return Plugin_Continue;
@@ -2456,7 +2480,7 @@ public Action Timer_CleanFloor(Handle timer)
 		}
 
 		// If the king's current power is the carpet bombing flashbangs power then execute this section
-		if(powerScoutNoScope)
+		if(powerCarpetBombingFlashbangs)
 		{
 			// If the entity is a flashbang then execute this section
 			if(StrEqual(className, "weapon_flashbang", false))
@@ -3182,7 +3206,7 @@ public Action ChooseKingPower(int client)
 		}
 	}
 
-	// If the cvar for the Bumpmine power is enabled then execute this section
+	// If the cvar for the movement speed power is enabled then execute this section
 	if(cvar_PowerMovementSpeed)
 	{
 		// Adds +1 to the current value of the powersAvailable variable
@@ -3199,7 +3223,7 @@ public Action ChooseKingPower(int client)
 		}
 	}
 
-	// If the cvar for the Bumpmine power is enabled then execute this section
+	// If the cvar for the sticky grenades power is enabled then execute this section
 	if(cvar_PowerStickyGrenades)
 	{
 		// Adds +1 to the current value of the powersAvailable variable
@@ -3218,7 +3242,7 @@ public Action ChooseKingPower(int client)
 		}
 	}
 
-	// If the cvar for the Bumpmine power is enabled then execute this section
+	// If the cvar for the scout no scope power is enabled then execute this section
 	if(cvar_PowerScoutNoScope)
 	{
 		// Adds +1 to the current value of the powersAvailable variable
@@ -3237,7 +3261,7 @@ public Action ChooseKingPower(int client)
 		}
 	}
 
-	// If the cvar for the Bumpmine power is enabled then execute this section
+	// If the cvar for the carpet bombing flashbangs power is enabled then execute this section
 	if(cvar_PowerCarpetBombingFlashbangs)
 	{
 		// Adds +1 to the current value of the powersAvailable variable
@@ -3256,7 +3280,7 @@ public Action ChooseKingPower(int client)
 		}
 	}
 
-	// If the cvar for the Bumpmine power is enabled then execute this section
+	// If the cvar for the napalm power is enabled then execute this section
 	if(cvar_PowerNapalm)
 	{
 		// Adds +1 to the current value of the powersAvailable variable
@@ -3275,6 +3299,26 @@ public Action ChooseKingPower(int client)
 		}
 	}
 
+	// If the cvar for the riot power is enabled then execute this section
+	if(cvar_PowerRiot)
+	{
+		// Adds +1 to the current value of the powersAvailable variable
+		powersAvailable++;
+
+		PrintToChatAll("Debug Power - PA %i | C %i", powersAvailable, chosenPower);
+
+		// If the value contained within chosenPower is the same as the value stored in powersAvailable then execute this section
+		if(chosenPower == powersAvailable)
+		{
+			// Gives the client a riot shield, and changes everybody's health to 1
+			PowerRiot(client);
+
+			// 
+			PrintToChatAll("Power Napalm - [ %i | %i ]", chosenPower, powersAvailable);
+		}
+	}
+
+
 	// Plays the sound file that is specific to that of the newly acquired power
 	CreateTimer(2.0, Timer_PlayPowerSpecificSound, client);
 
@@ -3286,6 +3330,7 @@ public Action ChooseKingPower(int client)
 
 	return Plugin_Continue;
 }
+
 
 
 // This happens when a new king has been chosen and he is about to receive a unique power
@@ -3336,9 +3381,17 @@ public int countAvailablePowers()
 		powersAvailable++;
 	}
 
+	// If the cvar for the riot power is enabled then execute this section
+	if(cvar_PowerRiot)
+	{
+		// Adds +1 to the current value of the powersAvailable variable
+		powersAvailable++;
+	}
+
 	// Returns the value of our powersAvailable variable
 	return powersAvailable;
 }
+
 
 
 // This happens when a king is about to receive a new power and when a round starts
@@ -3387,6 +3440,13 @@ public void ResetPreviousPower()
 	{
 		// Turns off the napalm king power 
 		powerNapalm = false;
+	}
+
+	// If the currently active power is riot then execute this section
+	if(powerRiot)
+	{
+		// Turns off the riot king power 
+		powerRiot = false;
 	}
 }
 
@@ -4354,7 +4414,7 @@ public Action OnDamageTaken(int client, int &attacker, int &inflictor, float &da
 // This happens when a king acquires the napalm power 
 public void PowerNapalm(int client)
 {
-	// Turns on the Power Carpet Bombing Flashbangs king power 
+	// Turns on the Power napalm king power 
 	powerNapalm = true;
 
 	// Changes the name of the path for the sound that is will be played when the player acquires the specific power
@@ -4608,6 +4668,126 @@ public void RemoveNapalmFromVictims()
 
 		// Changes the duration of the fire to 0.0 thereby extinguishing it
 		SetEntPropFloat(burningFlamees, Prop_Data, "m_flLifetime", 0.0); 
+	}
+}
+
+
+
+////////////////////
+// - Power Riot - //
+////////////////////
+
+
+// This happens when a king acquires the riot power 
+public void PowerRiot(int client)
+{
+	// Turns on the riot king power 
+	powerRiot = true;
+
+	// Changes the name of the path for the sound that is will be played when the player acquires the specific power
+	powerSoundName = "kingmod/power_riot.mp3";
+
+	// Changes the content of the dottedLine variable to match the length of the name of power and tier
+	dottedLine = "--------------------";
+
+	// Changes the content of the nameOfPower variable to reflect which power the king acquired
+	nameOfPower = "Riot";
+
+	// Changes the content of the nameOfTier variable to reflect which tier of the power the king acquired
+	nameOfTier = "Tier A";
+
+	// Specifies which special weapon the king should be given
+	kingWeapon = "weapon_shield";
+
+	// Gives the king a unique weapon if the current power requires one
+	CreateTimer(0.25, Timer_GiveKingUniqueWeapon, client);
+
+	// Loops through all of the clients
+	for (int i = 1; i <= MaxClients; i++)
+	{
+		// If the client does not meet our validation criteria then execute this section
+		if(!IsValidClient(i))
+		{
+			continue;
+		}
+
+		// If the client is not alive then execute this section
+		if(!IsPlayerAlive(i))
+		{
+			continue;
+		}
+
+		// Changes the health of the client to 1
+		SetEntProp(i, Prop_Send, "m_iHealth", 1, 1);
+	}
+
+	// Loops through all entities that are currently in the game
+	for (int entity = MaxClients + 1; entity <= GetMaxEntities(); entity++)
+	{
+		// If the entity does not meet our criteria of validation then execute this section
+		if(!IsValidEntity(entity))
+		{
+			continue;
+		}
+
+		// Creates a variable which we will use to store data within
+		char className[64];
+
+		// Obtains the entity's class name and store it within our className variable
+		GetEntityClassname(entity, className, sizeof(className));
+
+		// If the entity is a healthshot then execute this section
+		if(!StrEqual(className, "weapon_healthshot"))
+		{	
+			continue;
+		}
+
+		// Kills the weapon entity, removing it from the game
+		AcceptEntityInput(entity, "Kill");
+	}
+}
+
+
+// This happens when a player spawns
+public void PowerRiotChangePlayerHealth(int client)
+{
+	// If the the riot power is not currently active  execute this section
+	if(!powerRiot)
+	{
+		return;
+	}
+
+	// Changes the health of the client to 1
+	SetEntProp(client, Prop_Send, "m_iHealth", 1, 1);
+}
+
+
+// This hapens when the round starts
+public void createHostageZone()
+{
+	// Creates a variable which we will store data within
+	int entity = -1;
+
+	// Loops through all of the entities and if no func_hostage_rescue zone exists then execute this section
+	if((entity = FindEntityByClassname(entity, "func_hostage_rescue")) == -1)
+	{
+		// Creates a func_hostage_rescue entity and store it within the rescueArea variable
+		int rescueArea = CreateEntityByName("func_hostage_rescue");
+
+		// If the rescueArea does not meet our criteria of validation then execute this section
+		if(!IsValidEntity(rescueArea))
+		{
+			return;
+		}
+		
+		// Sets the origin of our hostage rescue zone
+		DispatchKeyValue(rescueArea, "origin", "0.0, 0.0, 0.0");
+		
+		// Spawns our hostage rescue zone
+		DispatchSpawn(rescueArea);
+
+		// Changes the zone's state to disabled, as we don't need the functionality of it, we just require it to exist within the level
+		AcceptEntityInput(rescueArea, "disable");
 	}
 }
 

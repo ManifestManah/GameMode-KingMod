@@ -39,6 +39,8 @@ bool cvar_KingPowerChooser = true;
 bool cvar_PowerImpregnableArmor = true;
 bool cvar_PowerMovementSpeed = true;
 bool cvar_PowerStickyGrenades = true;
+bool cvar_PowerScoutNoScope = true;
+bool cvar_PowerCarpetBombingFlashbangs = true;
 
 int cvar_PointsNormalKill = 1;
 int cvar_PointsKingKill = 3;
@@ -58,10 +60,11 @@ float cvar_HealthshotExpirationTime = 10.0;
 ////////////////////////////////
 
 bool powerStickyGrenades = false;
+bool powerScoutNoScope = false;
 
 int powerImpregnableArmor = 0;
 int powerMovementSpeed = 0;
-
+int powerCarpetBombingFlashbangs = 0;
 
 //////////////////////////
 // - Global Variables - //
@@ -208,6 +211,12 @@ public void OnClientPostAdminCheck(int client)
 	// Adds a hook to the client which will let us track when the player changes weapon
 	SDKHook(client, SDKHook_WeaponCanSwitchTo, OnWeaponCanSwitchTo);
 
+	// Adds a hook to the client which will let us track when the player takes damage
+	SDKHook(client, SDKHook_OnTakeDamage, OnDamageTaken);
+
+	// Adds a hook to the client which will let us track when the client uses their weapon's scope
+	SDKHook(client, SDKHook_PreThink, OnPreThink);
+
 	// Attempts to auto-assign the player to the team at a disadvantage after the mp_force_pick_time duration
 	AutoJoinTeam(client);
 }
@@ -233,10 +242,16 @@ public void OnClientDisconnect(int client)
 	SDKUnhook(client, SDKHook_WeaponCanUse, OnWeaponCanUse);
 
 	// Removes the hook that we had added to the client to track when he had picked up a weapon
-	SDKHook(client, SDKHook_WeaponEquip, OnWeaponEquip);
+	SDKUnhook(client, SDKHook_WeaponEquip, OnWeaponEquip);
 
 	// Removes the hook that we had added to the client to track when he changes weapon
-	SDKHook(client, SDKHook_WeaponCanSwitchTo, OnWeaponCanSwitchTo);
+	SDKUnhook(client, SDKHook_WeaponCanSwitchTo, OnWeaponCanSwitchTo);
+
+	// Removes the hook that we added to track when the player takes damage
+	SDKUnhook(client, SDKHook_OnTakeDamage, OnDamageTaken);
+
+	// Removes the hook that we added to track when the client is using their weapon's scope
+	SDKUnhook(client, SDKHook_PreThink, OnPreThink);
 
 	// If the client is not the current king then execute this section
 	if(!isPlayerKing[client])
@@ -407,6 +422,26 @@ public Action OnWeaponCanUse(int client, int weapon)
 		{
 			// If the weapon is a high explosive grenad then excute this section
 			if(StrEqual(ClassName, "weapon_hegrenade", false))
+			{
+				return Plugin_Continue;
+			}
+		}
+
+		// If the king's current power is the carpet bombing flashbangs power then execute this section
+		if(powerScoutNoScope)
+		{
+			// If the weapon is a ssg08 then excute this section
+			if(StrEqual(ClassName, "weapon_ssg08", false))
+			{
+				return Plugin_Continue;
+			}
+		}
+
+		// If the king's current power is not the flashbang power then execute this section
+		if(powerCarpetBombingFlashbangs)
+		{
+			// If the weapon is a flashbang then excute this section
+			if(StrEqual(ClassName, "weapon_flashbang", false))
 			{
 				return Plugin_Continue;
 			}
@@ -1012,8 +1047,11 @@ public Action Event_WeaponFire(Handle event, const char[] name, bool dontBroadca
 	// Grants a random amount of health when using the healthshot
 	InjectHealthshot(client); 
 
-	// Gives the player grenades after having thrown
+	// Gives the player high explosive grenades after having thrown
 	WeaponFireStickyGrenades(client);
+
+	// Gives the player a flashbang after having thrown
+	WeaponFireCarpetBombingFlashbang(client);
 
 	// If the player is no longer spawnprotected then execute this section
 	if(!isPlayerProtected[client])
@@ -1066,6 +1104,12 @@ public void LateLoadSupport()
 
 		// Adds a hook to the client which will let us track when the player changes weapon
 		SDKHook(client, SDKHook_WeaponCanSwitchTo, OnWeaponCanSwitchTo);
+
+		// Adds a hook to the client which will let us track when the player takes damage
+		SDKHook(client, SDKHook_OnTakeDamage, OnDamageTaken);
+
+		// Adds a hook to the client which will let us track when the client uses their weapon's scope
+		SDKHook(client, SDKHook_PreThink, OnPreThink);
 	}
 }
 
@@ -2193,6 +2237,16 @@ public Action Timer_CleanFloor(Handle timer)
 			}
 		}
 
+		// If the king's current power is the carpet bombing flashbangs power then execute this section
+		if(powerScoutNoScope)
+		{
+			// If the entity is a flashbang then execute this section
+			if(StrEqual(className, "weapon_flashbang", false))
+			{
+				continue;
+			}
+		}
+
 		// If the entity has an ownership relation to somebody or something, then execute this section
 		if(GetEntDataEnt2(entity, weaponOwner) != -1)
 		{
@@ -2946,6 +3000,45 @@ public Action ChooseKingPower(int client)
 		}
 	}
 
+	// If the cvar for the Bumpmine power is enabled then execute this section
+	if(cvar_PowerScoutNoScope)
+	{
+		// Adds +1 to the current value of the powersAvailable variable
+		powersAvailable++;
+
+		PrintToChatAll("Debug Power - PA %i | C %i", powersAvailable, chosenPower);
+
+		// If the value contained within chosenPower is the same as the value stored in powersAvailable then execute this section
+		if(chosenPower == powersAvailable)
+		{
+			// Gives the client a ssg08 but the player is unable to use the weapon's scope 
+			PowerScoutNoScope(client);
+
+			// 
+			PrintToChatAll("Power Sticky Grenades - [ %i | %i ]", chosenPower, powersAvailable);
+		}
+	}
+
+	// If the cvar for the Bumpmine power is enabled then execute this section
+	if(cvar_PowerCarpetBombingFlashbangs)
+	{
+		// Adds +1 to the current value of the powersAvailable variable
+		powersAvailable++;
+
+		PrintToChatAll("Debug Power - PA %i | C %i", powersAvailable, chosenPower);
+
+		// If the value contained within chosenPower is the same as the value stored in powersAvailable then execute this section
+		if(chosenPower == powersAvailable)
+		{
+			// Gives the client an infinite amount of flashbangs that duplicates themselves when thrown and deal damage 1337 upon collision
+			PowerCarpetBombingFlashbangs(client);
+
+			// 
+			PrintToChatAll("Power Sticky Grenades - [ %i | %i ]", chosenPower, powersAvailable);
+		}
+	}
+
+
 	// Plays the sound file that is specific to that of the newly acquired power
 	CreateTimer(2.0, Timer_PlayPowerSpecificSound, client);
 
@@ -2986,6 +3079,20 @@ public int countAvailablePowers()
 		powersAvailable++;
 	}
 
+	// If the cvar for the scout no scope power is enabled then execute this section
+	if(cvar_PowerScoutNoScope)
+	{
+		// Adds +1 to the current value of the powersAvailable variable
+		powersAvailable++;
+	}
+
+	// If the cvar for the carpet bombing flashbangs power is enabled then execute this section
+	if(cvar_PowerCarpetBombingFlashbangs)
+	{
+		// Adds +1 to the current value of the powersAvailable variable
+		powersAvailable++;
+	}
+
 	// Returns the value of our powersAvailable variable
 	return powersAvailable;
 }
@@ -3016,6 +3123,20 @@ public void ResetPreviousPower()
 	{
 		// Turns off the movement speed king power 
 		powerMovementSpeed = 0;
+	}
+
+	// If the currently active power is scout no scope then execute this section
+	if(powerScoutNoScope)
+	{
+		// Turns off the scout no scope king power 
+		powerScoutNoScope = false;
+	}
+
+	// If the currently active power is carpet bombing flashbangs then execute this section
+	if(powerCarpetBombingFlashbangs)
+	{
+		// Turns off the carpet bombing flashbangs king power 
+		powerCarpetBombingFlashbangs = 0;
 	}
 }
 
@@ -3277,6 +3398,7 @@ public void RemoveScreenOverlay(int client)
 }
 
 
+
 //////////////////////////////
 // - Movement Speed Power - //
 //////////////////////////////
@@ -3427,31 +3549,42 @@ public void PowerStickyGrenades(int client)
 	kingWeapon = "weapon_hegrenade";
 
 	// Gives the king a unique weapon if the current power requires one
-	CreateTimer(0.1, Timer_GiveKingUniqueWeapon, client);
+	CreateTimer(0.25, Timer_GiveKingUniqueWeapon, client);
 }
 
 
 // This happens when a new entity is created
 public void OnEntityCreated(int entity, const char[] classname)
 {
-	// If the king's current power is not the sticky grenades power then execute this section
-	if(!powerStickyGrenades)
+	// If the king's current power is the sticky grenades power then execute this section
+	if(powerStickyGrenades)
 	{
-		return;
+		// If the entity that was created is not a high explosive grenade projectile then execute this section
+		if(!StrEqual(classname, "hegrenade_projectile", false))
+		{
+			return;
+		}
+
+		// Adds a hook to the high explosive grenade after it has been spawned allowing us to alter the grenade's behavior
+		SDKHook(entity, SDKHook_SpawnPost, entity_HEGrenadeSpawned);
 	}
 
-	// If the entity that was created is a high explosive grenade projectile then execute this section
-	if(!StrEqual(classname, "hegrenade_projectile", false))
+	// If the king's current power is the carpet bombing flashbang power then execute this section
+	if(powerCarpetBombingFlashbangs)
 	{
-		return;
-	}
+		// If the entity that was created is not a flashbang projectile then execute this section
+		if(!StrEqual(classname, "flashbang_projectile", false))
+		{
+			return;
+		}
 
-	// Adds a hook to the high explosive grenade after it has been spawned allowing us to alter the grenade's behavior
-	SDKHook(entity, SDKHook_SpawnPost, entity_HEGrenadeSpawned);
+		// Adds a hook to the flashbange after it has been spawned allowing us to alter the flashbang's behavior
+		SDKHook(entity, SDKHook_SpawnPost, entity_FlashbangSpawned);
+	}
 }
 
 
-// This happens when a high explosive grenade has been spawned
+// This happens when a high explosive grenade projectile has been spawned
 public Action entity_HEGrenadeSpawned(int entity)
 {
 	// If the entity does not meet our criteria validation then execute this section
@@ -3586,6 +3719,338 @@ public Action WeaponFireStickyGrenades(int client)
 
 	// Changes the player's amount of high explosive grenades to 10
 	SetEntProp(client, Prop_Send, "m_iAmmo", 10, _, 14);
+
+	return Plugin_Continue;
+}
+
+
+
+//////////////////////////////
+// - Power Scout No Scope - //
+//////////////////////////////
+
+
+// This happens when a king acquires the scout no scope power
+public void PowerScoutNoScope(int client)
+{
+	// Turns on the scout no scope king power 
+	powerScoutNoScope = true;
+
+	// Changes the name of the path for the sound that is will be played when the player acquires the specific power
+	powerSoundName = "kingmod/power_impregnablearmor.mp3";
+
+	// Changes the content of the dottedLine variable to match the length of the name of power and tier
+	dottedLine = "------------------------------";
+
+	// Changes the content of the nameOfPower variable to reflect which power the king acquired
+	nameOfPower = "Scout No Scope";
+	
+	// Changes the content of the nameOfTier variable to reflect which tier of the power the king acquired
+	nameOfTier = "Tier A";
+	
+	// Specifies which special weapon the king should be given
+	kingWeapon = "weapon_ssg08";
+
+	// Gives the king a unique weapon if the current power requires one
+	CreateTimer(0.25, Timer_GiveKingUniqueWeapon, client);
+}
+
+
+// This happens every game tick
+public Action OnPreThink(int client)
+{
+	// If the king's current power is not the scout no scope power then execute this section
+	if(!powerScoutNoScope)
+	{
+		return Plugin_Continue;
+	}
+
+	// If the client does not meet our validation criteria then execute this section
+	if(!IsValidClient(client))
+	{
+		return Plugin_Continue;
+	}
+
+	// If the client is not the king then execute this section
+	if(!isPlayerKing[client])
+	{
+		return Plugin_Continue;
+	}
+
+	// Prevents the player from using their weapon's scope to zoom
+	preventPlayerFromScoping(client);
+
+	return Plugin_Continue;
+}
+
+
+// This happens when the king tries to use the scope while the scout no scope power is active
+public Action preventPlayerFromScoping(int client)
+{
+	// Obtains the name of the player's weapon and store it within our variable entity
+	int entity = GetEntPropEnt(client, Prop_Send, "m_hActiveWeapon");
+
+	// If the entity does not meet our criteria validation then execute this section
+	if(!IsValidEntity(entity))
+	{
+		return Plugin_Continue;
+	}
+
+	// Creates a variable to store our data within
+	char classname[32];
+
+	// Obtains the classname of the entity and store it within our classname variable
+	GetEdictClassname(entity, classname, sizeof(classname));
+
+	// If the entity is not a ssg08 then execute this section
+	if(!StrEqual(classname, "weapon_ssg08"))
+	{
+		return Plugin_Continue;
+	}
+
+	// Adds 2.0 seconds cooldown to when the player would be able to use the secondary attack (zoom function) 
+	SetEntDataFloat(entity, FindSendPropOffs("CBaseCombatWeapon", "m_flNextSecondaryAttack"), GetGameTime() + 2.0);
+
+	return Plugin_Continue;
+}
+
+
+
+///////////////////////////////////
+// - Carpet Bombing Flashbangs - //
+///////////////////////////////////
+
+
+// This happens when a king acquires the movement speed power 
+public void PowerCarpetBombingFlashbangs(int client)
+{
+	// Changes the name of the path for the sound that is will be played when the player acquires the specific power
+	powerSoundName = "kingmod/power_carpetbombingflashbangs.mp3";
+
+	// Changes the content of the dottedLine variable to match the length of the name of power and tier
+	dottedLine = "---------------------------------------------";
+
+	// Changes the content of the nameOfPower variable to reflect which power the king acquired
+	nameOfPower = "Power Bombing Flashbangs";
+	
+	// Specifies which special weapon the king should be given
+	kingWeapon = "weapon_flashbang";
+
+	// Gives the king a unique weapon if the current power requires one
+	CreateTimer(0.25, Timer_GiveKingUniqueWeapon, client);
+
+	// Turns on the Power Bombing Flashbangs king power 
+	powerCarpetBombingFlashbangs = GetRandomInt(1, 3);
+
+	// If the value stored within the powerCarpetBombingFlashbangs is 1 execute this section
+	if(powerCarpetBombingFlashbangs == 1)
+	{
+		// Changes the content of the nameOfTier variable to reflect which tier of the power the king acquired
+		nameOfTier = "Tier A";
+	}
+
+	// If the value stored within the powerCarpetBombingFlashbangs is 2 execute this section
+	else if(powerCarpetBombingFlashbangs == 2)
+	{
+		// Changes the content of the nameOfTier variable to reflect which tier of the power the king acquired
+		nameOfTier = "Tier B";
+	}
+
+	// If the value stored within the powerCarpetBombingFlashbangs is 3 execute this section
+	else if(powerCarpetBombingFlashbangs == 3)
+	{
+		// Changes the content of the nameOfTier variable to reflect which tier of the power the king acquired
+		nameOfTier = "Tier C";
+	}
+}
+
+
+// This happens when a player uses the left attack with their knife or weapon
+public Action WeaponFireCarpetBombingFlashbang(int client)
+{
+	// If the king's current power is not the carpet bombing flashbang power then execute this section
+	if(!powerCarpetBombingFlashbangs)
+	{
+		return Plugin_Continue;
+	}
+
+	// Obtains the name of the player's weapon and store it within our variable entity
+	int entity = GetEntPropEnt(client, Prop_Send, "m_hActiveWeapon");
+
+	// If the entity does not meet our criteria validation then execute this section
+	if(!IsValidEntity(entity))
+	{
+		return Plugin_Continue;
+	}
+
+	// Creates a variable which we will use to store data within
+	char className[64];
+
+	// Obtains the entity's class name and store it within our className variable
+	GetEntityClassname(entity, className, sizeof(className));
+
+	// If the entity is not a flashbang then execute this section
+	if(!StrEqual(className, "weapon_flashbang", false))
+	{
+		return Plugin_Continue;
+	}
+
+	// Gives the client the specified weapon
+	GivePlayerItem(client, "weapon_flashbang");
+
+	// Changes the player's amount of flashbangs to 25
+	SetEntProp(client, Prop_Send, "m_iAmmo", 25, _, 15);
+
+	// Throws another flashbang after 0.1 seconds has passed
+	CreateTimer(0.1, Timer_DuplicateFlashbangEntity, client, TIMER_FLAG_NO_MAPCHANGE);
+
+	// Throws another flashbang after 0.2 seconds has passed
+	CreateTimer(0.2, Timer_DuplicateFlashbangEntity, client, TIMER_FLAG_NO_MAPCHANGE);
+
+	// If the value stored within the powerCarpetBombingFlashbangs is 1 execute this section
+	if(powerCarpetBombingFlashbangs == 1)
+	{
+		// Changes the content of the nameOfTier variable to reflect which tier of the power the king acquired
+		nameOfTier = "Tier A";
+
+		// Throws another flashbang after 0.3 seconds has passed
+		CreateTimer(0.3, Timer_DuplicateFlashbangEntity, client, TIMER_FLAG_NO_MAPCHANGE);
+
+		// Throws another flashbang after 0.4 seconds has passed
+		CreateTimer(0.4, Timer_DuplicateFlashbangEntity, client, TIMER_FLAG_NO_MAPCHANGE);
+	}
+
+	// If the value stored within the powerCarpetBombingFlashbangs is 2 execute this section
+	else if(powerCarpetBombingFlashbangs == 2)
+	{
+		// Changes the content of the nameOfTier variable to reflect which tier of the power the king acquired
+		nameOfTier = "Tier B";
+
+		// Throws another flashbang after 0.3 seconds has passed
+		CreateTimer(0.3, Timer_DuplicateFlashbangEntity, client, TIMER_FLAG_NO_MAPCHANGE);
+	}
+
+	// If the value stored within the powerCarpetBombingFlashbangs is 3 execute this section
+	else if(powerCarpetBombingFlashbangs == 3)
+	{
+		// Changes the content of the nameOfTier variable to reflect which tier of the power the king acquired
+		nameOfTier = "Tier C";
+	}
+
+	return Plugin_Continue;
+}
+
+
+// This happens anywhere between 0.1 to 0.4 seconds after a player throws a flashbang
+public Action Timer_DuplicateFlashbangEntity(Handle timer, int client)
+{
+	// If the king's current power is not the carpet bombing flashbang power then execute this section
+	if(!powerCarpetBombingFlashbangs)
+	{
+		return Plugin_Continue;
+	}
+
+	// If the client does not meet our validation criteria then execute this section
+	if(!IsValidClient(client))
+	{
+		return Plugin_Continue;
+	}
+
+	// Obtains the client's active weapon and store it within the variable: entity
+	int entity = GetEntPropEnt(client, Prop_Send, "m_hActiveWeapon");
+
+	// If the entity that was picked up our entity criteria of validation then execute this section
+	if(!IsValidEntity(entity))
+	{
+		return Plugin_Continue;
+	}
+
+	// Changes the throw time of the grenade to 1.0 to reset the thrown grenade
+	SetEntPropFloat(entity, Prop_Send, "m_fThrowTime", 1.0);
+
+	return Plugin_Continue;
+}
+
+
+// This happens when a flashbang projectile has been spawned
+public Action entity_FlashbangSpawned(int entity)
+{
+	// If the entity does not meet our criteria validation then execute this section
+	if(!IsValidEntity(entity))
+	{
+		return Plugin_Continue;
+	}
+
+	// Throws another flashbang after 1.0 seconds has passed
+	CreateTimer(1.0, Timer_RemoveFlashBangEntity, entity, TIMER_FLAG_NO_MAPCHANGE);
+
+	return Plugin_Continue;
+}
+
+
+// This happens 1.0 seconds after a flashbang has been thrown
+public Action Timer_RemoveFlashBangEntity(Handle timer, int entity)
+{
+	// If the entity that was picked up our entity criteria of validation then execute this section
+	if(!IsValidEntity(entity))
+	{
+		return Plugin_Continue;
+	}
+
+	// Kills the entity, removing it from the game
+	AcceptEntityInput(entity, "Kill");
+
+	return Plugin_Continue;
+}
+
+
+// This happens when the player takes damage
+public Action OnDamageTaken(int client, int &attacker, int &inflictor, float &damage, int &damagetype) 
+{
+	// If the king's current power is not the carpet bombing flashbang power then execute this section
+	if(!powerCarpetBombingFlashbangs)
+	{
+		return Plugin_Continue;
+	}
+
+	// If the client does not meet our validation criteria then execute this section
+	if(!IsValidClient(client))
+	{
+		return Plugin_Continue;
+	}
+
+	// If the attacker does not meet our validation criteria then execute this section
+	if(!IsValidClient(attacker))
+	{
+		return Plugin_Continue;
+	}
+
+	// If the inflictor is not a valid entity then execute this section
+	if(!IsValidEntity(inflictor))
+	{
+		return Plugin_Continue;
+	}
+
+	// If the victim and attacker is on the same team
+	if(GetClientTeam(client) == GetClientTeam(attacker))
+	{
+		return Plugin_Continue;
+	}
+
+	// Creates a variable to store our data within
+	char classname[64];
+
+	// Obtains the classname of the inflictor entity and store it within our classname variable
+	GetEdictClassname(inflictor, classname, sizeof(classname));
+
+	// If the inflictor entity is not a flashbang then execute this section
+	if(StrEqual(classname, "flashbang_projectile", false))
+	{
+		// Changes the amount of damage to 1337
+		damage = 1337.0;
+
+		return Plugin_Changed;
+	}
 
 	return Plugin_Continue;
 }

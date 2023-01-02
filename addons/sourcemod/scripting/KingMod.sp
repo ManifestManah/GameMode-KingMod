@@ -827,11 +827,11 @@ public Action Event_PlayerDeath(Handle event, const char[] name, bool dontBroadc
 // This happens when the round starts 
 public Action Event_RoundStart(Handle event, const char[] name, bool dontBroadcast)
 {
-	// Changes all power related variables from active to inactive
-	ResetPreviousPower();
-
 	// Removes any power related effects that may elsewise be able to transfer over from the previous round
 	RemoveKingPowerEffects();
+
+	// Changes all power related variables from active to inactive
+	ResetPreviousPower();
 
 	// Checks if the current map has been configured to have platform support included 
 	CheckForPlatformSupport();

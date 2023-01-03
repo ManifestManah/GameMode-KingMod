@@ -41,7 +41,8 @@ bool cvar_PowerStickyGrenades = false;
 bool cvar_PowerScoutNoScope = false;
 bool cvar_PowerCarpetBombingFlashbangs = false;
 bool cvar_PowerNapalm = false;
-bool cvar_PowerRiot = true;
+bool cvar_PowerRiot = false;
+bool cvar_PowerVampiret = true;
 
 int cvar_PointsNormalKill = 1;
 int cvar_PointsKingKill = 3;
@@ -66,10 +67,10 @@ bool powerScoutNoScope = false;
 bool powerNapalm = false;
 bool powerRiot = false;
 
-
 int powerImpregnableArmor = 0;
 int powerMovementSpeed = 0;
 int powerCarpetBombingFlashbangs = 0;
+int powerVampire = 0;
 
 //////////////////////////
 // - Global Variables - //
@@ -3314,7 +3315,26 @@ public Action ChooseKingPower(int client)
 			PowerRiot(client);
 
 			// 
-			PrintToChatAll("Power Napalm - [ %i | %i ]", chosenPower, powersAvailable);
+			PrintToChatAll("Power Riot - [ %i | %i ]", chosenPower, powersAvailable);
+		}
+	}
+
+	// If the cvar for the vampire power is enabled then execute this section
+	if(cvar_PowerVampiret)
+	{
+		// Adds +1 to the current value of the powersAvailable variable
+		powersAvailable++;
+
+		PrintToChatAll("Debug Power - PA %i | C %i", powersAvailable, chosenPower);
+
+		// If the value contained within chosenPower is the same as the value stored in powersAvailable then execute this section
+		if(chosenPower == powersAvailable)
+		{
+			// Gives the client a the ability to leech a percentage of health from the enemy he attacks
+			PowerVampire();
+
+			// 
+			PrintToChatAll("Power Vampire - [ %i | %i ]", chosenPower, powersAvailable);
 		}
 	}
 
@@ -3330,7 +3350,6 @@ public Action ChooseKingPower(int client)
 
 	return Plugin_Continue;
 }
-
 
 
 // This happens when a new king has been chosen and he is about to receive a unique power
@@ -3388,10 +3407,17 @@ public int countAvailablePowers()
 		powersAvailable++;
 	}
 
+	// If the cvar for the vampire power is enabled then execute this section
+	if(cvar_PowerVampiret)
+	{
+		// Adds +1 to the current value of the powersAvailable variable
+		powersAvailable++;
+	}
+
+
 	// Returns the value of our powersAvailable variable
 	return powersAvailable;
 }
-
 
 
 // This happens when a king is about to receive a new power and when a round starts
@@ -3447,6 +3473,12 @@ public void ResetPreviousPower()
 	{
 		// Turns off the riot king power 
 		powerRiot = false;
+	}
+
+	if(powerVampire)
+	{
+		// Turns off the riot Vampire power 
+		powerVampire = 0;
 	}
 }
 
@@ -3743,9 +3775,6 @@ public void PowerMovementSpeed()
 	// Changes the content of the nameOfPower variable to reflect which power the king acquired
 	nameOfPower = "Movement Speed";
 	
-	// Changes the content of the nameOfTier variable to reflect which tier of the power the king acquired
-	nameOfTier = "Tier A";
-
 	// Turns on the movement speed king power 
 	powerMovementSpeed = GetRandomInt(1, 3);
 
@@ -4358,6 +4387,59 @@ public Action OnDamageTaken(int client, int &attacker, int &inflictor, float &da
 		return Plugin_Continue;
 	}
 
+	// If the king's current power is not the vampire power then execute this section
+	if(powerVampire)
+	{
+		// If the attacker is not the current king then execute this section
+		if(!isPlayerKing[attacker])
+		{
+			return Plugin_Continue;
+		}
+
+		// Creates a variable which we will store data within
+		float leechedHealth = 0.0;
+
+		// If the value stored within the powerVampire is 1 execute this section
+		if(powerVampire == 1)
+		{
+			// Obtains the damage dealt and multiply it by 0.50 and store the result within the leechedhealth variable
+			leechedHealth = damage * 0.50;
+		}
+
+		// If the value stored within the powerVampire is 2 execute this section
+		else if(powerVampire == 2)
+		{
+			// Obtains the damage dealt and multiply it by 0.425 and store the result within the leechedhealth variable
+			leechedHealth = damage * 0.425;
+		}
+
+		// If the value stored within the powerVampire is 3 execute this section
+		else if(powerVampire == 3)
+		{
+			// Obtains the damage dealt and multiply it by 0.35 and store the result within the leechedhealth variable
+			leechedHealth = damage * 0.35;
+		}
+
+		// Obtains the attacker's current health and the leeched health and store the total value within the playerhealth variable
+		int playerHealth = GetEntProp(attacker, Prop_Send, "m_iHealth") + RoundToFloor(leechedHealth);
+
+		// If the attacker's health plus the leeched amount is larger than (200 default) then execute this section
+		if(playerHealth > cvar_KingHealth)
+		{
+			// Changes the health of the attacker to (200 default)
+			SetEntProp(attacker, Prop_Send, "m_iHealth", cvar_KingHealth, 1);
+		}
+
+		// If the attacker's health plus the lehced amount is not larger than (200 default) then execute this section
+		else
+		{
+			// Changes the health of the attacker to the  value stored within the playerHealth variable
+			SetEntProp(attacker, Prop_Send, "m_iHealth", playerHealth, 1);
+		}
+
+		PrintToChat(attacker, "Kingmod You leeched %i health from your enemy", RoundToFloor(leechedHealth));
+	}
+
 	// Creates a variable to store our data within
 	char classname[64];
 
@@ -4403,7 +4485,6 @@ public Action OnDamageTaken(int client, int &attacker, int &inflictor, float &da
 
 	return Plugin_Continue;
 }
-
 
 
 //////////////////////
@@ -4792,6 +4873,49 @@ public void createHostageZone()
 }
 
 
+///////////////////////
+// - Power Vampire - //
+///////////////////////
+
+
+// This happens when a king acquires the vampire power 
+public void PowerVampire()
+{
+	// Changes the name of the path for the sound that is will be played when the player acquires the specific power
+	powerSoundName = "kingmod/power_vampire.mp3";
+
+	// Changes the content of the dottedLine variable to match the length of the name of power and tier
+	dottedLine = "---------------------";
+
+	// Changes the content of the nameOfPower variable to reflect which power the king acquired
+	nameOfPower = "Vampire";
+	
+	// Turns on the movement speed king power 
+	powerVampire = GetRandomInt(1, 3);
+
+	// If the value stored within the powerVampire is 1 execute this section
+	if(powerVampire == 1)
+	{
+		// Changes the content of the nameOfTier variable to reflect which tier of the power the king acquired
+		nameOfTier = "Tier A";
+	}
+
+	// If the value stored within the powerVampire is 2 execute this section
+	else if(powerVampire == 2)
+	{
+		// Changes the content of the nameOfTier variable to reflect which tier of the power the king acquired
+		nameOfTier = "Tier B";
+	}
+
+	// If the value stored within the powerVampire is 3 execute this section
+	else if(powerVampire == 3)
+	{
+		// Changes the content of the nameOfTier variable to reflect which tier of the power the king acquired
+		nameOfTier = "Tier C";
+	}
+}
+
+
 
 ////////////////////////////////
 // - Return Based Functions - //
@@ -4935,4 +5059,11 @@ public void DownloadAndPrecacheFiles()
 	// Power - Napalm
 	AddFileToDownloadsTable("sound/kingmod/power_napalm.mp3");
 	PrecacheSound("kingmod/power_napalm.mp3");
+
+	// Power - Riot
+
+
+	// Power - Vampire
+	AddFileToDownloadsTable("sound/kingmod/power_vampire.mp3");
+	PrecacheSound("kingmod/power_vampire.mp3");
 }

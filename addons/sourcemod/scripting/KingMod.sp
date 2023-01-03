@@ -46,6 +46,7 @@ bool cvar_PowerVampire = false;
 bool cvar_PowerBreachCharges = false;
 bool cvar_PowerLegCrushingBumpmines = false;
 bool cvar_PowerHatchetMassacre = true;
+bool cvar_PowerChuckNorrisFists = true;
 
 int cvar_PointsNormalKill = 1;
 int cvar_PointsKingKill = 3;
@@ -70,6 +71,7 @@ bool powerScoutNoScope = false;
 bool powerNapalm = false;
 bool powerRiot = false;
 bool powerHatchetMassacre = false;
+bool powerChuckNorris = false;
 
 int powerImpregnableArmor = 0;
 int powerMovementSpeed = 0;
@@ -341,6 +343,50 @@ public Action OnPlayerRunCmd(int client, int &buttons, int &impulse, float unuse
 		return Plugin_Continue;
 	}
 
+	// If thg king power chooser is enabled and the chuck norris fists or the hatchet massacre powers are enabled then execute this section
+	if(cvar_KingPowerChooser && cvar_PowerChuckNorrisFists | cvar_PowerHatchetMassacre)
+	{
+		// If the currently active power is either hatchet massacre or chuck norris fists then execute this section
+		if(powerChuckNorris | powerHatchetMassacre)
+		{
+			// If the client is not alive then execute this section
+			if(!IsPlayerAlive(client))
+			{
+				return Plugin_Continue;
+			}
+
+			// If the player is pressing their secondary attack button then execute this section
+			if(buttons & IN_ATTACK2)
+			{
+				// Obtains the name of the player's weapon and store it within our variable entity
+				int entity = GetEntPropEnt(client, Prop_Send, "m_hActiveWeapon");
+
+				// If the entity does not meet our criteria validation then execute this section
+				if(!IsValidEntity(entity))
+				{
+					return Plugin_Continue;
+				}
+
+				// Creates a variable to store our data within
+				char classname[32];
+
+				// Obtains the classname of the entity and store it within our classname variable
+				GetEdictClassname(entity, classname, sizeof(classname));
+
+				// If the entity is not a pair of fists or an axe then execute this section
+				if(!StrEqual(classname, "weapon_fists") && !StrEqual(classname, "weapon_melee"))
+				{
+					return Plugin_Continue;
+				}
+
+				// Blocks the usage of the second attack button
+				buttons &= ~IN_ATTACK2;
+
+				return Plugin_Changed;
+			}
+		}
+	}
+
 	// If the player is spawn protected then execute this section
 	if(isPlayerProtected[client])
 	{
@@ -430,6 +476,7 @@ public Action OnPlayerRunCmd(int client, int &buttons, int &impulse, float unuse
 
 	return Plugin_Continue;
 }
+
 
 
 // This happens when a player can pick up a weapon
@@ -526,11 +573,23 @@ public Action OnWeaponCanUse(int client, int weapon)
 			}
 		}
 
-		// If the currently active power is axe massacre then execute this section
+		// If the currently active power is hatchet massacre then execute this section
 		if(powerHatchetMassacre)
 		{
-			// If the weapon is an axe massacre then excute this section
+			// If the weapon is an hatchet massacre then excute this section
 			if(StrEqual(ClassName, "weapon_melee", false))
+			{
+				EquipPlayerWeapon(client, weapon);
+
+				return Plugin_Continue;
+			}
+		}
+
+		// If the currently active power is chuck norris fists then execute this section
+		if(powerChuckNorris)
+		{
+			// If the weapon is a pair of fists then excute this section
+			if(StrEqual(ClassName, "weapon_fists", false))
 			{
 				EquipPlayerWeapon(client, weapon);
 
@@ -2630,11 +2689,21 @@ public Action Timer_CleanFloor(Handle timer)
 			}
 		}
 
-		// If the currently active power is axe massacre then execute this section
+		// If the currently active power is hatchet massacre then execute this section
 		if(powerHatchetMassacre)
 		{
 			// If the entity is an axe then execute this section
 			if(StrEqual(className, "weapon_melee", false))
+			{
+				continue;
+			}
+		}
+
+		// If the currently active power is chuck norris fists then execute this section
+		if(powerChuckNorris)
+		{
+			// If the entity is fists then execute this section
+			if(StrEqual(className, "weapon_fists", false))
 			{
 				continue;
 			}
@@ -2778,8 +2847,14 @@ public Action Timer_GiveGoldenKnife(Handle Timer, int client)
 		return Plugin_Continue;
 	}
 
-	// If the currently active power is axe massacre then execute this section
+	// If the currently active power is hatchet massacre then execute this section
 	if(powerHatchetMassacre)
+	{
+		return Plugin_Continue;
+	}
+
+	// If the currently active power is chuck norris fists then execute this section
+	if(powerChuckNorris)
 	{
 		return Plugin_Continue;
 	}
@@ -3551,6 +3626,26 @@ public Action ChooseKingPower(int client)
 		}
 	}
 
+
+	// If the cvar for the chuck norris fists power is enabled then execute this section
+	if(cvar_PowerChuckNorrisFists)
+	{
+		// Adds +1 to the current value of the powersAvailable variable
+		powersAvailable++;
+
+		PrintToChatAll("Debug Power - PA %i | C %i", powersAvailable, chosenPower);
+
+		// If the value contained within chosenPower is the same as the value stored in powersAvailable then execute this section
+		if(chosenPower == powersAvailable)
+		{
+			// Gives the client a pair of fists that deals high damage 
+			PowerChuckNorrisFists(client);
+
+			// 
+			PrintToChatAll("Power Chuck Norris Fists - [ %i | %i ]", chosenPower, powersAvailable);
+		}
+	}
+
 	// Plays the sound file that is specific to that of the newly acquired power
 	CreateTimer(2.0, Timer_PlayPowerSpecificSound, client);
 
@@ -3647,6 +3742,13 @@ public int countAvailablePowers()
 		powersAvailable++;
 	}
 
+	// If the cvar for the chuck norris fists power is enabled then execute this section
+	if(cvar_PowerChuckNorrisFists)
+	{
+		// Adds +1 to the current value of the powersAvailable variable
+		powersAvailable++;
+	}
+
 	// Returns the value of our powersAvailable variable
 	return powersAvailable;
 }
@@ -3728,11 +3830,18 @@ public void ResetPreviousPower()
 		powerLegCrushingBumpmines = 0;
 	}
 
-	// If the currently active power is axe massacre then execute this section
+	// If the currently active power is hatchet massacre then execute this section
 	if(powerHatchetMassacre)
 	{
-		// Turns off the axe massacre king power 
+		// Turns off the hatchet massacre king power 
 		powerHatchetMassacre = false;
+	}
+
+	// If the currently active power is chuck norris fists then execute this section
+	if(powerChuckNorris)
+	{
+		// Turns off the chuck norris fists king power 
+		powerChuckNorris = false;
 	}
 }
 
@@ -4471,13 +4580,6 @@ public Action OnPreThink(int client)
 		preventPlayerFromScoping(client);
 	}
 
-	// If the king's current power is the hatchet massacre power then execute this section
-	if(powerHatchetMassacre)
-	{
-		// Prevents the player from throwing their axe weapon
-		preventPlayerFromThrowingAxe(client);
-	}
-
 	return Plugin_Continue;
 }
 
@@ -4745,15 +4847,15 @@ public Action OnDamageTaken(int client, int &attacker, int &inflictor, float &da
 		return Plugin_Continue;
 	}
 
+	// If the attacker is not the current king then execute this section
+	if(!isPlayerKing[attacker])
+	{
+		return Plugin_Continue;
+	}
+
 	// If the king's current power is not the vampire power then execute this section
 	if(powerVampire)
 	{
-		// If the attacker is not the current king then execute this section
-		if(!isPlayerKing[attacker])
-		{
-			return Plugin_Continue;
-		}
-
 		// Creates a variable which we will store data within
 		float leechedHealth = 0.0;
 
@@ -4841,29 +4943,30 @@ public Action OnDamageTaken(int client, int &attacker, int &inflictor, float &da
 		}
 	}
 
-	// If the currently active power is axe massacre then execute this section
+	// If the currently active power is hatchet massacre then execute this section
 	if(powerHatchetMassacre)
 	{
-		PrintToChat(attacker, "attacker weapon %s", classname);
-
 		// If the inflictor entity is an axe then execute this section
 		if(StrEqual(classname, "player", false))
 		{
 			// If the damage is equals to 20 then execute this section
 			if(damage == 20)
 			{
+				// Changes the damage value to 50.0
 				damage = 50.0;
 			}
 
 			// If the damage is equals to 24 then execute this section
 			else if(damage == 24)
 			{
+				// Changes the damage value to 55.0
 				damage = 55.0;
 			}
 
 			// If the damage is equals to 40 then execute this section
 			else if(damage == 40)
 			{
+				// Changes the damage value to 100.0
 				damage = 100.0;
 			}
 
@@ -4885,6 +4988,44 @@ public Action OnDamageTaken(int client, int &attacker, int &inflictor, float &da
 
 			return Plugin_Changed;
 		}
+	}
+
+
+	// If the currently active power is chuck norris fists then execute this section
+	if(powerChuckNorris)
+	{
+		if(StrEqual(classname, "player", false))
+		{
+			// If the damage is equals to 15 then execute this section
+			if(damage == 15)
+			{
+				// Picks a random number between 1 and 5 and store it within the random number variable
+				int randomNumber = GetRandomInt(1, 5);
+
+				// If the randomly chosen number is 4 or below then execute this section
+				if(randomNumber <= 4)
+				{
+					// Changes the damage value to 5 times the randomly picked number + a base of 30 damage
+					damage = 30.0 + (randomNumber * 5);
+				}
+
+				// If the randomly chosen number is 5 then execute this section
+				else if(randomNumber == 5)
+				{
+					// Changes the damage value to 9000.0
+					damage = 9000.0;
+
+					PrintToChat(attacker, "Chuck Norris' punch completely obliterated you by dealing %i", RoundToFloor(damage));
+				}
+			}
+		}
+
+		PrintToChat(attacker, "damage %0.2f", damage);
+
+		PrintToChat(attacker, "attacker weapon %s", classname);
+
+		return Plugin_Changed;
+
 	}
 
 	return Plugin_Continue;
@@ -5556,34 +5697,284 @@ public void ApplyFadeOverlay(int client, int duration, int holdTime, int fadefla
 }
 
 
-// This happens when the king tries to throw his axe while the hatchet massacre power is active
-public Action preventPlayerFromThrowingAxe(int client)
+
+//////////////////////////////////
+// - Power Chuck Norris Fists - //
+//////////////////////////////////
+
+
+// This happens when a king acquires the chuck norris fists power 
+public void PowerChuckNorrisFists(int client)
 {
-	// Obtains the name of the player's weapon and store it within our variable entity
-	int entity = GetEntPropEnt(client, Prop_Send, "m_hActiveWeapon");
+	// Turns on the chuck norris king power 
+	powerChuckNorris = true;
 
-	// If the entity does not meet our criteria validation then execute this section
-	if(!IsValidEntity(entity))
+	// Changes the name of the path for the sound that is will be played when the player acquires the specific power
+	powerSoundName = "kingmod/power_chucknorris.mp3";
+
+	// Changes the content of the dottedLine variable to match the length of the name of power and tier
+	dottedLine = "-----------------------------------";
+
+	// Changes the content of the nameOfPower variable to reflect which power the king acquired
+	nameOfPower = "Chuck Norris Fists";
+	
+	// Changes the content of the nameOfTier variable to reflect which tier of the power the king acquired
+	nameOfTier = "Tier S+";
+
+	// Specifies which special weapon the king should be given
+	kingWeapon = "weapon_fists";
+
+	// Picks one of many random chuck norris jokes and posts it in the chat presenting it as if it was a fact
+	SelectChuckNorirsJoke();
+
+	// Gives the king a unique weapon if the current power requires one
+	CreateTimer(0.25, Timer_GiveKingUniqueWeapon, client);
+}
+
+
+// This happens when a king acquires the chuck norris fists power
+public void SelectChuckNorirsJoke()
+{
+	// Picks a random number and store it within the randomJoke variable
+	int randomJoke = GetRandomInt(1, 46);
+
+	// Creates a variable which we will store our data within
+	char chuckNorrisJoke[256];
+
+	// Creates a switch statement to manage outcomes depnding on the value of our randomVariable
+	switch(randomJoke)
 	{
-		return Plugin_Continue;
+		// If the value of the randomJoke variable is 1 then execute this section
+		case 1:
+		{
+			// Changes the contents of the chuckNorrisJoke variable
+			chuckNorrisJoke = "Chuck Norris can strangle you with a cordless phone.";
+		}
+
+		case 2:
+		{
+			chuckNorrisJoke = "Death once had a near-Chuck-Norris experience.";
+		}
+		
+		case 3:
+		{
+			chuckNorrisJoke = "When Chuck Norris writes, he makes paper bleed.";
+		}
+
+		case 4:
+		{
+			chuckNorrisJoke = "Chuck Norris makes onions cry.";
+		}
+
+		case 5:
+		{
+			chuckNorrisJoke = "Chuck Norris can kill two stones with one bird.";
+		}
+
+		case 6:
+		{
+			chuckNorrisJoke = "The dark is afraid of Chuck Norris.";
+		}
+
+		case 7:
+		{
+			chuckNorrisJoke = "Chuck Norris does not hunt because the word hunting implies the possibility of failure. Chuck Norris goes killing.";
+		}
+
+		case 8:
+		{
+			chuckNorrisJoke = "Chuck Norris once won a game of Connect Four in three moves.";
+		}
+
+		case 9:
+		{
+			chuckNorrisJoke = "A cobra once bit Chuck Norris' leg. After five days of excruciating pain, the cobra died.";
+		}
+
+		case 10:
+		{
+			chuckNorrisJoke = "Chuck Norris stands faster than anyone can run.";
+		}
+
+		case 11:
+		{
+			chuckNorrisJoke = "Chuck Norris counted to infinity... Twice.";
+		}
+
+		case 12:
+		{
+			chuckNorrisJoke = "If you want a list of Chuck Norris' enemies, just check the extinct species list.";
+		}
+		
+		case 13:
+		{
+			chuckNorrisJoke = "On the 7th day, God rested ... Chuck Norris took over.";
+		}
+
+		case 14:
+		{
+			chuckNorrisJoke = "The chief export of Chuck Norris is pain.";
+		}
+
+		case 15:
+		{
+			chuckNorrisJoke = "Chuck Norris does not sleep. He waits.";
+		}
+
+		case 16:
+		{
+			chuckNorrisJoke = "Chuck Norris does not own a stove, oven, or microwave, because revenge is a dish best served cold.";
+		}
+
+		case 17:
+		{
+			chuckNorrisJoke = "Since 1940, the year Chuck Norris was born, roundhouse kick related deaths have increased 13,000 percent.";
+		}
+
+		case 18:
+		{
+			chuckNorrisJoke = "Chuck Norris' tears cure cancer. Too bad he has never cried.";
+		}
+		
+		case 19:
+		{
+			chuckNorrisJoke = "The dinosaurs looked at Chuck Norris the wrong way once. You know what happened to them.";
+		}
+
+		case 20:
+		{
+			chuckNorrisJoke = "In the Beginning there was nothing ... then Chuck Norris roundhouse kicked nothing and told it to get a job.";
+		}
+
+		case 21:
+		{
+			chuckNorrisJoke = "Chuck Norris breathes air ... Three times a day.";
+		}
+
+		case 22:
+		{
+			chuckNorrisJoke = "Time waits for no man. Unless that man is Chuck Norris.";
+		}
+		
+		case 23:
+		{
+			chuckNorrisJoke = "Chuck Norris doesn't read books. He stares them down until he gets the information he wants.";
+		}
+
+		case 24:
+		{
+			chuckNorrisJoke = "Chuck Norris once punched a man in the soul.";
+		}
+
+		case 25:
+		{
+			chuckNorrisJoke = "Chuck Norris once had a heart attack. His heart lost.";
+		}
+
+		case 26:
+		{
+			chuckNorrisJoke = "The only time Chuck Norris was ever wrong was when he thought he had made a mistake.";
+		}
+
+		case 27:
+		{
+			chuckNorrisJoke = "The quickest way to a man's heart is with Chuck Norris's fist.";
+		}
+
+		case 28:
+		{
+			chuckNorrisJoke = "Chuck Norris used to beat up his shadow because it was following to close. It now stands 15 feet behind him.";
+		}
+		
+		case 29:
+		{
+			chuckNorrisJoke = "Outer space exists because it's too afraid to be on the same planet with Chuck Norris.";
+		}
+
+		case 30:
+		{
+			chuckNorrisJoke = "When Chuck Norris does a pushup, he's pushing the Earth down.";
+		}
+
+		case 31:
+		{
+			chuckNorrisJoke = "Chuck Norris is the reason why Waldo is hiding.";
+		}
+
+		case 32:
+		{
+			chuckNorrisJoke = "The Great Wall of China was originally created to keep Chuck Norris out. It didn’t work.";
+		}
+		
+		case 33:
+		{
+			chuckNorrisJoke = "Chuck Norris is the only man to ever defeat a brick wall in a game of tennis.";
+		}
+
+		case 34:
+		{
+			chuckNorrisJoke = "Chuck Norris once ordered a steak in a restaurant. The steak did what it was told.";
+		}
+
+		case 35:
+		{
+			chuckNorrisJoke = "Chuck Norris can cook minute rice in 30 seconds.";
+		}
+
+		case 36:
+		{
+			chuckNorrisJoke = "Chuck Norris once beat the sun in a staring contest.";
+		}
+
+		case 37:
+		{
+			chuckNorrisJoke = "Chuck Norris doesn't breathe, he holds air hostage.";
+		}
+
+		case 38:
+		{
+			chuckNorrisJoke = "Before he forgot a gift for Chuck Norris, Santa Claus was real.";
+		}
+		
+		case 39:
+		{
+			chuckNorrisJoke = "Chuck Norris can start a fire with an ice cube.";
+		}
+
+		case 40:
+		{
+			chuckNorrisJoke = "When Chuck Norris stares into the abyss, the abyss nervously looks away.";
+		}
+
+		case 41:
+		{
+			chuckNorrisJoke = "COVID-19 is desperate to develop a vaccine against Chuck Norris.";
+		}
+		
+		case 43:
+		{
+			chuckNorrisJoke = "When Chuck Norris steps on a piece of lego, the lego cries.";
+		}
+
+		case 44:
+		{
+			chuckNorrisJoke = "The Dead Sea was alive before Chuck Norris swam there.";
+		}
+
+		case 45:
+		{
+			chuckNorrisJoke = "The Swiss Army uses Chuck Norris Knives.";
+		}
+
+		case 46:
+		{
+			chuckNorrisJoke = "Chuck Norris knows Victoria’s secret.";
+		}
 	}
 
-	// Creates a variable to store our data within
-	char classname[32];
-
-	// Obtains the classname of the entity and store it within our classname variable
-	GetEdictClassname(entity, classname, sizeof(classname));
-
-	// If the entity is not an ax then execute this section
-	if(!StrEqual(classname, "weapon_melee"))
-	{
-		return Plugin_Continue;
-	}
-
-	// Adds 2.0 seconds cooldown to when the player would be able to use the secondary attack (zoom function) 
-	SetEntDataFloat(entity, FindSendPropOffs("CBaseCombatWeapon", "m_flNextSecondaryAttack"), GetGameTime() + 2.0);
-
-	return Plugin_Continue;
+	// Sends a message in the chat to all players online
+	PrintToChatAll("Chuck Norris Fact #%i", randomJoke);
+	PrintToChatAll("- %s", chuckNorrisJoke);
 }
 
 
@@ -5762,4 +6153,9 @@ public void DownloadAndPrecacheFiles()
 	// Power - Hatchet Massacre
 	AddFileToDownloadsTable("sound/kingmod/power_hatchetmassacre.mp3");
 	PrecacheSound("kingmod/power_hatchetmassacre.mp3");
+
+
+	// Power - Chuck Norris
+	AddFileToDownloadsTable("sound/kingmod/power_chucknorris.mp3");
+	PrecacheSound("kingmod/power_chucknorris.mp3");
 }

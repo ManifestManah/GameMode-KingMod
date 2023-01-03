@@ -45,8 +45,9 @@ bool cvar_PowerRiot = false;
 bool cvar_PowerVampire = false;
 bool cvar_PowerBreachCharges = false;
 bool cvar_PowerLegCrushingBumpmines = false;
-bool cvar_PowerHatchetMassacre = true;
-bool cvar_PowerChuckNorrisFists = true;
+bool cvar_PowerHatchetMassacre = false;
+bool cvar_PowerChuckNorrisFists = false;
+bool cvar_PowerLaserGun = true;
 
 int cvar_PointsNormalKill = 1;
 int cvar_PointsKingKill = 3;
@@ -79,6 +80,7 @@ int powerCarpetBombingFlashbangs = 0;
 int powerVampire = 0;
 int powerBreachCharges = 0;
 int powerLegCrushingBumpmines = 0;
+int powerLaserGun = 0;
 
 
 //////////////////////////
@@ -108,7 +110,8 @@ int pointCounterT = 0;
 int pointCounterCT = 0;
 int mapHasMinimapHidden = 0;
 int kingRecoveryCounter = 0;
-int effectSprite = 0;
+int effectRingSprite = 0;
+int effectLaserSprite = 0;
 int kingIsAcquiringPower = 0;
 
 int colorRGB[3];
@@ -593,6 +596,16 @@ public Action OnWeaponCanUse(int client, int weapon)
 			{
 				EquipPlayerWeapon(client, weapon);
 
+				return Plugin_Continue;
+			}
+		}
+
+		// If the currently active power is laser gun then execute this section
+		if(powerLaserGun)
+		{
+			// If the weapon is a cz75a (p250 shares item slot with it) then excute this section
+			if(StrEqual(ClassName, "weapon_p250", false))
+			{
 				return Plugin_Continue;
 			}
 		}
@@ -1349,6 +1362,9 @@ public Action Event_WeaponFire(Handle event, const char[] name, bool dontBroadca
 
 	// Gives the player a molotov after having thrown their previous one
 	WeaponFireNapalm(client);
+
+	// Replenishes the clip and creates a laser beam from the player to where the bullet hit the wall
+	WeaponFireCz75a(client);
 
 	// If the player is no longer spawnprotected then execute this section
 	if(!isPlayerProtected[client])
@@ -2305,9 +2321,9 @@ public Action DisplayVisualEffects(int attacker)
 	if(cvar_EffectRing)
 	{
 		// Creates a temp entity visual efefct shaped like a ring
-		TE_SetupBeamRingPoint(playerLocation, 40.0, 2000.0, effectSprite, effectSprite, 0, 20, 1.5, 90.0, 2.0, effectColor, 1, 1);
+		TE_SetupBeamRingPoint(playerLocation, 40.0, 2000.0, effectRingSprite, effectRingSprite, 0, 20, 1.5, 90.0, 2.0, effectColor, 1, 1);
 
-		// Sends the visual effect temp entity to the players with visual headshot effects enabled 
+		// Sends the visual effect temp entity to the relevant players
 		ShowVisualEffectToPlayers();
 	}
 
@@ -2704,6 +2720,16 @@ public Action Timer_CleanFloor(Handle timer)
 		{
 			// If the entity is fists then execute this section
 			if(StrEqual(className, "weapon_fists", false))
+			{
+				continue;
+			}
+		}
+
+		// If the currently active power is laser gun then execute this section
+		if(powerLaserGun)
+		{
+			// If the entity is cz75a then execute this section
+			if(StrEqual(className, "weapon_cz75a", false))
 			{
 				continue;
 			}
@@ -3646,6 +3672,25 @@ public Action ChooseKingPower(int client)
 		}
 	}
 
+	// If the cvar for the laser gun power is enabled then execute this section
+	if(cvar_PowerLaserGun)
+	{
+		// Adds +1 to the current value of the powersAvailable variable
+		powersAvailable++;
+
+		PrintToChatAll("Debug Power - PA %i | C %i", powersAvailable, chosenPower);
+
+		// If the value contained within chosenPower is the same as the value stored in powersAvailable then execute this section
+		if(chosenPower == powersAvailable)
+		{
+			// Gives the client a cz-auto which deals 3, 4 or 5 damage with no recoil and unlimited ammo that shoots lasers 
+			PowerLaserGun(client);
+
+			// 
+			PrintToChatAll("Power Laser Gun Fists - [ %i | %i ]", chosenPower, powersAvailable);
+		}
+	}
+
 	// Plays the sound file that is specific to that of the newly acquired power
 	CreateTimer(2.0, Timer_PlayPowerSpecificSound, client);
 
@@ -3749,6 +3794,13 @@ public int countAvailablePowers()
 		powersAvailable++;
 	}
 
+	// If the cvar for the laser gun power is enabled then execute this section
+	if(cvar_PowerLaserGun)
+	{
+		// Adds +1 to the current value of the powersAvailable variable
+		powersAvailable++;
+	}
+
 	// Returns the value of our powersAvailable variable
 	return powersAvailable;
 }
@@ -3842,6 +3894,16 @@ public void ResetPreviousPower()
 	{
 		// Turns off the chuck norris fists king power 
 		powerChuckNorris = false;
+	}
+
+	// If the currently active power is laser gun then execute this section
+	if(powerLaserGun)
+	{
+		// Removes the no-recoil and no-spread and restore the default accuracy settings
+		PowerLaserGunEnableRecoil();
+
+		// Turns off the laser gun power 
+		powerLaserGun = 0;
 	}
 }
 
@@ -5025,7 +5087,34 @@ public Action OnDamageTaken(int client, int &attacker, int &inflictor, float &da
 		PrintToChat(attacker, "attacker weapon %s", classname);
 
 		return Plugin_Changed;
+	}
 
+
+	// If the king's current power is not the laser gun power then execute this section
+	if(powerLaserGun)
+	{
+		if(StrEqual(classname, "player", false))
+		{
+			if(powerLaserGun == 1)
+			{
+				// Changes the damage inflicted by the attack to 5.0
+				damage = 5.0;
+			}
+
+			else if(powerLaserGun == 2)
+			{
+				// Changes the damage inflicted by the attack to 4.0
+				damage = 4.0;
+			}
+
+			else if(powerLaserGun == 3)
+			{
+				// Changes the damage inflicted by the attack to 3.0
+				damage = 3.0;
+			}
+		}
+
+		return Plugin_Changed;
 	}
 
 	return Plugin_Continue;
@@ -5979,6 +6068,199 @@ public void SelectChuckNorirsJoke()
 
 
 
+/////////////////////////
+// - Power Laser Gun - //
+/////////////////////////
+
+
+// This happens when a king acquires the laser gun power 
+public void PowerLaserGun(int client)
+{
+	// Changes the name of the path for the sound that is will be played when the player acquires the specific power
+	powerSoundName = "kingmod/power_lasergun.mp3";
+
+	// Changes the content of the dottedLine variable to match the length of the name of power and tier
+	dottedLine = "-----------------------";
+
+	// Changes the content of the nameOfPower variable to reflect which power the king acquired
+	nameOfPower = "Laser Gun";
+	
+	// Specifies which special weapon the king should be given
+	kingWeapon = "weapon_cz75a";
+
+	// Disables recoil and spread
+	PowerLaserGunDisableRecoil();
+
+	// Turns on the laser gun king power 
+	powerLaserGun = GetRandomInt(1, 3);
+
+	// If the value stored within the powerLaserGun is 1 execute this section
+	if(powerLaserGun == 1)
+	{
+		// Changes the content of the nameOfTier variable to reflect which tier of the power the king acquired
+		nameOfTier = "Tier A";
+	}
+
+	// If the value stored within the powerLaserGun is 2 execute this section
+	else if(powerLaserGun == 2)
+	{
+		// Changes the content of the nameOfTier variable to reflect which tier of the power the king acquired
+		nameOfTier = "Tier B";
+	}
+
+	// If the value stored within the powerLaserGun is 3 execute this section
+	else if(powerLaserGun == 3)
+	{
+		// Changes the content of the nameOfTier variable to reflect which tier of the power the king acquired
+		nameOfTier = "Tier C";
+	}
+
+	// Gives the king a unique weapon if the current power requires one
+	CreateTimer(0.25, Timer_GiveKingUniqueWeapon, client);
+}
+
+
+// This happens when a king acquires the laser gun power 
+public void PowerLaserGunDisableRecoil()
+{
+	SetConVar("weapon_recoil_scale", "0");
+	SetConVar("weapon_recoil_cooldown", "0");
+	SetConVar("weapon_accuracy_nospread", "1");
+	SetConVar("weapon_recoil_decay1_exp", "99999");
+	SetConVar("weapon_recoil_decay2_exp", "99999");
+	SetConVar("weapon_recoil_decay2_lin", "99999");
+	SetConVar("weapon_recoil_suppression_shots", "500");
+}
+
+
+// This happens when a new round starts or the king dies
+public void PowerLaserGunEnableRecoil()
+{
+	SetConVar("weapon_recoil_scale", "2.0");
+	SetConVar("weapon_recoil_cooldown", "0.55");
+	SetConVar("weapon_accuracy_nospread", "0");
+	SetConVar("weapon_recoil_decay1_exp", "3.5");
+	SetConVar("weapon_recoil_decay2_exp", "8.0");
+	SetConVar("weapon_recoil_decay2_lin", "18");
+	SetConVar("weapon_recoil_suppression_shots", "4");
+}
+
+
+// This happens when a player uses the left attack with their knife or weapon
+public Action WeaponFireCz75a(int client)
+{
+	// If the king's current power is not the laser gun power then execute this section
+	if(!powerLaserGun)
+	{
+		return Plugin_Continue;
+	}
+
+	// Obtains the name of the player's weapon and store it within our variable entity
+	int entity = GetEntPropEnt(client, Prop_Send, "m_hActiveWeapon");
+
+	// If the entity does not meet our criteria validation then execute this section
+	if(!IsValidEntity(entity))
+	{
+		return Plugin_Continue;
+	}
+
+	// Creates a variable to store our data within
+	char classname[32];
+
+	// Obtains the classname of the entity and store it within our classname variable
+	GetEdictClassname(entity, classname, sizeof(classname));
+
+	// If the weapon is not a cz75a (p250 shares item slot with it) then excute this section
+	if(!StrEqual("weapon_p250", classname))
+	{
+		return Plugin_Continue;
+	}
+
+	// Changes the cz75a's clip to 13
+	SetEntProp(entity, Prop_Data, "m_iClip1", 13);
+
+	// Creates our two variables which we will store our data within
+	float playerEyeLocation[3];
+
+	// Creates our two variables which we will store our data within
+	float playerViewLocation[3];
+
+	// Obtains the player's eye coordinat location and store it within our variable playerEyeLocation
+	GetClientEyePosition(client, playerEyeLocation);
+	
+	// Obtains the player's aim coordinate location and store it within our variable playerViewLocation
+	GetClientSightEnd(client, playerViewLocation);
+
+	int effectColor[4];
+
+	// If the player is on the Terrorist team then execute this section
+	if(GetClientTeam(client) == 2)
+	{
+		// Defines the Red, Green, Blue and Alpha color values and store them within effectColor
+		effectColor = {230, 15, 30, 255};
+
+		// Creates a temporary visual effect shaped as a line from where you stand to where the bullet was fired at
+		TE_SetupBeamPoints(playerEyeLocation, playerViewLocation, effectLaserSprite, effectLaserSprite, 10, 10, 0.7, 1.5, 1.5, 0, 0.0, effectColor, 0);
+	}
+
+	// If the player is on the Counter-Terrorist team then execute this section
+	else if(GetClientTeam(client) == 3)
+	{
+		// Defines the Red, Green, Blue and Alpha color values and store them within effectColor
+		effectColor = {0, 210, 250, 255};
+
+		// Creates a temporary visual effect shaped as a line from where you stand to where the bullet was fired at
+		TE_SetupBeamPoints(playerEyeLocation, playerViewLocation, effectLaserSprite, effectLaserSprite, 10, 10, 0.7, 1.5, 1.5, 0, 0.0, effectColor, 0);
+	}
+
+	// Sends the visual effect temp entity to the relevant players
+	ShowVisualEffectToPlayers();
+
+	return Plugin_Continue;
+}
+
+
+// This happens when the king fires his cz75a while the laser gun power is currently active
+public void GetClientSightEnd(int client, float endLocation[3])
+{
+	// Creates our two variables which we will store our data within
+	float playerEyeLocation[3];
+
+	// Creates our two variables which we will store our data within
+	float playerEyeAngles[3];
+
+	// Obtains the player's eye coordinat location and store it within our variable playerEyeLocation
+	GetClientEyePosition(client, playerEyeLocation);
+
+	// Obtains the player's eye angles and store it within our variable playerEyeLocation
+	GetClientEyeAngles(client, playerEyeAngles);
+
+	// Performs a trace ray 
+	TR_TraceRayFilter(playerEyeLocation, playerEyeAngles, MASK_PLAYERSOLID, RayType_Infinite, TraceRayDontHitPlayers);
+	
+	// If the traceray did hit then execute this section
+	if(TR_DidHit())
+	{
+		// Obtains the colission point of the trace ray
+		TR_GetEndPosition(endLocation);
+	}
+}
+
+
+// This happens when the king fires his cz75a while the laser gun power is currently active
+public bool TraceRayDontHitPlayers(int entity, int mask, int data)
+{
+	// If the entity is above 0 but below or equals to the value of maxClients then execute this section
+	if (0 < entity <= MaxClients)
+	{
+		return false;
+	}
+
+	return true;
+}
+
+
+
 ////////////////////////////////
 // - Return Based Functions - //
 ////////////////////////////////
@@ -6086,7 +6368,7 @@ public void DownloadAndPrecacheFiles()
 	// Visual Effect Sprites
 	AddFileToDownloadsTable("materials/kingmod/sprites/lgtning.vtf");
 	AddFileToDownloadsTable("materials/kingmod/sprites/lgtning.vmt");
-	effectSprite = PrecacheModel("kingmod/sprites/lgtning.vmt");
+	effectRingSprite = PrecacheModel("kingmod/sprites/lgtning.vmt");
 
 
 	// Power Chooser System
@@ -6158,4 +6440,12 @@ public void DownloadAndPrecacheFiles()
 	// Power - Chuck Norris
 	AddFileToDownloadsTable("sound/kingmod/power_chucknorris.mp3");
 	PrecacheSound("kingmod/power_chucknorris.mp3");
+
+
+	// Power - Laser Gun
+	AddFileToDownloadsTable("materials/sprites/laserbeam.vtf");
+	AddFileToDownloadsTable("materials/sprites/laserbeam.vmt");
+	AddFileToDownloadsTable("sound/kingmod/power_lasergun.mp3");
+	effectLaserSprite = PrecacheModel("materials/sprites/laserbeam.vmt");
+	PrecacheSound("kingmod/power_lasergun.mp3");
 }

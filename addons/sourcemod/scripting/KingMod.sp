@@ -5495,4 +5495,7 @@ public void DownloadAndPrecacheFiles()
 	AddFileToDownloadsTable("sound/kingmod/power_legcrushingbumpmines.mp3");
 	PrecacheSound("kingmod/power_legcrushingbumpmines.mp3");
 
+	// Power - Hatchet Massacre
+	AddFileToDownloadsTable("sound/kingmod/power_hatchetmassacre.mp3");
+	PrecacheSound("kingmod/power_hatchetmassacre.mp3");
 }

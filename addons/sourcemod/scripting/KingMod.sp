@@ -44,7 +44,8 @@ bool cvar_PowerNapalm = false;
 bool cvar_PowerRiot = false;
 bool cvar_PowerVampire = false;
 bool cvar_PowerBreachCharges = false;
-bool cvar_powerLegCrushingBumpmines = true;
+bool cvar_PowerLegCrushingBumpmines = false;
+bool cvar_PowerHatchetMassacre = true;
 
 int cvar_PointsNormalKill = 1;
 int cvar_PointsKingKill = 3;
@@ -68,6 +69,7 @@ bool powerStickyGrenades = false;
 bool powerScoutNoScope = false;
 bool powerNapalm = false;
 bool powerRiot = false;
+bool powerHatchetMassacre = false;
 
 int powerImpregnableArmor = 0;
 int powerMovementSpeed = 0;
@@ -75,6 +77,7 @@ int powerCarpetBombingFlashbangs = 0;
 int powerVampire = 0;
 int powerBreachCharges = 0;
 int powerLegCrushingBumpmines = 0;
+
 
 //////////////////////////
 // - Global Variables - //
@@ -93,6 +96,7 @@ bool isRecoveryOnCooldown[MAXPLAYERS + 1] = {false,...};
 bool injectingHealthshot[MAXPLAYERS + 1] = {false,...};
 bool cooldownHealthshot[MAXPLAYERS + 1] = {false,...};
 bool cooldownWeaponSwapMessage[MAXPLAYERS + 1] = {false,...};
+bool powerHatchetMassacreCooldown[MAXPLAYERS + 1] = {false,...};
 
 
 // Global Integers
@@ -518,6 +522,18 @@ public Action OnWeaponCanUse(int client, int weapon)
 			// If the weapon is a bumpmine then excute this section
 			if(StrEqual(ClassName, "weapon_bumpmine", false))
 			{
+				return Plugin_Continue;
+			}
+		}
+
+		// If the currently active power is axe massacre then execute this section
+		if(powerHatchetMassacre)
+		{
+			// If the weapon is an axe massacre then excute this section
+			if(StrEqual(ClassName, "weapon_melee", false))
+			{
+				EquipPlayerWeapon(client, weapon);
+
 				return Plugin_Continue;
 			}
 		}
@@ -2614,6 +2630,16 @@ public Action Timer_CleanFloor(Handle timer)
 			}
 		}
 
+		// If the currently active power is axe massacre then execute this section
+		if(powerHatchetMassacre)
+		{
+			// If the entity is an axe then execute this section
+			if(StrEqual(className, "weapon_melee", false))
+			{
+				continue;
+			}
+		}
+
 		// If the entity has an ownership relation then execute this section
 		if(GetEntPropEnt(entity, Prop_Data, "m_hOwnerEntity") != -1)
 		{
@@ -2748,6 +2774,12 @@ public Action Timer_GiveGoldenKnife(Handle Timer, int client)
 {
 	// If the player does not meet our validation criteria then execut this section
 	if(!IsValidClient(client))
+	{
+		return Plugin_Continue;
+	}
+
+	// If the currently active power is axe massacre then execute this section
+	if(powerHatchetMassacre)
 	{
 		return Plugin_Continue;
 	}
@@ -3482,7 +3514,7 @@ public Action ChooseKingPower(int client)
 	}
 
 	// If the cvar for the leg crushing bumpmines power is enabled then execute this section
-	if(cvar_powerLegCrushingBumpmines)
+	if(cvar_PowerLegCrushingBumpmines)
 	{
 		// Adds +1 to the current value of the powersAvailable variable
 		powersAvailable++;
@@ -3497,6 +3529,25 @@ public Action ChooseKingPower(int client)
 
 			// 
 			PrintToChatAll("Power Leg Crushing Bumpmines - [ %i | %i ]", chosenPower, powersAvailable);
+		}
+	}
+
+	// If the cvar for the hatchet massacre power is enabled then execute this section
+	if(cvar_PowerHatchetMassacre)
+	{
+		// Adds +1 to the current value of the powersAvailable variable
+		powersAvailable++;
+
+		PrintToChatAll("Debug Power - PA %i | C %i", powersAvailable, chosenPower);
+
+		// If the value contained within chosenPower is the same as the value stored in powersAvailable then execute this section
+		if(chosenPower == powersAvailable)
+		{
+			// Gives the client an axe that deals additional damage, and applies blood to the victim's screen 
+			PowerHatchetMassacre(client);
+
+			// 
+			PrintToChatAll("Power Hatchet Massacre - [ %i | %i ]", chosenPower, powersAvailable);
 		}
 	}
 
@@ -3583,7 +3634,14 @@ public int countAvailablePowers()
 	}
 
 	// If the cvar for the leg crushing bumpmines power is enabled then execute this section
-	if(cvar_powerLegCrushingBumpmines)
+	if(cvar_PowerLegCrushingBumpmines)
+	{
+		// Adds +1 to the current value of the powersAvailable variable
+		powersAvailable++;
+	}
+
+	// If the cvar for the hatchet massacre power is enabled then execute this section
+	if(cvar_PowerHatchetMassacre)
 	{
 		// Adds +1 to the current value of the powersAvailable variable
 		powersAvailable++;
@@ -3668,6 +3726,13 @@ public void ResetPreviousPower()
 	{
 		// Turns off the leg crushing bumpmines power 
 		powerLegCrushingBumpmines = 0;
+	}
+
+	// If the currently active power is axe massacre then execute this section
+	if(powerHatchetMassacre)
+	{
+		// Turns off the axe massacre king power 
+		powerHatchetMassacre = false;
 	}
 }
 
@@ -4381,8 +4446,8 @@ public void PowerScoutNoScope(int client)
 // This happens every game tick
 public Action OnPreThink(int client)
 {
-	// If the king's current power is not the scout no scope power then execute this section
-	if(!powerScoutNoScope)
+	// If the cvar_KingPowerChooser is not enabled then execute this section
+	if(!cvar_KingPowerChooser)
 	{
 		return Plugin_Continue;
 	}
@@ -4399,8 +4464,19 @@ public Action OnPreThink(int client)
 		return Plugin_Continue;
 	}
 
-	// Prevents the player from using their weapon's scope to zoom
-	preventPlayerFromScoping(client);
+	// If the king's current power is the scout no scope power then execute this section
+	if(powerScoutNoScope)
+	{
+		// Prevents the player from using their weapon's scope to zoom
+		preventPlayerFromScoping(client);
+	}
+
+	// If the king's current power is the hatchet massacre power then execute this section
+	if(powerHatchetMassacre)
+	{
+		// Prevents the player from throwing their axe weapon
+		preventPlayerFromThrowingAxe(client);
+	}
 
 	return Plugin_Continue;
 }
@@ -4765,8 +4841,55 @@ public Action OnDamageTaken(int client, int &attacker, int &inflictor, float &da
 		}
 	}
 
+	// If the currently active power is axe massacre then execute this section
+	if(powerHatchetMassacre)
+	{
+		PrintToChat(attacker, "attacker weapon %s", classname);
+
+		// If the inflictor entity is an axe then execute this section
+		if(StrEqual(classname, "player", false))
+		{
+			// If the damage is equals to 20 then execute this section
+			if(damage == 20)
+			{
+				damage = 50.0;
+			}
+
+			// If the damage is equals to 24 then execute this section
+			else if(damage == 24)
+			{
+				damage = 55.0;
+			}
+
+			// If the damage is equals to 40 then execute this section
+			else if(damage == 40)
+			{
+				damage = 100.0;
+			}
+
+			// If the client does not currently have a blood spattered screen then exceute this section
+			if(!powerHatchetMassacreCooldown)
+			{
+				// Sets the powerHatchetMassacreCooldown variable to true
+				powerHatchetMassacreCooldown[client] = true;
+
+				// Applies a red fade overlay to the player that was hit with the axe
+				ApplyFadeOverlay(client, 1, 1536, (0x0010), 173, 0, 0, 120, true);
+
+				// Applies a blood screen overlay to the client
+				ClientCommand(client, "r_screenoverlay manifest/kingmod/bloodoverlay.vmt");
+
+				// Removes the blood screen overlay from the player's screen after 3.0 seconds
+				CreateTimer(3.0, Timer_HatchetMassacreRemoveBlood, client, TIMER_FLAG_NO_MAPCHANGE);
+			}
+
+			return Plugin_Changed;
+		}
+	}
+
 	return Plugin_Continue;
 }
+
 
 
 //////////////////////
@@ -5128,6 +5251,12 @@ public void PowerRiotChangePlayerHealth(int client)
 // This hapens when the round starts
 public void createHostageZone()
 {
+	// If the cvar_KingPowerChooser is enabled and the riot power is enabled then execute this section
+	if(cvar_KingPowerChooser && cvar_PowerRiot)
+	{
+		return;
+	}
+
 	// Creates a variable which we will store data within
 	int entity = -1;
 
@@ -5327,6 +5456,139 @@ public void RemoveAllBumpMines()
 
 
 ////////////////////////////////
+// - Power Hatchet Massacre - //
+////////////////////////////////
+
+
+// This happens when a king acquires the hatchet massacre power 
+public void PowerHatchetMassacre(int client)
+{
+	// Turns on the hatchet massacre king power 
+	powerHatchetMassacre = true;
+
+	// Changes the name of the path for the sound that is will be played when the player acquires the specific power
+	powerSoundName = "kingmod/power_hatchetmassacre.mp3";
+
+	// Changes the content of the dottedLine variable to match the length of the name of power and tier
+	dottedLine = "---------------------------------";
+
+	// Changes the content of the nameOfPower variable to reflect which power the king acquired
+	nameOfPower = "Hatchet Massacre";
+	
+	// Changes the content of the nameOfTier variable to reflect which tier of the power the king acquired
+	nameOfTier = "Tier A";
+
+	// Specifies which special weapon the king should be given
+	kingWeapon = "weapon_axe";
+
+	// Gives the king a unique weapon if the current power requires one
+	CreateTimer(0.25, Timer_GiveKingUniqueWeapon, client);
+}
+
+
+// This happens 3.0 seconds after a player is hit by the king's axe
+public Action Timer_HatchetMassacreRemoveBlood(Handle timer, int client)
+{
+	// If the client does not meet our validation criteria then execute this section
+	if(!IsValidClient(client))
+	{
+		return Plugin_Continue;
+	}
+
+	// Removes the screen overlay from the client
+	ClientCommand(client, "r_screenoverlay 0");
+
+	// Sets the powerHatchetMassacreCooldown variable to true
+	powerHatchetMassacreCooldown[client] = true;
+
+	return Plugin_Continue;
+}
+
+
+// Thanks to Berni for his SM LIB screenfade stock
+public void ApplyFadeOverlay(int client, int duration, int holdTime, int fadeflags, int colorRed, int colorGreen, int colorBlue, int colorAlpha, bool reliable)
+{
+	// 0x0001 - Fade In, i believe?
+	// 0x0002 - Fade out
+	// 0x0004 - Fade without transitional color blend and a bit darker tones
+	// 0x0008 - Stays faded until a new fade takes over
+	// 0x0010 - Replaces any existing fade overlays with this one
+	
+	// Creates a handle for our usermessage
+	Handle userMessage = StartMessageOne("Fade", client, (reliable ? USERMSG_RELIABLE : 0));
+
+	// If the usermessage is not invalid then execute this section 
+	if(userMessage != INVALID_HANDLE)
+	{
+		// If the usermessage type is protobuf which is used in CS:GO then execute this section
+		if(GetUserMessageType() == UM_Protobuf)
+		{
+			// Creates a variable called fadeColor which we will use to store our color code in
+			int fadeColor[4];
+
+			// Assigns the red color value to the fadeColor variable first index
+			fadeColor[0] = colorRed;
+
+			// Assigns the green color value to the fadeColor variable's second index
+			fadeColor[1] = colorGreen;
+
+			// Assigns the blue color value to the fadeColor variable's third index
+			fadeColor[2] = colorBlue;
+
+			// Assigns the alpha color value to the fadeColor variable's fourth index
+			fadeColor[3] = colorAlpha;
+
+			// Defines how long the duration should last (duration roughly translates 512 to ~1 second)
+			PbSetInt(userMessage, "duration", duration);
+
+			// Definses the hold time for the screen fade
+			PbSetInt(userMessage, "hold_time", holdTime);
+
+			// You can use multiple flags at once by enclosing them in parantheses different options
+			PbSetInt(userMessage, "flags", fadeflags);
+
+			// Sets the fade color to that of our value stored within our variable fadeColor
+			PbSetColor(userMessage, "clr", fadeColor);
+
+			EndMessage();
+		}
+	}
+}
+
+
+// This happens when the king tries to throw his axe while the hatchet massacre power is active
+public Action preventPlayerFromThrowingAxe(int client)
+{
+	// Obtains the name of the player's weapon and store it within our variable entity
+	int entity = GetEntPropEnt(client, Prop_Send, "m_hActiveWeapon");
+
+	// If the entity does not meet our criteria validation then execute this section
+	if(!IsValidEntity(entity))
+	{
+		return Plugin_Continue;
+	}
+
+	// Creates a variable to store our data within
+	char classname[32];
+
+	// Obtains the classname of the entity and store it within our classname variable
+	GetEdictClassname(entity, classname, sizeof(classname));
+
+	// If the entity is not an ax then execute this section
+	if(!StrEqual(classname, "weapon_melee"))
+	{
+		return Plugin_Continue;
+	}
+
+	// Adds 2.0 seconds cooldown to when the player would be able to use the secondary attack (zoom function) 
+	SetEntDataFloat(entity, FindSendPropOffs("CBaseCombatWeapon", "m_flNextSecondaryAttack"), GetGameTime() + 2.0);
+
+	return Plugin_Continue;
+}
+
+
+
+////////////////////////////////
 // - Return Based Functions - //
 ////////////////////////////////
 
@@ -5491,9 +5753,11 @@ public void DownloadAndPrecacheFiles()
 	AddFileToDownloadsTable("sound/kingmod/power_breachcharges.mp3");
 	PrecacheSound("kingmod/power_breachcharges.mp3");
 
+
 	// Power - Leg Crushing Bumpmines
 	AddFileToDownloadsTable("sound/kingmod/power_legcrushingbumpmines.mp3");
 	PrecacheSound("kingmod/power_legcrushingbumpmines.mp3");
+
 
 	// Power - Hatchet Massacre
 	AddFileToDownloadsTable("sound/kingmod/power_hatchetmassacre.mp3");

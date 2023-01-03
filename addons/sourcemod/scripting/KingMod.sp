@@ -43,7 +43,8 @@ bool cvar_PowerCarpetBombingFlashbangs = false;
 bool cvar_PowerNapalm = false;
 bool cvar_PowerRiot = false;
 bool cvar_PowerVampire = false;
-bool cvar_PowerBreachCharges = true;
+bool cvar_PowerBreachCharges = false;
+bool cvar_powerLegCrushingBumpmines = true;
 
 int cvar_PointsNormalKill = 1;
 int cvar_PointsKingKill = 3;
@@ -73,6 +74,7 @@ int powerMovementSpeed = 0;
 int powerCarpetBombingFlashbangs = 0;
 int powerVampire = 0;
 int powerBreachCharges = 0;
+int powerLegCrushingBumpmines = 0;
 
 //////////////////////////
 // - Global Variables - //
@@ -158,6 +160,7 @@ public void OnPluginStart()
 	HookEvent("round_end", Event_RoundEnd, EventHookMode_Post);
 	HookEvent("player_team", Event_PlayerTeam, EventHookMode_Post);
 	HookEvent("player_hurt", Event_PlayerHurt, EventHookMode_Pre);
+	HookEvent("player_falldamage", Event_PlayerFalldamage, EventHookMode_Post);
 	HookEvent("weapon_fire", Event_WeaponFire, EventHookMode_Pre);
 
 	// Calls upon our CommandListenerJoinTeam function whenever a player changes team
@@ -502,8 +505,18 @@ public Action OnWeaponCanUse(int client, int weapon)
 		// If the currently active power is breachcharges then execute this section
 		if(powerBreachCharges)
 		{
-			// If the weapon is a shield then excute this section
+			// If the weapon is a breachcharge then excute this section
 			if(StrEqual(ClassName, "weapon_breachcharge", false))
+			{
+				return Plugin_Continue;
+			}
+		}
+
+		// If the currently active power is leg crushing bumpmines then execute this section
+		if(powerLegCrushingBumpmines)
+		{
+			// If the weapon is a bumpmine then excute this section
+			if(StrEqual(ClassName, "weapon_bumpmine", false))
 			{
 				return Plugin_Continue;
 			}
@@ -775,6 +788,9 @@ public Action Event_PlayerDeath(Handle event, const char[] name, bool dontBroadc
 		// Changes the killed player's king status to false
 		isPlayerKing[client] = false;
 
+		// Removes all of the bumpmine projectile entities from the map
+		RemoveAllBumpMines();
+
 		// Extinguishes the flames of all clients currently on fire if the current power is napalm 
 		RemoveNapalmFromVictims();
 
@@ -841,6 +857,9 @@ public Action Event_PlayerDeath(Handle event, const char[] name, bool dontBroadc
 
 			// Changes the health of the player to (200 default)
 			SetEntProp(attacker, Prop_Send, "m_iHealth", cvar_KingHealth, 1);
+
+			// Removes all of the bumpmine projectile entities from the map
+			RemoveAllBumpMines();
 
 			// Extinguishes the flames of all clients currently on fire if the current power is napalm 
 			RemoveNapalmFromVictims();
@@ -947,6 +966,9 @@ public Action Event_PlayerDeath(Handle event, const char[] name, bool dontBroadc
 
 	// Changes the health of the player to (200 default)
 	SetEntProp(attacker, Prop_Send, "m_iHealth", cvar_KingHealth, 1);
+
+	// Removes all of the bumpmine projectile entities from the map
+	RemoveAllBumpMines();
 
 	// Extinguishes the flames of all clients currently on fire if the current power is napalm 
 	RemoveNapalmFromVictims();
@@ -1164,6 +1186,46 @@ public Action Event_PlayerTeam(Handle event, const char[] name, bool dontBroadca
 
 	// Calls upon the Timer_RespawnPlayer function after (1.5 default) seconds
 	CreateTimer(cvar_RespawnTime, Timer_RespawnPlayer, client, TIMER_FLAG_NO_MAPCHANGE);
+
+	return Plugin_Continue;
+}
+
+
+// This happens when a player takes or would take damage from falling
+public Action Event_PlayerFalldamage(Handle event, const char[] name, bool dontBroadcast)
+{
+	// If the cvar_KingPowerChooser is not enabled then execute this section
+	if(!cvar_KingPowerChooser)
+	{
+		return Plugin_Continue;
+	}
+
+	// If the currently active power is not leg crushing bumpmines then execute this section
+	if(!powerLegCrushingBumpmines)
+	{
+		return Plugin_Continue;
+	}
+
+	// Obtains the client's userid and converts it to an index and store it within our client variable
+	int client = GetClientOfUserId(GetEventInt(event, "userid"));
+
+	// If the client does not meet our validation criteria then execute this section
+	if(!IsValidClient(client))
+	{
+		return Plugin_Continue;
+	}
+
+	// If the client is on the same team as the king then execute this section
+ 	if(GetClientTeam(client) == kingIsOnTeam)
+	{
+		return Plugin_Continue;
+	}
+
+	// Obtains the damage taken from falling and store it within the fallDamage variable 
+	int fallDamage = RoundToCeil(GetEventFloat(event, "damage"));
+
+	// Inflicts the value of fallDamage as damage to the client from the king
+	DealDamageToClient(client, kingIndex, fallDamage, "weapon_bumpmine");
 
 	return Plugin_Continue;
 }
@@ -2542,6 +2604,16 @@ public Action Timer_CleanFloor(Handle timer)
 			}
 		}
 
+		// If the currently active power is leg crushing bumpmines then execute this section
+		if(powerLegCrushingBumpmines)
+		{
+			// If the entity is a bumpmine then execute this section
+			if(StrEqual(className, "weapon_bumpmine", false))
+			{
+				continue;
+			}
+		}
+
 		// If the entity has an ownership relation then execute this section
 		if(GetEntPropEnt(entity, Prop_Data, "m_hOwnerEntity") != -1)
 		{
@@ -3409,6 +3481,24 @@ public Action ChooseKingPower(int client)
 		}
 	}
 
+	// If the cvar for the leg crushing bumpmines power is enabled then execute this section
+	if(cvar_powerLegCrushingBumpmines)
+	{
+		// Adds +1 to the current value of the powersAvailable variable
+		powersAvailable++;
+
+		PrintToChatAll("Debug Power - PA %i | C %i", powersAvailable, chosenPower);
+
+		// If the value contained within chosenPower is the same as the value stored in powersAvailable then execute this section
+		if(chosenPower == powersAvailable)
+		{
+			// Gives the client a large stack of bumpmines, and causes all fall damage taken by enemies to be dealt by the king 
+			PowerLegCrushingBumpmines(client);
+
+			// 
+			PrintToChatAll("Power Leg Crushing Bumpmines - [ %i | %i ]", chosenPower, powersAvailable);
+		}
+	}
 
 	// Plays the sound file that is specific to that of the newly acquired power
 	CreateTimer(2.0, Timer_PlayPowerSpecificSound, client);
@@ -3492,6 +3582,12 @@ public int countAvailablePowers()
 		powersAvailable++;
 	}
 
+	// If the cvar for the leg crushing bumpmines power is enabled then execute this section
+	if(cvar_powerLegCrushingBumpmines)
+	{
+		// Adds +1 to the current value of the powersAvailable variable
+		powersAvailable++;
+	}
 
 	// Returns the value of our powersAvailable variable
 	return powersAvailable;
@@ -3556,21 +3652,27 @@ public void ResetPreviousPower()
 	// If the currently active power is vampire then execute this section
 	if(powerVampire)
 	{
-		// Turns off the riot Vampire power 
+		// Turns off the Vampire power 
 		powerVampire = 0;
 	}
 
 	// If the currently active power is breachcharges then execute this section
 	if(powerBreachCharges)
 	{
-		// Turns off the riot Vampire power 
+		// Turns off the breachcharge power 
 		powerBreachCharges = 0;
 	}
 
+	// If the currently active power is leg crushing bumpmines then execute this section
+	if(powerLegCrushingBumpmines)
+	{
+		// Turns off the leg crushing bumpmines power 
+		powerLegCrushingBumpmines = 0;
+	}
 }
 
 
-// This happens 0.1 second after a player becomes the king
+// This happens 0.25 second after a player becomes the king
 public Action Timer_GiveKingUniqueWeapon(Handle timer, int client)
 {
 	// If the client does not meet our validation criteria then execute this section
@@ -3614,21 +3716,21 @@ public Action Timer_GiveKingUniqueWeapon(Handle timer, int client)
 		// Creates a variable which we will store data within
 		int breachChargesAmmo = 0;
 
-		// If the breachChargesAmmo is 1 then execute this section
+		// If the powerBreachCharges is 1 then execute this section
 		if(powerBreachCharges == 1)
 		{
 			// Changes the value of our breachChargesAmmo variable 
 			breachChargesAmmo = 18;
 		}
 
-		// If the breachChargesAmmo is 2 then execute this section
+		// If the powerBreachCharges is 2 then execute this section
 		if(powerBreachCharges == 2)
 		{
 			// Changes the value of our breachChargesAmmo variable 
 			breachChargesAmmo = 15;
 		}
 
-		// If the breachChargesAmmo is 3 then execute this section
+		// If the powerBreachCharges is 3 then execute this section
 		if(powerBreachCharges == 3)
 		{
 			// Changes the value of our breachChargesAmmo variable 
@@ -3643,6 +3745,43 @@ public Action Timer_GiveKingUniqueWeapon(Handle timer, int client)
 
 		// Changes the "clip" of the breachcharge stack to value stored within our breachChargesAmmo
 		SetEntData(kingWeaponIndex, 2420, breachChargesAmmo, 4, true);
+	}
+
+	// If the currently active power is breachcharges then execute this section
+	if(powerLegCrushingBumpmines)
+	{
+		// Creates a variable which we will store data within
+		int bumpMinesAmmo = 0;
+
+		// If the powerLegCrushingBumpmines is 1 then execute this section
+		if(powerLegCrushingBumpmines == 1)
+		{
+			// Changes the value of our bumpMinesAmmo variable 
+			bumpMinesAmmo = 18;
+		}
+
+		// If the powerLegCrushingBumpmines is 2 then execute this section
+		if(powerLegCrushingBumpmines == 2)
+		{
+			// Changes the value of our bumpMinesAmmo variable 
+			bumpMinesAmmo = 15;
+		}
+
+		// If the powerLegCrushingBumpmines is 3 then execute this section
+		if(powerLegCrushingBumpmines == 3)
+		{
+			// Changes the value of our bumpMinesAmmo variable 
+			bumpMinesAmmo = 12;
+		}
+
+		// If the king's weapon does not match our validation criteria then execute this section
+		if(!IsValidEntity(kingWeaponIndex))
+		{
+			return Plugin_Continue;
+		}
+
+		// Changes the "clip" of the bumpmine stack to value stored within our bumpMinesAmmo
+		SetEntData(kingWeaponIndex, 2420, bumpMinesAmmo, 4, true);
 	}
 
 	return Plugin_Continue;
@@ -3709,7 +3848,7 @@ public Action Timer_PlayPowerSpecificSound(Handle timer, int client)
 
 	// If the sound is not already precached then execute this section
 	if(!IsSoundPrecached(powerSoundName))
-	{	
+	{
 		// Precaches the sound file
 		PrecacheSound(powerSoundName, true);
 	}
@@ -4490,10 +4629,26 @@ public Action Timer_RemoveFlashBangEntity(Handle timer, int entity)
 // This happens when the player takes damage
 public Action OnDamageTaken(int client, int &attacker, int &inflictor, float &damage, int &damagetype) 
 {
+	// If the cvar_KingPowerChooser is not enabled then execute this section
+	if(!cvar_KingPowerChooser)
+	{
+		return Plugin_Continue;
+	}
+
 	// If the client does not meet our validation criteria then execute this section
 	if(!IsValidClient(client))
 	{
 		return Plugin_Continue;
+	}
+
+	// If the currently active power is the leg crushing bumpmines then execute this section
+	if(powerLegCrushingBumpmines)
+	{
+		// If the type of damage taken is fall damage then execute this section
+		if(damagetype & DMG_FALL)
+		{
+			return Plugin_Handled;
+		}
 	}
 
 	// If the attacker does not meet our validation criteria then execute this section
@@ -5044,9 +5199,9 @@ public void PowerVampire()
 
 
 
-///////////////////////
-// - Power Vampire - //
-///////////////////////
+/////////////////////////////
+// - Power Breachcharges - //
+/////////////////////////////
 
 
 // This happens when a king acquires the breachcharges power 
@@ -5089,6 +5244,83 @@ public void PowerBreachCharges(int client)
 	{
 		// Changes the content of the nameOfTier variable to reflect which tier of the power the king acquired
 		nameOfTier = "Tier C";
+	}
+}
+
+
+
+//////////////////////////////////////
+// - Power Leg Crushing Bumpmines - //
+//////////////////////////////////////
+
+
+// This happens when a king acquires the leg crushing bumpmines power 
+public void PowerLegCrushingBumpmines(int client)
+{
+	// Changes the name of the path for the sound that is will be played when the player acquires the specific power
+	powerSoundName = "kingmod/power_legcrushingbumpmines.mp3";
+
+	// Changes the content of the dottedLine variable to match the length of the name of power and tier
+	dottedLine = "------------------------------------------";
+
+	// Changes the content of the nameOfPower variable to reflect which power the king acquired
+	nameOfPower = "Leg Crushing Bumpmines";
+	
+	// Specifies which special weapon the king should be given
+	kingWeapon = "weapon_bumpmine";
+
+	// Gives the king a unique weapon if the current power requires one
+	CreateTimer(0.25, Timer_GiveKingUniqueWeapon, client);
+
+	// Turns on the leg crushing bumpmines king power 
+	powerLegCrushingBumpmines = GetRandomInt(1, 3);
+
+	// If the value stored within the powerLegCrushingBumpmines is 1 execute this section
+	if(powerLegCrushingBumpmines == 1)
+	{
+		// Changes the content of the nameOfTier variable to reflect which tier of the power the king acquired
+		nameOfTier = "Tier A";
+	}
+
+	// If the value stored within the powerLegCrushingBumpmines is 2 execute this section
+	else if(powerLegCrushingBumpmines == 2)
+	{
+		// Changes the content of the nameOfTier variable to reflect which tier of the power the king acquired
+		nameOfTier = "Tier B";
+	}
+
+	// If the value stored within the powerLegCrushingBumpmines is 3 execute this section
+	else if(powerLegCrushingBumpmines == 3)
+	{
+		// Changes the content of the nameOfTier variable to reflect which tier of the power the king acquired
+		nameOfTier = "Tier C";
+	}
+}
+
+
+// This happens when the king dies while the leg crushing bumpmine power is active
+public void RemoveAllBumpMines()
+{
+	// If the currently active power is not leg crushing bumpmines then execute this section
+	if(!powerLegCrushingBumpmines)
+	{
+		return;
+	}
+
+	// Creates a variable to store our data within 
+	int entity = INVALID_ENT_REFERENCE;
+
+	// Loops through the entities and execute this section if the entity has the classname bumpmine_projectile
+	while ((entity = FindEntityByClassname(entity, "bumpmine_projectile")) != -1)
+	{
+		// If the entity does not meet our criteria of validation then execute this section
+		if(!IsValidEntity(entity))
+		{
+			return;
+		}
+
+		// Kills the weapon entity, removing it from the game
+		AcceptEntityInput(entity, "Kill");
 	}
 }
 
@@ -5257,5 +5489,10 @@ public void DownloadAndPrecacheFiles()
 
 	// Power - Breachcharges
 	AddFileToDownloadsTable("sound/kingmod/power_breachcharges.mp3");
-	PrecacheSound("kingmod/power_breachcharges.mp3");	
+	PrecacheSound("kingmod/power_breachcharges.mp3");
+
+	// Power - Leg Crushing Bumpmines
+	AddFileToDownloadsTable("sound/kingmod/power_legcrushingbumpmines.mp3");
+	PrecacheSound("kingmod/power_legcrushingbumpmines.mp3");
+
 }

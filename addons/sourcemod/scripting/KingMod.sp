@@ -42,7 +42,7 @@ bool cvar_PowerScoutNoScope = false;
 bool cvar_PowerCarpetBombingFlashbangs = false;
 bool cvar_PowerNapalm = false;
 bool cvar_PowerRiot = false;
-bool cvar_PowerVampiret = true;
+bool cvar_PowerVampire = true;
 
 int cvar_PointsNormalKill = 1;
 int cvar_PointsKingKill = 3;
@@ -3320,7 +3320,7 @@ public Action ChooseKingPower(int client)
 	}
 
 	// If the cvar for the vampire power is enabled then execute this section
-	if(cvar_PowerVampiret)
+	if(cvar_PowerVampire)
 	{
 		// Adds +1 to the current value of the powersAvailable variable
 		powersAvailable++;
@@ -3408,7 +3408,7 @@ public int countAvailablePowers()
 	}
 
 	// If the cvar for the vampire power is enabled then execute this section
-	if(cvar_PowerVampiret)
+	if(cvar_PowerVampire)
 	{
 		// Adds +1 to the current value of the powersAvailable variable
 		powersAvailable++;

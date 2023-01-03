@@ -42,7 +42,8 @@ bool cvar_PowerScoutNoScope = false;
 bool cvar_PowerCarpetBombingFlashbangs = false;
 bool cvar_PowerNapalm = false;
 bool cvar_PowerRiot = false;
-bool cvar_PowerVampire = true;
+bool cvar_PowerVampire = false;
+bool cvar_PowerBreachCharges = true;
 
 int cvar_PointsNormalKill = 1;
 int cvar_PointsKingKill = 3;
@@ -71,6 +72,7 @@ int powerImpregnableArmor = 0;
 int powerMovementSpeed = 0;
 int powerCarpetBombingFlashbangs = 0;
 int powerVampire = 0;
+int powerBreachCharges = 0;
 
 //////////////////////////
 // - Global Variables - //
@@ -492,6 +494,16 @@ public Action OnWeaponCanUse(int client, int weapon)
 		{
 			// If the weapon is a shield then excute this section
 			if(StrEqual(ClassName, "weapon_shield", false))
+			{
+				return Plugin_Continue;
+			}
+		}
+
+		// If the currently active power is breachcharges then execute this section
+		if(powerBreachCharges)
+		{
+			// If the weapon is a shield then excute this section
+			if(StrEqual(ClassName, "weapon_breachcharge", false))
 			{
 				return Plugin_Continue;
 			}
@@ -2490,6 +2502,46 @@ public Action Timer_CleanFloor(Handle timer)
 			}
 		}
 
+		// If the king's current power is the napalm power then execute this section
+		if(powerNapalm)
+		{
+			// If the entity is a molotov then execute this section
+			if(StrEqual(className, "weapon_molotov", false))
+			{
+				continue;
+			}
+		}
+
+		// If the king's current power is the scout no scope power then execute this section
+		if(powerScoutNoScope)
+		{
+			// If the entity is a ssg08 then execute this section
+			if(StrEqual(className, "weapon_ssg08", false))
+			{
+				continue;
+			}
+		}
+
+		// If the currently active power is riot then execute this section
+		if(powerRiot)
+		{
+			// If the entity is a shield then execute this section
+			if(StrEqual(className, "weapon_shield", false))
+			{
+				continue;
+			}
+		}
+
+		// If the currently active power is breachcharges then execute this section
+		if(powerBreachCharges)
+		{
+			// If the entity is a breachcharge then execute this section
+			if(StrEqual(className, "weapon_breachcharge", false))
+			{
+				continue;
+			}
+		}
+
 		// If the entity has an ownership relation then execute this section
 		if(GetEntPropEnt(entity, Prop_Data, "m_hOwnerEntity") != -1)
 		{
@@ -3338,6 +3390,25 @@ public Action ChooseKingPower(int client)
 		}
 	}
 
+	// If the cvar for the breachcharges power is enabled then execute this section
+	if(cvar_PowerBreachCharges)
+	{
+		// Adds +1 to the current value of the powersAvailable variable
+		powersAvailable++;
+
+		PrintToChatAll("Debug Power - PA %i | C %i", powersAvailable, chosenPower);
+
+		// If the value contained within chosenPower is the same as the value stored in powersAvailable then execute this section
+		if(chosenPower == powersAvailable)
+		{
+			// Gives the client a large stack of breachcharges to plant and detonate
+			PowerBreachCharges(client);
+
+			// 
+			PrintToChatAll("Power Breachcharges - [ %i | %i ]", chosenPower, powersAvailable);
+		}
+	}
+
 
 	// Plays the sound file that is specific to that of the newly acquired power
 	CreateTimer(2.0, Timer_PlayPowerSpecificSound, client);
@@ -3414,6 +3485,13 @@ public int countAvailablePowers()
 		powersAvailable++;
 	}
 
+	// If the cvar for the breachcharges power is enabled then execute this section
+	if(cvar_PowerBreachCharges)
+	{
+		// Adds +1 to the current value of the powersAvailable variable
+		powersAvailable++;
+	}
+
 
 	// Returns the value of our powersAvailable variable
 	return powersAvailable;
@@ -3475,11 +3553,20 @@ public void ResetPreviousPower()
 		powerRiot = false;
 	}
 
+	// If the currently active power is vampire then execute this section
 	if(powerVampire)
 	{
 		// Turns off the riot Vampire power 
 		powerVampire = 0;
 	}
+
+	// If the currently active power is breachcharges then execute this section
+	if(powerBreachCharges)
+	{
+		// Turns off the riot Vampire power 
+		powerBreachCharges = 0;
+	}
+
 }
 
 
@@ -3497,8 +3584,8 @@ public Action Timer_GiveKingUniqueWeapon(Handle timer, int client)
 		return Plugin_Continue;
 	}
 
-	// Gives the client the specified weapon
-	GivePlayerItem(client, kingWeapon);
+	// Gives the client the specified weapon and store it within the kingWeaponIndex variable
+	int kingWeaponIndex = GivePlayerItem(client, kingWeapon);
 
 	// If the currently active power is sticky grenades then execute this section
 	if(powerStickyGrenades)
@@ -3519,6 +3606,43 @@ public Action Timer_GiveKingUniqueWeapon(Handle timer, int client)
 	{
 		// Changes the player's amount of molotovs to 25
 		SetEntProp(client, Prop_Send, "m_iAmmo", 10, _, 17);
+	}
+
+	// If the currently active power is breachcharges then execute this section
+	if(powerBreachCharges)
+	{
+		// Creates a variable which we will store data within
+		int breachChargesAmmo = 0;
+
+		// If the breachChargesAmmo is 1 then execute this section
+		if(powerBreachCharges == 1)
+		{
+			// Changes the value of our breachChargesAmmo variable 
+			breachChargesAmmo = 18;
+		}
+
+		// If the breachChargesAmmo is 2 then execute this section
+		if(powerBreachCharges == 2)
+		{
+			// Changes the value of our breachChargesAmmo variable 
+			breachChargesAmmo = 15;
+		}
+
+		// If the breachChargesAmmo is 3 then execute this section
+		if(powerBreachCharges == 3)
+		{
+			// Changes the value of our breachChargesAmmo variable 
+			breachChargesAmmo = 12;
+		}
+
+		// If the king's weapon does not match our validation criteria then execute this section
+		if(!IsValidEntity(kingWeaponIndex))
+		{
+			return Plugin_Continue;
+		}
+
+		// Changes the "clip" of the breachcharge stack to value stored within our breachChargesAmmo
+		SetEntData(kingWeaponIndex, 2420, breachChargesAmmo, 4, true);
 	}
 
 	return Plugin_Continue;
@@ -3891,6 +4015,9 @@ public void PowerStickyGrenades(int client)
 {
 	// Turns on the sticky grenade king power 
 	powerStickyGrenades = true;
+
+	// Changes the name of the path for the sound that is will be played when the player acquires the specific power
+	powerSoundName = "kingmod/power_stickynades.mp3";
 
 	// Changes the content of the dottedLine variable to match the length of the name of power and tier
 	dottedLine = "------------------------------";
@@ -4917,6 +5044,56 @@ public void PowerVampire()
 
 
 
+///////////////////////
+// - Power Vampire - //
+///////////////////////
+
+
+// This happens when a king acquires the breachcharges power 
+public void PowerBreachCharges(int client)
+{
+	// Changes the name of the path for the sound that is will be played when the player acquires the specific power
+	powerSoundName = "kingmod/power_breachcharges.mp3";
+
+	// Changes the content of the dottedLine variable to match the length of the name of power and tier
+	dottedLine = "-----------------------------";
+
+	// Changes the content of the nameOfPower variable to reflect which power the king acquired
+	nameOfPower = "Breachcharges";
+	
+	// Specifies which special weapon the king should be given
+	kingWeapon = "weapon_breachcharge";
+
+	// Gives the king a unique weapon if the current power requires one
+	CreateTimer(0.25, Timer_GiveKingUniqueWeapon, client);
+
+	// Turns on the breachcharges king power 
+	powerBreachCharges = GetRandomInt(1, 3);
+
+	// If the value stored within the powerBreachCharges is 1 execute this section
+	if(powerBreachCharges == 1)
+	{
+		// Changes the content of the nameOfTier variable to reflect which tier of the power the king acquired
+		nameOfTier = "Tier A";
+	}
+
+	// If the value stored within the powerBreachCharges is 2 execute this section
+	else if(powerBreachCharges == 2)
+	{
+		// Changes the content of the nameOfTier variable to reflect which tier of the power the king acquired
+		nameOfTier = "Tier B";
+	}
+
+	// If the value stored within the powerBreachCharges is 3 execute this section
+	else if(powerBreachCharges == 3)
+	{
+		// Changes the content of the nameOfTier variable to reflect which tier of the power the king acquired
+		nameOfTier = "Tier C";
+	}
+}
+
+
+
 ////////////////////////////////
 // - Return Based Functions - //
 ////////////////////////////////
@@ -5000,7 +5177,6 @@ public Action Command_DeveloperMenu(int client, int args)
 }
 
 
-
 //////////////////////////////////////
 // - Download & Precache Function - //
 //////////////////////////////////////
@@ -5048,22 +5224,38 @@ public void DownloadAndPrecacheFiles()
 	AddFileToDownloadsTable("sound/kingmod/power_movementspeed.mp3");
 	PrecacheSound("kingmod/power_movementspeed.mp3");
 
+
+	// Power - Sticky Nades
+	AddFileToDownloadsTable("sound/kingmod/power_stickynades.mp3");
+	PrecacheSound("kingmod/power_stickynades.mp3");
+
+
 	// Power - Scout No Scope
 	AddFileToDownloadsTable("sound/kingmod/power_scoutnoscope.mp3");
 	PrecacheSound("kingmod/power_scoutnoscope.mp3");
+
 
 	// Power - Carpet Bombing Flashbangs
 	AddFileToDownloadsTable("sound/kingmod/power_carpetbombingflashbangs.mp3");
 	PrecacheSound("kingmod/power_carpetbombingflashbangs.mp3");
 
+
 	// Power - Napalm
 	AddFileToDownloadsTable("sound/kingmod/power_napalm.mp3");
 	PrecacheSound("kingmod/power_napalm.mp3");
 
+
 	// Power - Riot
+	AddFileToDownloadsTable("sound/kingmod/power_riot.mp3");
+	PrecacheSound("kingmod/power_riot.mp3");
 
 
 	// Power - Vampire
 	AddFileToDownloadsTable("sound/kingmod/power_vampire.mp3");
 	PrecacheSound("kingmod/power_vampire.mp3");
+
+
+	// Power - Breachcharges
+	AddFileToDownloadsTable("sound/kingmod/power_breachcharges.mp3");
+	PrecacheSound("kingmod/power_breachcharges.mp3");	
 }

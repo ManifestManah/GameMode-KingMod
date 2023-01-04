@@ -48,7 +48,9 @@ bool cvar_PowerLegCrushingBumpmines = false;
 bool cvar_PowerHatchetMassacre = false;
 bool cvar_PowerChuckNorrisFists = false;
 bool cvar_PowerLaserGun = false;
-bool cvar_PowerLuckyNumberSeven = true;
+bool cvar_PowerLuckyNumberSeven = false;
+bool cvar_PowerWesternShootout = true;
+
 
 int cvar_PointsNormalKill = 1;
 int cvar_PointsKingKill = 3;
@@ -75,6 +77,7 @@ bool powerRiot = false;
 bool powerHatchetMassacre = false;
 bool powerChuckNorris = false;
 bool powerLuckyNumberSeven = false;
+bool powerWesternShootout = false;
 
 int powerImpregnableArmor = 0;
 int powerMovementSpeed = 0;
@@ -263,6 +266,22 @@ public void OnClientPostAdminCheck(int client)
 	// Attempts to auto-assign the player to the team at a disadvantage after the mp_force_pick_time duration
 	AutoJoinTeam(client);
 }
+
+
+public Action OnGetGameDescription(char sDescription[64])
+{
+	char GameInfo[64];
+
+	strcopy(sDescription, 64, GameInfo);
+	
+
+
+	PrintToServer("[ECON] Game Description set");
+	
+	return Plugin_Changed;
+} 
+
+
 
 
 // This happens when a player disconnects
@@ -607,6 +626,16 @@ public Action OnWeaponCanUse(int client, int weapon)
 		{
 			// If the weapon is a cz75a (p250 shares item slot with it) then excute this section
 			if(StrEqual(ClassName, "weapon_p250", false))
+			{
+				return Plugin_Continue;
+			}
+		}
+
+		// If the currently active power is western shootout then execute this section
+		if(powerWesternShootout)
+		{
+			// If the weapon is a revolver (deagle shares item slot with it) then excute this section
+			if(StrEqual(ClassName, "weapon_deagle", false))
 			{
 				return Plugin_Continue;
 			}
@@ -2737,6 +2766,16 @@ public Action Timer_CleanFloor(Handle timer)
 			}
 		}
 
+		// If the currently active power is western shootout then execute this section
+		if(powerWesternShootout)
+		{
+			// If the entity is a revolver (deagle shares item slot with it) then excute this section
+			if(StrEqual(className, "weapon_deagle", false))
+			{
+				continue;
+			}
+		}
+
 		// If the entity has an ownership relation then execute this section
 		if(GetEntPropEnt(entity, Prop_Data, "m_hOwnerEntity") != -1)
 		{
@@ -3712,6 +3751,25 @@ public Action ChooseKingPower(int client)
 		}
 	}
 
+	// If the cvar for the western shootout power is enabled then execute this section
+	if(cvar_PowerWesternShootout)
+	{
+		// Adds +1 to the current value of the powersAvailable variable
+		powersAvailable++;
+
+		PrintToChatAll("Debug Power - PA %i | C %i", powersAvailable, chosenPower);
+
+		// If the value contained within chosenPower is the same as the value stored in powersAvailable then execute this section
+		if(chosenPower == powersAvailable)
+		{
+			// Gives the king a revolver that always deals 50 damage, only contains 2 bullets and cannot use secondary attacks
+			PowerWesternShootout(client);
+
+			// 
+			PrintToChatAll("Power Western Shootout - [ %i | %i ]", chosenPower, powersAvailable);
+		}
+	}
+
 	// Plays the sound file that is specific to that of the newly acquired power
 	CreateTimer(2.0, Timer_PlayPowerSpecificSound, client);
 
@@ -3829,6 +3887,13 @@ public int countAvailablePowers()
 		powersAvailable++;
 	}
 
+	// If the cvar for the western shootout power is enabled then execute this section
+	if(cvar_PowerWesternShootout)
+	{
+		// Adds +1 to the current value of the powersAvailable variable
+		powersAvailable++;
+	}
+
 	// Returns the value of our powersAvailable variable
 	return powersAvailable;
 }
@@ -3939,6 +4004,13 @@ public void ResetPreviousPower()
 	{
 		// Turns off the lucky number seven king power 
 		powerLuckyNumberSeven = false;
+	}
+
+	// If the currently active power is western shootout then execute this section
+	if(powerWesternShootout)
+	{
+		// Turns off the western shootoutn king power 
+		powerWesternShootout = false;
 	}
 }
 
@@ -4474,6 +4546,22 @@ public void OnEntityCreated(int entity, const char[] classname)
 		// Adds a hook to the flashbange after it has been spawned allowing us to alter the flashbang's behavior
 		SDKHook(entity, SDKHook_SpawnPost, entity_FlashbangSpawned);
 	}
+
+
+	// If the currently active power is western shootout then execute this section
+	if(powerWesternShootout)
+	{
+		PrintToChatAll("spawned %s", classname);
+
+		// If the entity that was created is not a flashbang projectile then execute this section
+		if(!StrEqual(classname, "weapon_deagle", false))
+		{
+			return;
+		}
+
+		// Adds a hook to the revolver after it has been spawned allowing us to alter the revolver's behavior
+		SDKHook(entity, SDKHook_SpawnPost, entity_RevolverSpawned);
+	}
 }
 
 
@@ -4670,19 +4758,19 @@ public Action OnPreThink(int client)
 		return Plugin_Continue;
 	}
 
-	// If the king's current power is the scout no scope power then execute this section
-	if(powerScoutNoScope)
+	// If the king's current power is the scout no scope or western shootout power then execute this section
+	if(powerScoutNoScope || powerWesternShootout)
 	{
-		// Prevents the player from using their weapon's scope to zoom
-		preventPlayerFromScoping(client);
+		// Prevents the player from using their secondary attack
+		PreventSecondaryAttack(client);
 	}
 
 	return Plugin_Continue;
 }
 
 
-// This happens when the king tries to use the scope while the scout no scope power is active
-public Action preventPlayerFromScoping(int client)
+// This happens when the king tries to use the scope or secondary attack while no scope power or western shootout power is active
+public Action PreventSecondaryAttack(int client)
 {
 	// Obtains the name of the player's weapon and store it within our variable entity
 	int entity = GetEntPropEnt(client, Prop_Send, "m_hActiveWeapon");
@@ -4699,13 +4787,13 @@ public Action preventPlayerFromScoping(int client)
 	// Obtains the classname of the entity and store it within our classname variable
 	GetEdictClassname(entity, classname, sizeof(classname));
 
-	// If the entity is not a ssg08 then execute this section
-	if(!StrEqual(classname, "weapon_ssg08"))
+	// If the entity is not a ssg08 or revolver then execute this section
+	if(!StrEqual(classname, "weapon_ssg08") && !StrEqual(classname, "weapon_deagle"))
 	{
 		return Plugin_Continue;
 	}
 
-	// Adds 2.0 seconds cooldown to when the player would be able to use the secondary attack (zoom function) 
+	// Adds 2.0 seconds cooldown to when the player would be able to use the secondary attack / zoom function 
 	SetEntDataFloat(entity, FindSendPropOffs("CBaseCombatWeapon", "m_flNextSecondaryAttack"), GetGameTime() + 2.0);
 
 	return Plugin_Continue;
@@ -5152,6 +5240,7 @@ public Action OnDamageTaken(int client, int &attacker, int &inflictor, float &da
 		return Plugin_Changed;
 	}
 
+
 	// If the currently active power is Lucky Number Seven then execute this section
 	if(powerLuckyNumberSeven)
 	{
@@ -5181,6 +5270,19 @@ public Action OnDamageTaken(int client, int &attacker, int &inflictor, float &da
 		{
 			// Sends a message in the chat area only visible to the specified client
 			PrintToChat(attacker, "KingMod: You rolled %i (%i & %i) and dealt normal damage", diceOne + diceTwo, diceOne, diceTwo);
+		}
+	}
+
+
+	// If the currently active power is western shootout then execute this section
+	if(powerWesternShootout)
+	{
+		if(StrEqual(classname, "player", false))
+		{
+			// Changes the damage inflicted by the attack to 50.0
+			damage = 50.0;
+
+			return Plugin_Changed;
 		}
 	}
 
@@ -6355,6 +6457,101 @@ public void PowerLuckyNumberSeven(int client)
 
 
 ////////////////////////////////
+// - Power Western Shootout - //
+////////////////////////////////
+
+
+// This happens when a king acquires the western shootout power 
+public void PowerWesternShootout(int client)
+{
+	// Turns on the western shootout king power 
+	powerWesternShootout = true;
+
+	// Changes the name of the path for the sound that is will be played when the player acquires the specific power
+	powerSoundName = "kingmod/power_westernshootout.mp3";
+
+	// Changes the content of the dottedLine variable to match the length of the name of power and tier
+	dottedLine = "---------------------------------";
+
+	// Changes the content of the nameOfPower variable to reflect which power the king acquired
+	nameOfPower = "Western Shootout";
+	
+	// Changes the content of the nameOfTier variable to reflect which tier of the power the king acquired
+	nameOfTier = "Tier A";
+
+	// Specifies which special weapon the king should be given
+	kingWeapon = "weapon_revolver";
+
+	// Gives the king a unique weapon if the current power requires one
+	CreateTimer(0.25, Timer_GiveKingUniqueWeapon, client);
+}
+
+
+// This happens when a revolver has been spawned
+public Action entity_RevolverSpawned(int entity)
+{
+	// If the entity does not meet our criteria validation then execute this section
+	if(!IsValidEntity(entity))
+	{
+		return Plugin_Continue;
+	}
+
+	// Changes the clip to 2 and the ammo to 2 after 0.1 second
+	CreateTimer(0.1, Timer_PowerWesternShootoutAmmo, entity, TIMER_FLAG_NO_MAPCHANGE);
+
+	// Adds a hook to the revolver entity which will let us track when the entity is reloaded
+	SDKHook(entity, SDKHook_ReloadPost, OnWeaponReloadPostRevolver);
+
+	return Plugin_Continue;
+}
+
+
+// This happens when the player starts to reload his revolver
+public Action OnWeaponReloadPostRevolver(int weapon)
+{
+	// If the entity does not meet our criteria validation then execute this section
+	if(!IsValidEntity(weapon))
+	{
+		return Plugin_Continue;
+	}
+
+	// Obtains and stores the entity owner offset within our client variable 
+	int client = GetEntPropEnt(weapon, Prop_Send, "m_hOwnerEntity");
+	
+	// If the client does not meet our validation criteria then execute this section
+	if(!IsValidClient(client))
+	{
+		return Plugin_Continue;
+	}
+
+	// Changes the clip to 2 and the ammo to 2 after 2.35 seconds
+	CreateTimer(2.35, Timer_PowerWesternShootoutAmmo, weapon, TIMER_FLAG_NO_MAPCHANGE);
+
+	return Plugin_Continue;
+}
+
+
+// This happens 0.1 second after a revolver has been spawned and 2.35 seconds after it has been reloaded
+public Action Timer_PowerWesternShootoutAmmo(Handle timer, int weapon)
+{
+	// If the entity does not meet our criteria validation then execute this section
+	if(!IsValidEntity(weapon))
+	{
+		return Plugin_Continue;
+	}
+
+	// Changes the amount of bullets there are inside of the revolveer's clip
+	SetEntProp(weapon, Prop_Send, "m_iClip1", 2);
+
+	// Changes the ammount of ammo that the player has for their weapon
+	SetEntProp(weapon, Prop_Send, "m_iPrimaryReserveAmmoCount", 2);
+
+	return Plugin_Continue;
+}
+
+
+
+////////////////////////////////
 // - Return Based Functions - //
 ////////////////////////////////
 
@@ -6548,4 +6745,9 @@ public void DownloadAndPrecacheFiles()
 	// Power - Lucky Number Seven
 	AddFileToDownloadsTable("sound/kingmod/power_luckynumberseven.mp3");
 	PrecacheSound("kingmod/power_luckynumberseven.mp3");
+
+
+	// Power - Western Shootout
+	AddFileToDownloadsTable("sound/kingmod/power_westernshootout.mp3");
+	PrecacheSound("kingmod/power_westernshootout.mp3");
 }

@@ -2365,7 +2365,7 @@ public Action DisplayVisualEffects(int attacker)
 	DispatchKeyValue(point_tesla, "m_Color", teslaColor);
 
 	// Specifies the texture we wish to use for our visual effect
-	DispatchKeyValue(point_tesla, "texture", "manifest/sprites/lgtning.vmt");
+	DispatchKeyValue(point_tesla, "texture", "kingmod/sprites/lgtning.vmt");
 
 	// Sets the minimum of tesla beams that will be created by our tesla
 	DispatchKeyValue(point_tesla, "beamcount_min", "1250");
@@ -6368,7 +6368,7 @@ public void DownloadAndPrecacheFiles()
 	// Visual Effect Sprites
 	AddFileToDownloadsTable("materials/kingmod/sprites/lgtning.vtf");
 	AddFileToDownloadsTable("materials/kingmod/sprites/lgtning.vmt");
-	effectRingSprite = PrecacheModel("kingmod/sprites/lgtning.vmt");
+	effectRingSprite = PrecacheModel("materials/kingmod/sprites/lgtning.vmt");
 
 
 	// Power Chooser System
@@ -6380,9 +6380,8 @@ public void DownloadAndPrecacheFiles()
 	AddFileToDownloadsTable("materials/kingmod/overlays/power_assaultsuit.vtf");
 	AddFileToDownloadsTable("materials/kingmod/overlays/power_assaultsuit.vmt");
 	AddFileToDownloadsTable("sound/kingmod/power_impregnablearmor.mp3");
-	PrecacheModel("kingmod/overlays/power_assaultsuit.vtf");
-	PrecacheModel("kingmod/overlays/power_assaultsuit.vmt");
-	PrecacheModel("models/player/custom_player/legacy/tm_phoenix_heavy.mdl");
+	PrecacheModel("materials/kingmod/overlays/power_assaultsuit.vmt");
+	PrecacheModel("materials/models/player/custom_player/legacy/tm_phoenix_heavy.mdl");
 	PrecacheModel("models/weapons/v_models/arms/phoenix_heavy/v_sleeve_phoenix_heavy.mdl");
 	PrecacheSound("kingmod/power_impregnablearmor.mp3");
 	PrecacheSound("items/nvg_on.wav");
@@ -6436,7 +6435,7 @@ public void DownloadAndPrecacheFiles()
 	AddFileToDownloadsTable("sound/kingmod/power_hatchetmassacre.mp3");
 	AddFileToDownloadsTable("materials/kingmod/overlays/power_hatchetmassacre.vmt");
 	AddFileToDownloadsTable("materials/kingmod/overlays/power_hatchetmassacre.vtf");
-	PrecacheModel("kingmod/overlays/power_hatchetmassacre.vmt");
+	PrecacheModel("materials/kingmod/overlays/power_hatchetmassacre.vmt");
 	PrecacheSound("kingmod/power_hatchetmassacre.mp3");
 
 
@@ -6445,11 +6444,10 @@ public void DownloadAndPrecacheFiles()
 	PrecacheSound("kingmod/power_chucknorris.mp3");
 
 
-
 	// Power - Laser Gun
-	AddFileToDownloadsTable("materials/sprites/laserbeam.vtf");
-	AddFileToDownloadsTable("materials/sprites/laserbeam.vmt");
+	AddFileToDownloadsTable("materials/kingmod/sprites/laserbeam.vtf");
+	AddFileToDownloadsTable("materials/kingmod/sprites/laserbeam.vmt");
 	AddFileToDownloadsTable("sound/kingmod/power_lasergun.mp3");
-	effectLaserSprite = PrecacheModel("materials/sprites/laserbeam.vmt");
+	effectLaserSprite = PrecacheModel("materials/kingmod/sprites/laserbeam.vmt");
 	PrecacheSound("kingmod/power_lasergun.mp3");
 }

@@ -106,6 +106,8 @@ bool injectingHealthshot[MAXPLAYERS + 1] = {false,...};
 bool cooldownHealthshot[MAXPLAYERS + 1] = {false,...};
 bool cooldownWeaponSwapMessage[MAXPLAYERS + 1] = {false,...};
 bool powerHatchetMassacreCooldown[MAXPLAYERS + 1] = {false,...};
+bool playerSwappedWeapons[MAXPLAYERS + 1] = {false,...};
+
 
 
 // Global Integers
@@ -1457,6 +1459,9 @@ public void LateLoadSupport()
 
 		// Adds a hook to the client which will let us track when the client takes damage and remains alive
 		SDKHook(client, SDKHook_OnTakeDamageAlive, OnTakeDamageAlive); 
+
+		// Adds a hook to the client which will let us track when the player switches weapon
+		SDKHook(client, SDKHook_WeaponSwitchPost, OnWeaponSwitchPost);
 	}
 }
 
@@ -6467,6 +6472,9 @@ public void PowerWesternShootout(int client)
 	// Turns on the western shootout king power 
 	powerWesternShootout = true;
 
+	// Sets the playerSwappedWeapons state to false to indicate the player has not swapped weapons since initiating the weapon reloading
+	playerSwappedWeapons[client] = false;
+
 	// Changes the name of the path for the sound that is will be played when the player acquires the specific power
 	powerSoundName = "kingmod/power_westernshootout.mp3";
 
@@ -6497,10 +6505,29 @@ public Action entity_RevolverSpawned(int entity)
 	}
 
 	// Changes the clip to 2 and the ammo to 2 after 0.1 second
-	CreateTimer(0.1, Timer_PowerWesternShootoutAmmo, entity, TIMER_FLAG_NO_MAPCHANGE);
+	CreateTimer(0.1, Timer_PowerWesternShootoutDefaultAmmo, entity, TIMER_FLAG_NO_MAPCHANGE);
 
 	// Adds a hook to the revolver entity which will let us track when the entity is reloaded
 	SDKHook(entity, SDKHook_ReloadPost, OnWeaponReloadPostRevolver);
+
+	return Plugin_Continue;
+}
+
+
+// This happens 0.1 second after a revolver has been spawned
+public Action Timer_PowerWesternShootoutDefaultAmmo(Handle timer, int weapon)
+{
+	// If the entity does not meet our criteria validation then execute this section
+	if(!IsValidEntity(weapon))
+	{
+		return Plugin_Continue;
+	}
+
+	// Changes the amount of bullets there are inside of the revolveer's clip
+	SetEntProp(weapon, Prop_Send, "m_iClip1", 2);
+
+	// Changes the ammount of ammo that the player has for their weapon
+	SetEntProp(weapon, Prop_Send, "m_iPrimaryReserveAmmoCount", 2);
 
 	return Plugin_Continue;
 }
@@ -6524,18 +6551,52 @@ public Action OnWeaponReloadPostRevolver(int weapon)
 		return Plugin_Continue;
 	}
 
-	// Changes the clip to 2 and the ammo to 2 after 2.35 seconds
-	CreateTimer(2.35, Timer_PowerWesternShootoutAmmo, weapon, TIMER_FLAG_NO_MAPCHANGE);
+	// Sets the playerSwappedWeapons state to false to indicate the player has not swapped weapons since initiating the weapon reloading
+	playerSwappedWeapons[client] = false;
+
+	// Changes the clip to 2 and the ammo to 2 after 2.31 seconds
+	CreateTimer(2.31, Timer_PowerWesternShootoutAmmo, weapon, TIMER_FLAG_NO_MAPCHANGE);
 
 	return Plugin_Continue;
 }
 
 
-// This happens 0.1 second after a revolver has been spawned and 2.35 seconds after it has been reloaded
+// This happens when a player switches
+public Action OnWeaponSwitchPost(int client, int weapon)
+{
+	// If the client does not meet our validation criteria then execute this section
+	if(!IsValidClient(client))
+	{
+		return Plugin_Continue;
+	}
+
+	// Sets the playerSwappedWeapons state to true to indicate the player swapped weapons since initiating the weapon reloading
+	playerSwappedWeapons[client] = true;
+
+	return Plugin_Handled;
+}
+
+
+// This happens 2.31 seconds after it has been reloaded
 public Action Timer_PowerWesternShootoutAmmo(Handle timer, int weapon)
 {
 	// If the entity does not meet our criteria validation then execute this section
 	if(!IsValidEntity(weapon))
+	{
+		return Plugin_Continue;
+	}
+
+	// Obtains and stores the entity owner offset within our client variable 
+	int client = GetEntPropEnt(weapon, Prop_Send, "m_hOwnerEntity");
+	
+	// If the client does not meet our validation criteria then execute this section
+	if(!IsValidClient(client))
+	{
+		return Plugin_Continue;
+	}
+
+	// If the player has changed weapons since he initiated the reloading process then execute this section
+	if(playerSwappedWeapons[client])
 	{
 		return Plugin_Continue;
 	}

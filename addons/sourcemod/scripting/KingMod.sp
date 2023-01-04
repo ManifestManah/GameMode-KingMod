@@ -47,7 +47,8 @@ bool cvar_PowerBreachCharges = false;
 bool cvar_PowerLegCrushingBumpmines = false;
 bool cvar_PowerHatchetMassacre = false;
 bool cvar_PowerChuckNorrisFists = false;
-bool cvar_PowerLaserGun = true;
+bool cvar_PowerLaserGun = false;
+bool cvar_PowerLuckyNumberSeven = true;
 
 int cvar_PointsNormalKill = 1;
 int cvar_PointsKingKill = 3;
@@ -73,6 +74,7 @@ bool powerNapalm = false;
 bool powerRiot = false;
 bool powerHatchetMassacre = false;
 bool powerChuckNorris = false;
+bool powerLuckyNumberSeven = false;
 
 int powerImpregnableArmor = 0;
 int powerMovementSpeed = 0;
@@ -3691,6 +3693,25 @@ public Action ChooseKingPower(int client)
 		}
 	}
 
+	// If the cvar for the lucky number seven power is enabled then execute this section
+	if(cvar_PowerLuckyNumberSeven)
+	{
+		// Adds +1 to the current value of the powersAvailable variable
+		powersAvailable++;
+
+		PrintToChatAll("Debug Power - PA %i | C %i", powersAvailable, chosenPower);
+
+		// If the value contained within chosenPower is the same as the value stored in powersAvailable then execute this section
+		if(chosenPower == powersAvailable)
+		{
+			// When attacking an enemy two dices will be rolled and if the number is 7 then the king deals bonus damage 
+			PowerLuckyNumberSeven(client);
+
+			// 
+			PrintToChatAll("Power Laser Gun Fists - [ %i | %i ]", chosenPower, powersAvailable);
+		}
+	}
+
 	// Plays the sound file that is specific to that of the newly acquired power
 	CreateTimer(2.0, Timer_PlayPowerSpecificSound, client);
 
@@ -3801,6 +3822,13 @@ public int countAvailablePowers()
 		powersAvailable++;
 	}
 
+	// If the cvar for the lucky number seven power is enabled then execute this section
+	if(cvar_PowerLuckyNumberSeven)
+	{
+		// Adds +1 to the current value of the powersAvailable variable
+		powersAvailable++;
+	}
+
 	// Returns the value of our powersAvailable variable
 	return powersAvailable;
 }
@@ -3904,6 +3932,13 @@ public void ResetPreviousPower()
 
 		// Turns off the laser gun power 
 		powerLaserGun = 0;
+	}
+
+	// If the currently active power is Lucky Number Seven then execute this section
+	if(powerLuckyNumberSeven)
+	{
+		// Turns off the lucky number seven king power 
+		powerLuckyNumberSeven = false;
 	}
 }
 
@@ -5117,6 +5152,38 @@ public Action OnDamageTaken(int client, int &attacker, int &inflictor, float &da
 		return Plugin_Changed;
 	}
 
+	// If the currently active power is Lucky Number Seven then execute this section
+	if(powerLuckyNumberSeven)
+	{
+		// Rolls a dice and stores the value of the outcome within the diceOne variable
+		int diceOne = GetRandomInt(1, 6);
+
+		// Rolls another dice and stores the value of the outcome within the diceTwo variable
+		int diceTwo = GetRandomInt(1, 6);
+
+		// If the rolled dices total number of eyes were equals to 7
+		if(diceOne + diceTwo == 7)
+		{
+			// Picks a random number between 100 and 200 and store the chosen value within the bonusDamage variable
+			int bonusDamage = GetRandomInt(100, 200);
+
+			// Changes the damage inflicted by the attack to add an additional 100% to 200% bonus damage
+			damage = damage + ((bonusDamage / 100) * damage);
+
+			// Sends a message in the chat area only visible to the specified client
+			PrintToChat(attacker, "KingMod: You rolled 7 (%i + %i) dealing %i%% bonus damage", diceOne, diceTwo, bonusDamage);
+
+			return Plugin_Changed;
+		}
+
+		// If the rolled dices total number of eyes were not equals to 7
+		else
+		{
+			// Sends a message in the chat area only visible to the specified client
+			PrintToChat(attacker, "KingMod: You rolled %i (%i & %i) and dealt normal damage", diceOne + diceTwo, diceOne, diceTwo);
+		}
+	}
+
 	return Plugin_Continue;
 }
 
@@ -6261,6 +6328,32 @@ public bool TraceRayDontHitPlayers(int entity, int mask, int data)
 
 
 
+//////////////////////////////////
+// - Power Lucky Number Seven - //
+//////////////////////////////////
+
+
+// This happens when a king acquires the lucky number seven power 
+public void PowerLuckyNumberSeven(int client)
+{
+	// Turns on the lucky number seven king power 
+	powerLuckyNumberSeven = true;
+
+	// Changes the name of the path for the sound that is will be played when the player acquires the specific power
+	powerSoundName = "kingmod/power_luckynumberseven.mp3";
+
+	// Changes the content of the dottedLine variable to match the length of the name of power and tier
+	dottedLine = "------------------------------------";
+
+	// Changes the content of the nameOfPower variable to reflect which power the king acquired
+	nameOfPower = "Lucky number Seven";
+	
+	// Changes the content of the nameOfTier variable to reflect which tier of the power the king acquired
+	nameOfTier = "Tier A";
+}
+
+
+
 ////////////////////////////////
 // - Return Based Functions - //
 ////////////////////////////////
@@ -6450,4 +6543,9 @@ public void DownloadAndPrecacheFiles()
 	AddFileToDownloadsTable("sound/kingmod/power_lasergun.mp3");
 	effectLaserSprite = PrecacheModel("materials/kingmod/sprites/laserbeam.vmt");
 	PrecacheSound("kingmod/power_lasergun.mp3");
+
+
+	// Power - Lucky Number Seven
+	AddFileToDownloadsTable("sound/kingmod/power_luckynumberseven.mp3");
+	PrecacheSound("kingmod/power_luckynumberseven.mp3");
 }

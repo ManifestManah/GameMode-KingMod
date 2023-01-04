@@ -6811,4 +6811,9 @@ public void DownloadAndPrecacheFiles()
 	// Power - Western Shootout
 	AddFileToDownloadsTable("sound/kingmod/power_westernshootout.mp3");
 	PrecacheSound("kingmod/power_westernshootout.mp3");
+
+
+	// Power - Western Shootout
+	AddFileToDownloadsTable("sound/kingmod/power_babonicplague.mp3");
+	PrecacheSound("kingmod/power_babonicplague.mp3");
 }

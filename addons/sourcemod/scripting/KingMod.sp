@@ -5042,7 +5042,7 @@ public Action OnDamageTaken(int client, int &attacker, int &inflictor, float &da
 				ApplyFadeOverlay(client, 1, 1536, (0x0010), 173, 0, 0, 120, true);
 
 				// Applies a blood screen overlay to the client
-				ClientCommand(client, "r_screenoverlay manifest/kingmod/bloodoverlay.vmt");
+				ClientCommand(client, "r_screenoverlay kingmod/overlays/power_hatchetmassacre.vmt");
 
 				// Removes the blood screen overlay from the player's screen after 3.0 seconds
 				CreateTimer(3.0, Timer_HatchetMassacreRemoveBlood, client, TIMER_FLAG_NO_MAPCHANGE);
@@ -6434,12 +6434,16 @@ public void DownloadAndPrecacheFiles()
 
 	// Power - Hatchet Massacre
 	AddFileToDownloadsTable("sound/kingmod/power_hatchetmassacre.mp3");
+	AddFileToDownloadsTable("materials/kingmod/overlays/power_hatchetmassacre.vmt");
+	AddFileToDownloadsTable("materials/kingmod/overlays/power_hatchetmassacre.vtf");
+	PrecacheModel("kingmod/overlays/power_hatchetmassacre.vmt");
 	PrecacheSound("kingmod/power_hatchetmassacre.mp3");
 
 
 	// Power - Chuck Norris
 	AddFileToDownloadsTable("sound/kingmod/power_chucknorris.mp3");
 	PrecacheSound("kingmod/power_chucknorris.mp3");
+
 
 
 	// Power - Laser Gun

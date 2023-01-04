@@ -1,0 +1,5 @@
+"MonitorScreen"
+{
+	"$basetexture" "kingmod/overlays/power_hatchetmassacre"
+	"$translucent" 1
+}

@@ -49,8 +49,8 @@ bool cvar_PowerHatchetMassacre = false;
 bool cvar_PowerChuckNorrisFists = false;
 bool cvar_PowerLaserGun = false;
 bool cvar_PowerLuckyNumberSeven = false;
-bool cvar_PowerWesternShootout = true;
-
+bool cvar_PowerWesternShootout = false;
+bool cvar_PowerBabonicPlague = true;
 
 int cvar_PointsNormalKill = 1;
 int cvar_PointsKingKill = 3;
@@ -86,6 +86,7 @@ int powerVampire = 0;
 int powerBreachCharges = 0;
 int powerLegCrushingBumpmines = 0;
 int powerLaserGun = 0;
+int powerBabonicPlague = 0;
 
 
 //////////////////////////
@@ -107,7 +108,7 @@ bool cooldownHealthshot[MAXPLAYERS + 1] = {false,...};
 bool cooldownWeaponSwapMessage[MAXPLAYERS + 1] = {false,...};
 bool powerHatchetMassacreCooldown[MAXPLAYERS + 1] = {false,...};
 bool playerSwappedWeapons[MAXPLAYERS + 1] = {false,...};
-
+bool powerBabonicPlagueInfected[MAXPLAYERS + 1] = {false,...};
 
 
 // Global Integers
@@ -187,6 +188,9 @@ public void OnPluginStart()
 
 	// Creates a timer that will check if people are on fire and at low health every 0.5 seconds
 	PowerNapalmStartTimer();
+
+	// Creates a timer that will apply babonic plague's effects every 1.5 second if the babonic plague king power is currently active
+	CreateTimer(1.5, Timer_PowerBabonicPlagueLoop, _, TIMER_REPEAT);
 
 	// Creates a timer that will update the team score hud every 1.0 second
 	CreateTimer(1.0, Timer_UpdateTeamScoreHud, _, TIMER_REPEAT);
@@ -868,6 +872,9 @@ public Action Event_PlayerDeath(Handle event, const char[] name, bool dontBroadc
 	{
 		return Plugin_Continue;
 	}
+
+	// Resets the babonic plague infection of the player back to 0 if the currently active power is babonic plague
+	ResetBabonicPlagueOnDeath(client);
 
 	// Resets the client's inferno stacks back to 0 if the currently active power is napalm 
 	ResetNapalmStacks(client);
@@ -3775,6 +3782,26 @@ public Action ChooseKingPower(int client)
 		}
 	}
 
+
+	// If the cvar for the Babonic Plague power is enabled then execute this section
+	if(cvar_PowerBabonicPlague)
+	{
+		// Adds +1 to the current value of the powersAvailable variable
+		powersAvailable++;
+
+		PrintToChatAll("Debug Power - PA %i | C %i", powersAvailable, chosenPower);
+
+		// If the value contained within chosenPower is the same as the value stored in powersAvailable then execute this section
+		if(chosenPower == powersAvailable)
+		{
+			// When the king attacks an enemy they will take damage over time and have their vision distorted
+			PowerBabonicPlague(client);
+
+			// 
+			PrintToChatAll("Power Babonic Plague - [ %i | %i ]", chosenPower, powersAvailable);
+		}
+	}
+
 	// Plays the sound file that is specific to that of the newly acquired power
 	CreateTimer(2.0, Timer_PlayPowerSpecificSound, client);
 
@@ -3899,6 +3926,13 @@ public int countAvailablePowers()
 		powersAvailable++;
 	}
 
+	// If the cvar for the Babonic Plague power is enabled then execute this section
+	if(cvar_PowerBabonicPlague)
+	{
+		// Adds +1 to the current value of the powersAvailable variable
+		powersAvailable++;
+	}
+
 	// Returns the value of our powersAvailable variable
 	return powersAvailable;
 }
@@ -4016,6 +4050,16 @@ public void ResetPreviousPower()
 	{
 		// Turns off the western shootoutn king power 
 		powerWesternShootout = false;
+	}
+
+	// If the currently active power is babonic plague then execute this section
+	if(powerBabonicPlague)
+	{
+		// Removes the babonic plague infection from all currently infected players
+		ResetBabonicPlague();
+
+		// Turns off the babonic plague power 
+		powerBabonicPlague = 0;
 	}
 }
 
@@ -4163,7 +4207,14 @@ public void RemoveKingPowerEffects()
 		// If the currently active power is impregnable armor then execute this section
 		if(powerImpregnableArmor)
 		{
-			// Removes the screen overlay if the client is the king and impregnable armor is currently active
+			// Removes the screen overlay from the player
+			RemoveScreenOverlay(client);
+		}
+
+		// If the currently active power is babonic plague then execute this section
+		if(powerBabonicPlague)
+		{
+			// Removes the screen overlay from the player
 			RemoveScreenOverlay(client);
 		}
 
@@ -5291,6 +5342,17 @@ public Action OnDamageTaken(int client, int &attacker, int &inflictor, float &da
 		}
 	}
 
+
+	// If the currently active power is babonic plague then execute this section
+	if(powerBabonicPlague)
+	{
+		// Sets it so that the client is infected by the babonic plague
+		powerBabonicPlagueInfected[client] = true;
+
+		// Adds a scren overlay to the client's screen
+		ClientCommand(client, "r_screenoverlay effects/tp_eyefx/tp_eyefx.vmt");
+	}
+
 	return Plugin_Continue;
 }
 
@@ -5439,8 +5501,6 @@ public Action Timer_PowerNapalmCheckHealth(Handle timer)
 			continue;
 		}
 
-		PrintToChatAll("Debug - 1");
-
 		// If the client's health is above 6 then execute this section
 		if(GetEntProp(client, Prop_Send, "m_iHealth") > 10)
 		{
@@ -5483,8 +5543,6 @@ public Action DealDamageToClient(int client, int attacker, int damage, const cha
 	{
 		return Plugin_Continue;
 	}
-
-	PrintToChatAll("Debug - 4");
 
 	// Creates a variable which we will use to store data within
 	char damageString[16];
@@ -6608,6 +6666,207 @@ public Action Timer_PowerWesternShootoutAmmo(Handle timer, int weapon)
 	SetEntProp(weapon, Prop_Send, "m_iPrimaryReserveAmmoCount", 2);
 
 	return Plugin_Continue;
+}
+
+
+
+//////////////////////////////
+// - Power Babonic Plague - //
+//////////////////////////////
+
+
+// This happens when a king acquires the babonic plague power 
+public void PowerBabonicPlague(int client)
+{
+	// Changes the name of the path for the sound that is will be played when the player acquires the specific power
+	powerSoundName = "kingmod/power_babonicplague.mp3";
+
+	// Changes the content of the dottedLine variable to match the length of the name of power and tier
+	dottedLine = "---------------------------------";
+
+	// Changes the content of the nameOfPower variable to reflect which power the king acquired
+	nameOfPower = "Babonic Plague";
+	
+	// Turns on the babonic plague king power 
+	powerBabonicPlague = GetRandomInt(1, 3);
+
+	// If the value stored within the powerBabonicPlague is 1 execute this section
+	if(powerBabonicPlague == 1)
+	{
+		// Changes the content of the nameOfTier variable to reflect which tier of the power the king acquired
+		nameOfTier = "Tier A";
+	}
+
+	// If the value stored within the powerBabonicPlague is 2 execute this section
+	if(powerBabonicPlague == 2)
+	{
+		// Changes the content of the nameOfTier variable to reflect which tier of the power the king acquired
+		nameOfTier = "Tier B";
+	}
+
+	// If the value stored within the powerBabonicPlague is 3 execute this section
+	if(powerBabonicPlague == 3)
+	{
+		// Changes the content of the nameOfTier variable to reflect which tier of the power the king acquired
+		nameOfTier = "Tier C";
+	}
+}
+
+
+// This happens once every 1.5 second
+public Action Timer_PowerBabonicPlagueLoop(Handle timer)
+{
+	// If thg king power chooser is enabled and the babonic plague power is enabled then execute this section
+	if(!cvar_KingPowerChooser && !cvar_PowerBabonicPlague)
+	{
+		return Plugin_Continue;
+	}
+
+	// If the currently active power is babonic plague then execute this section
+	if(!powerBabonicPlague)
+	{
+		return Plugin_Continue;
+	}
+
+	// Loops through all of the clients
+	for (int client = 1; client <= MaxClients; client++)
+	{
+		// If the client does not meet our validation criteria then execute this section
+		if(!IsValidClient(client))
+		{
+			continue;
+		}
+
+		// If the player is not infected by the babonic plague then execute this section
+		if(!powerBabonicPlagueInfected[client])
+		{
+			continue;
+		}
+
+		// If the client is not alive then execute this section
+		if(!IsPlayerAlive(client))
+		{
+			continue;
+		}
+
+		// Obtains the value of powerBabonicPlague multiplies it by 2 and adds 4 and store it within the damage variable
+		int damage = 4 + (powerBabonicPlague * 2);
+
+		// Obtains the player's health and store it within the playerHealth variable
+		int playerHealth = GetEntProp(client, Prop_Send, "m_iHealth");
+
+		// If the client's health is the same as the value contained within damage or below then execute this section
+		if(playerHealth <= damage)
+		{
+			// Inflicts the value stored within the damage upon the client from the king
+			DealDamageToClient(client, kingIndex, damage, "weapon_healthshot");
+
+			continue;
+		}
+
+		// Subtracts the value stored within the damage variable from our player's health 
+		playerHealth -= damage;
+
+		// Changes the health of the client
+		SetEntProp(client, Prop_Send, "m_iHealth", playerHealth, 1);
+
+		// If the client is not a bot then execute this section
+		if(!IsFakeClient(client))
+		{
+			continue;
+		}
+
+		// Obtains a random number between 0 and 255 and store it within the colorRed variable
+		int colorRed = GetRandomInt(0, 255);
+		
+		// Obtains a random number between 0 and 255 and store it within the colorGreen variable
+		int colorGreen = GetRandomInt(0, 255);
+		
+		// Obtains a random number between 0 and 255 and store it within the colorBlue variable
+		int colorBlue = GetRandomInt(0, 255);
+
+		// Applies a colored fade overlay to the player's screen
+		ApplyFadeOverlay(client, 255, 255, (0x0008), colorRed, colorGreen, colorBlue, 128, true);
+
+		// Picks a random value between 102 and 158 and store it within the randomFOV variable
+		int randomFoV = GetRandomInt(102, 158);
+
+		// Changes the client's FOV to the value stored in our randomFOV variable
+		SetEntProp(client, Prop_Send, "m_iFOV", randomFoV);
+
+		// Changes the client's default FOV to the value stored in our randomFOV variable
+		SetEntProp(client, Prop_Send, "m_iDefaultFOV", randomFoV);
+
+		// float PlayerPosition[3];
+		float playerViewAngle[3];
+
+		// GetClientAbsOrigin(client, PlayerPosition);
+		GetClientEyeAngles(client, playerViewAngle);
+
+		// Picks a random value between -32.50 and 32.50 and store it within our playerViewAngle
+		playerViewAngle[2] = GetRandomFloat(-32.50, 32.50);
+		
+		// TeleportEntity(client, PlayerPosition, playerViewAngle, NULL_VECTOR);
+		TeleportEntity(client, NULL_VECTOR, playerViewAngle, NULL_VECTOR);
+	}
+
+	return Plugin_Continue;
+}
+
+
+// This happens when the king dies or when a new round starts
+public void ResetBabonicPlague()
+{
+	// Loops through all of the clients
+	for (int client = 1; client <= MaxClients; client++)
+	{
+		// If the client does not meet our validation criteria then execute this section
+		if(!IsValidClient(client))
+		{
+			continue;
+		}
+
+		// If the player is not infected by the babonic plague then execute this section
+		if(!powerBabonicPlagueInfected[client])
+		{
+			continue;
+		}
+
+		// Sets it so that the client is no longer inflicted by the babonic plague
+		powerBabonicPlagueInfected[client] = false;
+
+		// Removes the screen overlay from the player
+		RemoveScreenOverlay(client);
+
+		// Changes the client's FOV to the default valuee 90
+		SetEntProp(client, Prop_Send, "m_iFOV", 90);
+
+		// Changes the client's default FOV to the default valuee 90
+		SetEntProp(client, Prop_Send, "m_iDefaultFOV", 90);
+	}
+}
+
+
+// This happens when the player dies while Babonic Plague is active
+public void ResetBabonicPlagueOnDeath(int client)
+{
+	// If the currently active power is babonic plague then execute this section
+	if(!powerBabonicPlague)
+	{
+		return;
+	}
+
+	// Sets it so that the client is no longer inflicted by the babonic plague
+	powerBabonicPlagueInfected[client] = false;
+
+	// Removes the screen overlay from the player
+	RemoveScreenOverlay(client);
+
+	// Changes the client's FOV to the default valuee 90
+	SetEntProp(client, Prop_Send, "m_iFOV", 90);
+
+	// Changes the client's default FOV to the default valuee 90
+	SetEntProp(client, Prop_Send, "m_iDefaultFOV", 90);
 }
 
 

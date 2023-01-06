@@ -1440,7 +1440,7 @@ public void RemoveAllScreenOverlays()
 			continue;
 		}
 
-		// Removes the screen overlay if the client is the king and impregnable armor is currently active
+		// Removes any active screen overlays from the client
 		RemoveScreenOverlay(client);
 	}
 }
@@ -5415,7 +5415,7 @@ public Action OnDamageTaken(int client, int &attacker, int &inflictor, float &da
 		powerBabonicPlagueInfected[client] = true;
 
 		// Adds a scren overlay to the client's screen
-		ClientCommand(client, "r_screenoverlay effects/tp_eyefx/tp_eyefx.vmt");
+		ClientCommand(client, "r_screenoverlay kingmod/overlays/power_babonicplague.vmt");
 	}
 
 	return Plugin_Continue;
@@ -7468,8 +7468,14 @@ public void DownloadAndPrecacheFiles()
 	PrecacheSound("kingmod/power_westernshootout.mp3");
 
 
-	// Power - Western Shootout
+	// Power - Babonic Plague
 	AddFileToDownloadsTable("sound/kingmod/power_babonicplague.mp3");
+	AddFileToDownloadsTable("materials/kingmod/overlays/power_babonicplague.vmt");
+	AddFileToDownloadsTable("materials/kingmod/overlays/power_babonicplague.vtf");
+	AddFileToDownloadsTable("materials/kingmod/overlays/power_babonicplaguedudv.vmt");
+	AddFileToDownloadsTable("materials/kingmod/overlays/power_babonicplaguedudv.vtf");
+	AddFileToDownloadsTable("materials/kingmod/overlays/power_babonicplaguenormal.vtf");
+	PrecacheModel("materials/kingmod/overlays/power_babonicplague.vmt");
 	PrecacheSound("kingmod/power_babonicplague.mp3");
 
 

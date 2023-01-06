@@ -7040,7 +7040,7 @@ public void PowerZombieApocalypseInitiate(int client)
 	if(!IsFakeClient(client))
 	{
 		// Applies a screen overlay to the player's screen
-		ClientCommand(client, "r_screenoverlay kingmod/overlays/power_zombieapocalypse.vmt");
+		ClientCommand(client, "r_screenoverlay kingmod/overlays/power_zombieapocalypsezombie.vmt");
 
 		// If the sound is not already precached then execute this section
 		if(!IsSoundPrecached("kingmod/sfx_zombiescream.mp3"))
@@ -7068,6 +7068,13 @@ public void PowerZombieApocalypseInitiate(int client)
 		// If the client is not on the same team as the king then execute this section
 		if(GetClientTeam(i) != GetClientTeam(kingIndex))
 		{
+			// If the client is on the terrorist or counter-terrorist team then execute this section
+			if(GetClientTeam(i) >= 2)
+			{
+				// Applies a screen overlay to the player's screen
+				ClientCommand(i, "r_screenoverlay kingmod/overlays/power_zombieapocalypsehuman.vmt");
+			}
+
 			continue;
 		}
 
@@ -7096,7 +7103,7 @@ public void PowerZombieApocalypseInitiate(int client)
 		EmitSoundToClient(i, "kingmod/sfx_zombiescream.mp3", SOUND_FROM_PLAYER, SNDCHAN_AUTO, SNDLEVEL_NORMAL, SND_NOFLAGS, 1.00, SNDPITCH_NORMAL, -1, NULL_VECTOR, NULL_VECTOR, true, 0.0);
 
 		// Applies a screen overlay to the player's screen
-		ClientCommand(i, "r_screenoverlay kingmod/overlays/power_zombieapocalypse.vmt");
+		ClientCommand(i, "r_screenoverlay kingmod/overlays/power_zombieapocalypsezombie.vmt");
 	}
 }
 
@@ -7209,6 +7216,13 @@ public void PowerZombieApocalypseSpawn(int client)
 	// If the client is not on the king's team then execute this section
 	if(GetClientTeam(client) != GetClientTeam(kingIndex))
 	{
+		// If the client is on the terrorist or counter-terrorist team then execute this section
+		if(GetClientTeam(client) >= 2)
+		{
+			// Applies a screen overlay to the player's screen
+			ClientCommand(client, "r_screenoverlay kingmod/overlays/power_zombieapocalypsehuman.vmt");
+		}
+		
 		return;
 	}
 
@@ -7238,7 +7252,7 @@ public void PowerZombieApocalypseSpawn(int client)
 	EmitSoundToClient(client, "kingmod/sfx_zombiescream.mp3", SOUND_FROM_PLAYER, SNDCHAN_AUTO, SNDLEVEL_NORMAL, SND_NOFLAGS, 1.00, SNDPITCH_NORMAL, -1, NULL_VECTOR, NULL_VECTOR, true, 0.0);
 
 	// Applies a screen overlay to the player's screen
-	ClientCommand(client, "r_screenoverlay kingmod/overlays/power_zombieapocalypse.vmt");
+	ClientCommand(client, "r_screenoverlay kingmod/overlays/power_zombieapocalypsezombie.vmt");
 }
 
 
@@ -7476,13 +7490,16 @@ public void DownloadAndPrecacheFiles()
 	AddFileToDownloadsTable("materials/skybox/zombienightrt.vmt");
 	AddFileToDownloadsTable("materials/skybox/zombienightup.vtf");
 	AddFileToDownloadsTable("materials/skybox/zombienightup.vmt");
-	AddFileToDownloadsTable("materials/kingmod/overlays/power_zombieapocalypse.vtf");
-	AddFileToDownloadsTable("materials/kingmod/overlays/power_zombieapocalypse.vmt");
+	AddFileToDownloadsTable("materials/kingmod/overlays/power_zombieapocalypsezombie.vtf");
+	AddFileToDownloadsTable("materials/kingmod/overlays/power_zombieapocalypsezombie.vmt");
+	AddFileToDownloadsTable("materials/kingmod/overlays/power_zombieapocalypsehuman.vtf");
+	AddFileToDownloadsTable("materials/kingmod/overlays/power_zombieapocalypsehuman.vmt");
 	AddFileToDownloadsTable("sound/kingmod/sfx_zombiescream.mp3");
 	AddFileToDownloadsTable("sound/kingmod/power_zombieapocalypse.mp3");
 	AddFileToDownloadsTable("sound/kingmod/power_zombieapocalypseambience.mp3");
 
-	PrecacheModel("materials/kingmod/overlays/power_zombieapocalypse.vmt");
+	PrecacheModel("materials/kingmod/overlays/power_zombieapocalypsezombie.vmt");
+	PrecacheModel("materials/kingmod/overlays/power_zombieapocalypsehuman.vmt");
 	PrecacheModel("models/player/zombie.mdl");
 	PrecacheModel("models/player/tm_phoenix.mdl");
 	PrecacheModel("models/player/ctm_idf.mdl");

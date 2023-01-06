@@ -667,8 +667,6 @@ public Action OnWeaponCanUse(int client, int weapon)
 		// If the currently active power is Deagle Headshot then execute this section
 		if(powerDeagleHeadshot)
 		{
-			PrintToChatAll("debug - ClassName is %s", ClassName);
-
 			// If the entity is a deagle then excute this section
 			if(StrEqual(ClassName, "weapon_deagle", false))
 			{
@@ -679,8 +677,6 @@ public Action OnWeaponCanUse(int client, int weapon)
 		// If the currently active power is Hammer Time then execute this section
 		if(powerHammerTime)
 		{
-			PrintToChatAll("debug - ClassName is %s", ClassName);
-
 			// If the entity is a hammer then excute this section
 			if(StrEqual(ClassName, "weapon_melee", false))
 			{
@@ -4934,9 +4930,7 @@ public void OnEntityCreated(int entity, const char[] classname)
 	// If the currently active power is western shootout then execute this section
 	if(powerWesternShootout)
 	{
-		PrintToChatAll("spawned %s", classname);
-
-		// If the entity that was created is not a flashbang projectile then execute this section
+		// If the entity that was created is not a deagle then execute this section
 		if(!StrEqual(classname, "weapon_deagle", false))
 		{
 			return;
@@ -4944,6 +4938,20 @@ public void OnEntityCreated(int entity, const char[] classname)
 
 		// Adds a hook to the revolver after it has been spawned allowing us to alter the revolver's behavior
 		SDKHook(entity, SDKHook_SpawnPost, entity_RevolverSpawned);
+	}
+
+
+	// If the currently active power is Deagle Headshot then execute this section
+	if(powerDeagleHeadshot)
+	{
+		// If the entity that was created is not a deagle then execute this section
+		if(!StrEqual(classname, "weapon_deagle", false))
+		{
+			return;
+		}
+
+		// Adds a hook to the deagle after it has been spawned allowing us to alter the deagle's behavior
+		SDKHook(entity, SDKHook_SpawnPost, entity_DeagleSpawned);
 	}
 }
 
@@ -5701,7 +5709,7 @@ public Action OnDamageTaken(int client, int &attacker, int &inflictor, float &da
 	if(powerDeagleHeadshot)
 	{
 		// If the entity is a deagle then excute this section
-		if(StrEqual(classname, "weapon_deagle", false))
+		if(StrEqual(classname, "player", false))
 		{
 			// If the damage type is headshot damage then execute this section
 			if(damagetype & CS_DMG_HEADSHOT)
@@ -7709,7 +7717,7 @@ public void PowerDeagleHeadshot(int client)
 	powerSoundName = "kingmod/power_placeholder.mp3";
 
 	// Changes the content of the dottedLine variable to match the length of the name of power and tier
-	dottedLine = "----------------------------------";
+	dottedLine = "--------------------------------";
 
 	// Changes the content of the nameOfPower variable to reflect which power the king acquired
 	nameOfPower = "Deagle Headshot";
@@ -7724,6 +7732,71 @@ public void PowerDeagleHeadshot(int client)
 	CreateTimer(0.25, Timer_GiveKingUniqueWeapon, client);
 }
 
+
+// This happens when a deagle has been spawned
+public Action entity_DeagleSpawned(int entity)
+{
+	// If the entity does not meet our criteria validation then execute this section
+	if(!IsValidEntity(entity))
+	{
+		return Plugin_Continue;
+	}
+
+	// Changes the clip to 1 and the ammo to 1 after 2.19 seconds
+	CreateTimer(0.1, Timer_PowerDeagleHeadshotDefaultAmmo, entity, TIMER_FLAG_NO_MAPCHANGE);
+
+	// Adds a hook to the revolver entity which will let us track when the entity is reloaded
+	SDKHook(entity, SDKHook_ReloadPost, OnWeaponReloadPostDeagle);
+
+	return Plugin_Continue;
+}
+
+
+// This happens 0.1 second after a deagle has been spawned
+public Action Timer_PowerDeagleHeadshotDefaultAmmo(Handle timer, int weapon)
+{
+	// If the entity does not meet our criteria validation then execute this section
+	if(!IsValidEntity(weapon))
+	{
+		return Plugin_Continue;
+	}
+
+	// Changes the amount of bullets there are inside of the deagle's clip
+	SetEntProp(weapon, Prop_Send, "m_iClip1", 1);
+
+	// Changes the ammount of ammo that the player has for their weapon
+	SetEntProp(weapon, Prop_Send, "m_iPrimaryReserveAmmoCount", 1);
+
+	return Plugin_Continue;
+}
+
+ 
+// This happens when the player starts to reload his deagle
+public Action OnWeaponReloadPostDeagle(int weapon)
+{
+	// If the entity does not meet our criteria validation then execute this section
+	if(!IsValidEntity(weapon))
+	{
+		return Plugin_Continue;
+	}
+
+	// Obtains and stores the entity owner offset within our client variable 
+	int client = GetEntPropEnt(weapon, Prop_Send, "m_hOwnerEntity");
+	
+	// If the client does not meet our validation criteria then execute this section
+	if(!IsValidClient(client))
+	{
+		return Plugin_Continue;
+	}
+
+	// Adds 2.3 seconds cooldown to when the player would be able to use the secondary attack / zoom function 
+	SetEntDataFloat(weapon, FindSendPropOffs("CBaseCombatWeapon", "m_flNextPrimaryAttack"), GetGameTime() + 2.4);
+
+	// Changes the clip to 1 and the ammo to 1 after 2.21 seconds
+	CreateTimer(2.21, Timer_PowerDeagleHeadshotDefaultAmmo, weapon, TIMER_FLAG_NO_MAPCHANGE);
+
+	return Plugin_Continue;
+}
 
 
 /////////////////////////////

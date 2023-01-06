@@ -1,0 +1,13 @@
+"Refract"
+{
+ 	"$dudvmap" "kingmod/overlays/power_babonicplaguedudv"
+	"$normalmap" "kingmod/overlays/power_babonicplaguenormal"
+	"$refractamount" ".16"
+	"$bluramount" "0"
+	"$bumpframe" "0"
+	"$translucent" "1"
+	"$ignorez" "1"	
+	"$nofog" "1"
+ 	"$forcerefract" 1
+	"$model" 1
+}

@@ -227,9 +227,13 @@ public void OnPluginEnd()
 	// Changes the skybox back to the skybox that was saved prior to altering it to the zombie apocalypse skybox
 	PowerZombieApocalypseResetSkybox();
 
+	// Removes all overlays that may currently be applied to players' screens
+	RemoveAllScreenOverlays();
+
 	// Forcefully ends the round and considers it a round draw
 	CS_TerminateRound(3.0, CSRoundEnd_Draw);
 }
+
 
 // This happens when a new map is loaded
 public void OnMapStart()
@@ -1418,6 +1422,31 @@ public Action Event_WeaponFire(Handle event, const char[] name, bool dontBroadca
 ///////////////////////////
 
 
+// This happens when the plugin is unloaded
+public void RemoveAllScreenOverlays()
+{
+	// Loops through all of the clients
+	for (int client = 1; client <= MaxClients; client++)
+	{
+		// If the client does not meet our validation criteria then execute this section
+		if(!IsValidClient(client))
+		{
+			continue;
+		}
+
+		// If the client is a bot then execute this section
+		if(IsFakeClient(client))
+		{
+			continue;
+		}
+
+		// Removes the screen overlay if the client is the king and impregnable armor is currently active
+		RemoveScreenOverlay(client);
+	}
+}
+
+
+// This happens when the plugin is loaded
 public void LateLoadSupport()
 {
 	// Changes the kingName variable's value to just be None

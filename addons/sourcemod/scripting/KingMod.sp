@@ -277,22 +277,6 @@ public void OnClientPostAdminCheck(int client)
 }
 
 
-public Action OnGetGameDescription(char sDescription[64])
-{
-	char GameInfo[64];
-
-	strcopy(sDescription, 64, GameInfo);
-	
-
-
-	PrintToServer("[ECON] Game Description set");
-	
-	return Plugin_Changed;
-} 
-
-
-
-
 // This happens when a player disconnects
 public void OnClientDisconnect(int client)
 {
@@ -509,7 +493,6 @@ public Action OnPlayerRunCmd(int client, int &buttons, int &impulse, float unuse
 
 	return Plugin_Continue;
 }
-
 
 
 // This happens when a player can pick up a weapon
@@ -911,7 +894,7 @@ public Action Event_PlayerDeath(Handle event, const char[] name, bool dontBroadc
 	int attacker = GetClientOfUserId(GetEventInt(event, "attacker"));
 
 	// If the attacker is the same as the victim (suicide) then execute this section or if the attacker is the world like for fall damage etc.
-	if(attacker == client || attacker == 0)
+	if((attacker == client) | (attacker == 0))
 	{
 		// If the client is not the current king then execute this section
 		if(!isPlayerKing[client])
@@ -1165,7 +1148,6 @@ public Action Event_PlayerDeath(Handle event, const char[] name, bool dontBroadc
 }
 
 
-
 // This happens when the round starts 
 public Action Event_RoundStart(Handle event, const char[] name, bool dontBroadcast)
 {
@@ -1387,7 +1369,6 @@ public Action Event_PlayerHurt(Handle event, const char[] name, bool dontBroadca
 }
 
 
-
 // This happens when a player uses the left attack with their knife or weapon
 public Action Event_WeaponFire(Handle event, const char[] name, bool dontBroadcast)
 {
@@ -1438,7 +1419,6 @@ public void LateLoadSupport()
 {
 	// Changes the kingName variable's value to just be None
 	kingName = "None";
-
 
 	PrintToChatAll("King Mod has been loaded. ");
 	PrintToChatAll("A new round will soon commence.");
@@ -4070,7 +4050,7 @@ public void ResetPreviousPower()
 		// Turns off the chuck norris fists king power 
 		powerChuckNorris = false;
 	}
-
+	
 	// If the currently active power is laser gun then execute this section
 	if(powerLaserGun)
 	{
@@ -6934,6 +6914,284 @@ public void ResetBabonicPlagueOnDeath(int client)
 // - Power Zombie Apocalypse - //
 /////////////////////////////////
 
+int powerZombieAffectedTeam = 0;
+
+// This happens when a king acquires the Zombie Apocalypse power 
+public void PowerZombieApocalypse(int client)
+{
+	// Turns on the zombie apocalypse king power 
+	powerZombieApocalypse = true;
+
+	// Obtains the client's team index and store it within the powerZombieAffectedTeam variable
+	powerZombieAffectedTeam = GetClientTeam(client);
+
+	// Changes the name of the path for the sound that is will be played when the player acquires the specific power
+	powerSoundName = "kingmod/power_zombieapocalypse.mp3";
+
+	// Changes the content of the dottedLine variable to match the length of the name of power and tier
+	dottedLine = "-----------------------------------";
+
+	// Changes the content of the nameOfPower variable to reflect which power the king acquired
+	nameOfPower = "Zombie Apocalypse";
+	
+	// Changes the content of the nameOfTier variable to reflect which tier of the power the king acquired
+	nameOfTier = "Tier A";
+
+	// Plays the ambient sound that will be running while the zombie apocalypse power is active
+	CreateTimer(0.0, Timer_PowerZombieApocalypseAmbience, _, TIMER_FLAG_NO_MAPCHANGE);
+
+	// Changes the skybox, sound ambience, turns the king's team in to zombies, increasing their health and lowers their speed
+	PowerZombieApocalypseInitiate(client);
+}
+
+
+// This happens when a king acquires the zombie apocalypse power
+public void PowerZombieApocalypseInitiate(int client)
+{
+	// Removes all the healthshots
+	PowerGenericRemoveHealthshots();
+
+	// Saves the current skybox, and changes the skybox to zombie apocalypse skybox
+	PowerZombieApocalypseChangeSkybox();
+
+	// Turns the client in to a zombie with 325 health, and 80% of the normal movement speed
+	PowerZombieApocalypseCreateZombie(client, 325, 0.80);
+
+	// Loops through all of the clients
+	for (int i = 1; i <= MaxClients; i++)
+	{
+		// If the client does not meet our validation criteria then execute this section
+		if(!IsValidClient(i))
+		{
+			continue;
+		}
+
+		// If the client is the king then execute this section
+		if(isPlayerKing[i])
+		{
+			continue;
+		}
+
+		// Turns the client in to a zombie with 150 health, and 80% of the normal movement speed
+		PowerZombieApocalypseCreateZombie(i, 150, 0.80);
+	}
+}
+
+
+// This happens when a king acquires the zombie apocalypse power
+public void PowerZombieApocalypseChangeSkybox()
+{
+	// Obtains the value of the sv_skyname server variable and store it within the skyName convar 
+	ConVar skyName = FindConVar("sv_skyname");
+
+	// Creates a variable to store our data within
+	char validateSkyboxName[128];
+
+	// Obtains the value of the sv_skyname server variable and store it within the validateSkyboxName variable
+	GetConVarString(skyName, validateSkyboxName, sizeof(validateSkyboxName));
+
+	// If the current skybox is not the zombienight skybox then execute this section
+	if(!StrEqual(validateSkyboxName, "zombienight"))
+	{
+		// Obtains the value of the sv_skyname server variable and store it within the skyboxName variable
+		GetConVarString(skyName, skyboxName, sizeof(skyboxName));
+
+		// Changes the map's skybox 
+		ServerCommand("sv_skyname zombienight");
+	}
+
+	// If the current skybox is the zombienight skybox then execut this section
+	else
+	{
+		// Changes the map's skybox 
+		ServerCommand("sv_skyname zombienight");
+	}
+}
+
+
+// This happens when a king acquires the zombie apocalypse power and when a player spawns while the zombie apocalypse power is active
+public void PowerZombieApocalypseCreateZombie(int client, int playerHealth, float movementSpeed)
+{
+	// If the client is not a bot then execute this section
+	if(!IsFakeClient(client))
+	{
+		// If the client is on the zombie infected team then execute this section
+		if(GetClientTeam(client) == powerZombieAffectedTeam)
+		{
+			// Applies a screen overlay to the player's screen
+			ClientCommand(client, "r_screenoverlay kingmod/overlays/power_zombieapocalypsezombie.vmt");
+		}
+
+		// If the client is not on the zombie infected team then execute this section
+		else
+		{
+			// Applies a screen overlay to the player's screen
+			ClientCommand(client, "r_screenoverlay kingmod/overlays/power_zombieapocalypsehuman.vmt");
+		}
+
+		// If the sound is not already precached then execute this section
+		if(!IsSoundPrecached("kingmod/sfx_zombiescream.mp3"))
+		{	
+			// Precaches the sound file
+			PrecacheSound("kingmod/sfx_zombiescream.mp3", true);
+		}
+
+		// Emits a sound to the specified client that only they can hear
+		EmitSoundToClient(client, "kingmod/sfx_zombiescream.mp3", SOUND_FROM_PLAYER, SNDCHAN_AUTO, SNDLEVEL_NORMAL, SND_NOFLAGS, 1.00, SNDPITCH_NORMAL, -1, NULL_VECTOR, NULL_VECTOR, true, 0.0);
+	}
+
+	// If the client is not alive then execute this section
+	if(!IsPlayerAlive(client))
+	{
+		return;
+	}
+
+	// If the client is on the zombie infected team then execute this section
+	if(GetClientTeam(client) != powerZombieAffectedTeam)
+	{
+		return;
+	}
+
+	// If the model is not precached already then execute this section
+	if(!IsModelPrecached("models/player/zombie.mdl"))
+	{
+		// Precaches the specified model
+		PrecacheModel("models/player/zombie.mdl");
+	}
+
+	// Changes the client's player model to the specified model
+	SetEntityModel(client, "models/player/zombie.mdl");
+
+	// Changes the health of the player
+	SetEntProp(client, Prop_Send, "m_iHealth", playerHealth, 1);
+
+	// Changes the movement speed of the player to 80% of the normal movement speed
+	SetEntPropFloat(client, Prop_Data, "m_flLaggedMovementValue", movementSpeed);
+}
+
+
+// This happens when the king dies or the round resets
+public void PowerZombieApocalypseResetSkybox()
+{
+	// Creates a variable which we will store data within
+	char serverCommand[140];
+
+	// Combines the sv_skyname with the name of the skybox stored within the skyboxname variable
+	FormatEx(serverCommand, sizeof(serverCommand), "sv_skyname %s", skyboxName);
+
+	// Performs a server command to change the map's skybox 
+	ServerCommand(serverCommand);
+}
+
+
+// This happens when the king dies or the round resets
+public void PowerZombieApocalypseCreateHuman(int client)
+{
+	// If the client is not a bot then execute this section
+	if(!IsFakeClient(client))
+	{
+		// Removes the screen overlay if the client is the king and impregnable armor is currently active
+		RemoveScreenOverlay(client);
+
+		// Stops the ambience sounds from playing
+		ClientCommand(client, "playgamesound Music.StopAllExceptMusic");
+	}
+
+	// If the client is dead then execute this section
+	if(!IsPlayerAlive(client))
+	{
+		return;
+	}
+
+	// Changes the movement speed of the player back to the normal movement speed
+	SetEntPropFloat(client, Prop_Data, "m_flLaggedMovementValue", 1.00);
+
+	// If the client's health is above 100 then execute this section
+	if(GetEntProp(client, Prop_Send, "m_iHealth") < 100)
+	{
+		// Changes the health of the player to 100
+		SetEntProp(client, Prop_Send, "m_iHealth", 100, 1);
+	}
+
+	if(GetClientTeam(client) == 2 && powerZombieAffectedTeam == 2)
+	{
+		// Changes the client's player model to the specified model
+		SetEntityModel(client, "models/player/tm_phoenix.mdl");
+	}
+
+	if(GetClientTeam(client) == 3 && powerZombieAffectedTeam == 3)
+	{
+		// Changes the client's player model to the specified model
+		SetEntityModel(client, "models/player/ctm_idf.mdl");
+	}
+}
+
+
+// This happens when the king dies or the round resets
+public void PowerZombieApocalypseRemove()
+{
+	// Changes the skybox back to the skybox that was saved prior to altering it to the zombie apocalypse skybox
+	PowerZombieApocalypseResetSkybox();
+
+	// If the model is not precached already then execute this section
+	if(!IsModelPrecached("models/player/ctm_idf.mdl"))
+	{
+		// Precaches the specified model
+		PrecacheModel("models/player/ctm_idf.mdl");
+	}
+
+	// If the model is not precached already then execute this section
+	if(!IsModelPrecached("models/player/tm_phoenix.mdl"))
+	{
+		// Precaches the specified model
+		PrecacheModel("models/player/tm_phoenix.mdl");
+	}
+
+	// Loops through all of the clients
+	for (int i = 1; i <= MaxClients; i++)
+	{
+		// If the client does not meet our validation criteria then execute this section
+		if(!IsValidClient(i))
+		{
+			continue;
+		}
+
+		// Removes the zombie empowering from the client turning him in to humans again
+		PowerZombieApocalypseCreateHuman(i);
+	}
+
+	// Changes the team that is currently affected with the zombie apocalypse to 0
+	powerZombieAffectedTeam = 0;
+}
+
+
+// This happens when the king dies or the round resets
+public void PowerZombieApocalypseSpawn(int client)
+{
+	// If the currently active power is not Zombie Apocalypse then execute this section
+	if(!powerZombieApocalypse)
+	{
+		return;
+	}
+
+	// Turns the client in to a zombie with 150 health, and 80% of the normal movement speed
+	PowerZombieApocalypseCreateZombie(client, 150, 0.80);
+}
+
+
+// This happens when the player dies while Zombie Apocalypse is active
+public void ZombieApocalypseOnDeath(int client)
+{
+	// If the currently active power is not Zombie Apocalypse then execute this section
+	if(powerZombieApocalypse)
+	{
+		return;
+	}
+
+	// Removes the screen overlay from the player
+	RemoveScreenOverlay(client);
+}
+
 
 // This function is called upon briefly after a player changes team or dies
 public Action Timer_PowerZombieApocalypseAmbience(Handle timer)
@@ -6975,315 +7233,6 @@ public Action Timer_PowerZombieApocalypseAmbience(Handle timer)
 
 	return Plugin_Continue;
 }
-
-
-// This happens when a king acquires the Zombie Apocalypse power 
-public void PowerZombieApocalypse(int client)
-{
-	// Turns on the zombie apocalypse king power 
-	powerZombieApocalypse = true;
-
-	// Changes the name of the path for the sound that is will be played when the player acquires the specific power
-	powerSoundName = "kingmod/power_zombieapocalypse.mp3";
-
-	// Changes the content of the dottedLine variable to match the length of the name of power and tier
-	dottedLine = "-----------------------------------";
-
-	// Changes the content of the nameOfPower variable to reflect which power the king acquired
-	nameOfPower = "Zombie Apocalypse";
-	
-	// Changes the content of the nameOfTier variable to reflect which tier of the power the king acquired
-	nameOfTier = "Tier A";
-
-	// Plays the ambient sound that will be running while the zombie apocalypse power is active
-	CreateTimer(0.0, Timer_PowerZombieApocalypseAmbience, _, TIMER_FLAG_NO_MAPCHANGE);
-
-	// Changes the skybox, sound ambience, turns the king's team in to zombies, increasing their health and lowers their speed
-	PowerZombieApocalypseInitiate(client);
-}
-
-
-// This happens when a king acquires the zombie apocalypse power
-public void PowerZombieApocalypseInitiate(int client)
-{
-	// Removes all the healthshots
-	PowerGenericRemoveHealthshots();
-
-	// Obtains the value of the sv_skyname server variable and store it within the skyName convar 
-	ConVar skyName = FindConVar("sv_skyname");
-
-	// Creates a variable to store our data within
-	char validateSkyboxName[128];
-
-	// Obtains the value of the sv_skyname server variable and store it within the validateSkyboxName variable
-	GetConVarString(skyName, validateSkyboxName, sizeof(validateSkyboxName));
-
-	// If the current skybox is not the zombienight skybox then execute this section
-	if(!StrEqual(validateSkyboxName, "zombienight"))
-	{
-		// Obtains the value of the sv_skyname server variable and store it within the skyboxName variable
-		GetConVarString(skyName, skyboxName, sizeof(skyboxName));
-
-		// Changes the map's skybox 
-		ServerCommand("sv_skyname zombienight");
-	}
-
-	// If the current skybox is the zombienight skybox then execut this section
-	else
-	{
-		// Changes the map's skybox 
-		ServerCommand("sv_skyname zombienight");
-	}
-
-	// If the model is not precached already then execute this section
-	if(!IsModelPrecached("models/player/zombie.mdl"))
-	{
-		// Precaches the specified model
-		PrecacheModel("models/player/zombie.mdl");
-	}
-
-	// Changes the client's player model to the specified model
-	SetEntityModel(client, "models/player/zombie.mdl");
-
-	// Changes the health of the player
-	SetEntProp(client, Prop_Send, "m_iHealth", 325, 1);
-
-	// Changes the movement speed of the player to 80% of the normal movement speed
-	SetEntPropFloat(client, Prop_Data, "m_flLaggedMovementValue", 0.80);
-
-	// If the client is a bot then execute this section
-	if(!IsFakeClient(client))
-	{
-		// Applies a screen overlay to the player's screen
-		ClientCommand(client, "r_screenoverlay kingmod/overlays/power_zombieapocalypsezombie.vmt");
-
-		// If the sound is not already precached then execute this section
-		if(!IsSoundPrecached("kingmod/sfx_zombiescream.mp3"))
-		{	
-			// Precaches the sound file
-			PrecacheSound("kingmod/sfx_zombiescream.mp3", true);
-		}
-	}
-
-	// Loops through all of the clients
-	for (int i = 1; i <= MaxClients; i++)
-	{
-		// If the client does not meet our validation criteria then execute this section
-		if(!IsValidClient(i))
-		{
-			continue;
-		}
-
-		// If the client is not alive then execute this section
-		if(!IsPlayerAlive(i))
-		{
-			continue;
-		}
-
-		// If the client is not on the same team as the king then execute this section
-		if(GetClientTeam(i) != GetClientTeam(kingIndex))
-		{
-			// If the client is on the terrorist or counter-terrorist team then execute this section
-			if(GetClientTeam(i) >= 2)
-			{
-				// Applies a screen overlay to the player's screen
-				ClientCommand(i, "r_screenoverlay kingmod/overlays/power_zombieapocalypsehuman.vmt");
-			}
-
-			continue;
-		}
-
-		// If the client is the king then execute this section
-		if(isPlayerKing[i])
-		{
-			continue;
-		}
-
-		// Changes the client's player model to the specified model
-		SetEntityModel(i, "models/player/zombie.mdl");
-
-		// Changes the health of the player
-		SetEntProp(i, Prop_Send, "m_iHealth", 150, 1);
-
-		// Changes the movement speed of the player to 80% of the normal movement speed
-		SetEntPropFloat(i, Prop_Data, "m_flLaggedMovementValue", 0.80);
-
-		// If the client is a bot then execute this section
-		if(IsFakeClient(i))
-		{
-			continue;
-		}
-
-		// Emits a sound to the specified client that only they can hear
-		EmitSoundToClient(i, "kingmod/sfx_zombiescream.mp3", SOUND_FROM_PLAYER, SNDCHAN_AUTO, SNDLEVEL_NORMAL, SND_NOFLAGS, 1.00, SNDPITCH_NORMAL, -1, NULL_VECTOR, NULL_VECTOR, true, 0.0);
-
-		// Applies a screen overlay to the player's screen
-		ClientCommand(i, "r_screenoverlay kingmod/overlays/power_zombieapocalypsezombie.vmt");
-	}
-}
-
-
-// This happens when the king dies or the round resets
-public void PowerZombieApocalypseRemove()
-{
-	// Creates a variable which we will store data within
-	char serverCommand[140];
-
-	// Combines the sv_skyname with the name of the skybox stored within the skyboxname variable
-	FormatEx(serverCommand, sizeof(serverCommand), "sv_skyname %s", skyboxName);
-
-	// Performs a server command to change the map's skybox 
-	ServerCommand(serverCommand);
-
-	// If the king is on the terrorist team then execute this section
-	if(kingIsOnTeam == 2)
-	{
-		// If the model is not precached already then execute this section
-		if(!IsModelPrecached("models/player/ctm_idf.mdl"))
-		{
-			// Precaches the specified model
-			PrecacheModel("models/player/ctm_idf.mdl");
-		}
-	}
-
-	// If the king is on the counter-terrorist team then execute this section
-	if(kingIsOnTeam == 3)
-	{
-		// If the model is not precached already then execute this section
-		if(!IsModelPrecached("models/player/tm_phoenix.mdl"))
-		{
-			// Precaches the specified model
-			PrecacheModel("models/player/tm_phoenix.mdl");
-		}
-	}
-
-	// Loops through all of the clients
-	for (int i = 1; i <= MaxClients; i++)
-	{
-		// If the client does not meet our validation criteria then execute this section
-		if(!IsValidClient(i))
-		{
-			continue;
-		}
-
-		// Removes the screen overlay if the client is the king and impregnable armor is currently active
-		RemoveScreenOverlay(i);
-
-		// Stops the ambience sounds from playing
-		ClientCommand(i, "playgamesound Music.StopAllExceptMusic");
-
-		// If the client is not alive then execute this section
-		if(!IsPlayerAlive(i))
-		{
-			continue;
-		}
-
-		// If the king is on the terrorist team then execute this section
-		if(GetClientTeam(kingIndex) == 2)
-		{
-			// Changes the client's player model to the specified model
-			SetEntityModel(i, "models/player/ctm_idf.mdl");
-		}
-
-		// If the king is on the counter-terrorist team then execute this section
-		else if(GetClientTeam(kingIndex) == 3)
-		{
-			// Changes the client's player model to the specified model
-			SetEntityModel(i, "models/player/tm_phoenix.mdl");
-		}
-
-		// If the client is not on the same team as the king then execute this section
-		if(GetClientTeam(i) != GetClientTeam(kingIndex))
-		{
-			continue;
-		}
-
-		// Changes the movement speed of the player back to the normal movement speed
-		SetEntPropFloat(i, Prop_Data, "m_flLaggedMovementValue", 1.00);
-
-		// If the client's health is above 100 then execute this section
-		if(GetEntProp(i, Prop_Send, "m_iHealth") < 100)
-		{
-			continue;
-		}
-
-		// Changes the health of the player to 100
-		SetEntProp(i, Prop_Send, "m_iHealth", 100, 1);
-	}
-}
-
-
-// This happens when the king dies or the round resets
-public void PowerZombieApocalypseSpawn(int client)
-{
-	// If the currently active power is not Zombie Apocalypse then execute this section
-	if(!powerZombieApocalypse)
-	{
-		return;
-	}
-
-	// If the client does not meet our validation criteria then execute this section
-	if(!IsValidClient(client))
-	{
-		return;
-	}
-
-	// If the client is not on the king's team then execute this section
-	if(GetClientTeam(client) != GetClientTeam(kingIndex))
-	{
-		// If the client is on the terrorist or counter-terrorist team then execute this section
-		if(GetClientTeam(client) >= 2)
-		{
-			// Applies a screen overlay to the player's screen
-			ClientCommand(client, "r_screenoverlay kingmod/overlays/power_zombieapocalypsehuman.vmt");
-		}
-
-		return;
-	}
-
-	// Changes the client's player model to the specified model
-	SetEntityModel(client, "models/player/zombie.mdl");
-
-	// Changes the health of the player
-	SetEntProp(client, Prop_Send, "m_iHealth", 150, 1);
-
-	// Changes the movement speed of the player to 80% of the normal movement speed
-	SetEntPropFloat(client, Prop_Data, "m_flLaggedMovementValue", 0.80);
-
-	// If the client is a bot then execute this section
-	if(IsFakeClient(client))
-	{
-		return;
-	}
-
-	// If the sound is not already precached then execute this section
-	if(!IsSoundPrecached("kingmod/sfx_zombiescream.mp3"))
-	{	
-		// Precaches the sound file
-		PrecacheSound("kingmod/sfx_zombiescream.mp3", true);
-	}
-
-	// Emits a sound to the specified client that only they can hear
-	EmitSoundToClient(client, "kingmod/sfx_zombiescream.mp3", SOUND_FROM_PLAYER, SNDCHAN_AUTO, SNDLEVEL_NORMAL, SND_NOFLAGS, 1.00, SNDPITCH_NORMAL, -1, NULL_VECTOR, NULL_VECTOR, true, 0.0);
-
-	// Applies a screen overlay to the player's screen
-	ClientCommand(client, "r_screenoverlay kingmod/overlays/power_zombieapocalypsezombie.vmt");
-}
-
-
-// This happens when the player dies while Zombie Apocalypse is active
-public void ZombieApocalypseOnDeath(int client)
-{
-	// If the currently active power is not Zombie Apocalypse then execute this section
-	if(powerZombieApocalypse)
-	{
-		return;
-	}
-
-	// Removes the screen overlay from the player
-	RemoveScreenOverlay(client);
-}
-
 
 
 ////////////////////////////////

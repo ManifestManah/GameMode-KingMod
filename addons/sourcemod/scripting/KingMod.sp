@@ -7012,13 +7012,28 @@ public void PowerZombieApocalypseInitiate(int client)
 	// Obtains the value of the sv_skyname server variable and store it within the skyName convar 
 	ConVar skyName = FindConVar("sv_skyname");
 
-	// Obtains the value of the sv_skyname server variable and store it within the skyboxName variable
-	GetConVarString(skyName, skyboxName, sizeof(skyboxName));
+	// Creates a variable to store our data within
+	char validateSkyboxName[128];
 
-	// Changes the map's skybox 
-	ServerCommand("sv_skyname zombienight");
+	// Obtains the value of the sv_skyname server variable and store it within the validateSkyboxName variable
+	GetConVarString(skyName, validateSkyboxName, sizeof(validateSkyboxName));
 
-	PrintToChatAll("%s", skyboxName);
+	// If the current skybox is not the zombienight skybox then execute this section
+	if(!StrEqual(validateSkyboxName, "zombienight"))
+	{
+		// Obtains the value of the sv_skyname server variable and store it within the skyboxName variable
+		GetConVarString(skyName, skyboxName, sizeof(skyboxName));
+
+		// Changes the map's skybox 
+		ServerCommand("sv_skyname zombienight");
+	}
+
+	// If the current skybox is the zombienight skybox then execut this section
+	else
+	{
+		// Changes the map's skybox 
+		ServerCommand("sv_skyname zombienight");
+	}
 
 	// If the model is not precached already then execute this section
 	if(!IsModelPrecached("models/player/zombie.mdl"))
@@ -7222,7 +7237,7 @@ public void PowerZombieApocalypseSpawn(int client)
 			// Applies a screen overlay to the player's screen
 			ClientCommand(client, "r_screenoverlay kingmod/overlays/power_zombieapocalypsehuman.vmt");
 		}
-		
+
 		return;
 	}
 

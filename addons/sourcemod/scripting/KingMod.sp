@@ -51,7 +51,13 @@ bool cvar_PowerLaserGun = false;
 bool cvar_PowerLuckyNumberSeven = false;
 bool cvar_PowerWesternShootout = false;
 bool cvar_PowerBabonicPlague = false;
-bool cvar_PowerZombieApocalypse = true;
+bool cvar_PowerZombieApocalypse = false;
+bool cvar_PowerBlastCannon = false;
+bool cvar_PowerDeagleHeadshot = true;
+bool cvar_powerLaserPointer = false;
+bool cvar_PowerHammerTime = false;
+bool cvar_PowerDoomChickens = false;
+
 
 int cvar_PointsNormalKill = 1;
 int cvar_PointsKingKill = 3;
@@ -80,6 +86,11 @@ bool powerChuckNorris = false;
 bool powerLuckyNumberSeven = false;
 bool powerWesternShootout = false;
 bool powerZombieApocalypse = false;
+bool powerBlastCannon = false;
+bool powerDeagleHeadshot = false;
+bool powerLaserPointer = false;
+bool powerHammerTime = false;
+bool powerDoomChickens = false;
 
 int powerImpregnableArmor = 0;
 int powerMovementSpeed = 0;
@@ -89,6 +100,7 @@ int powerBreachCharges = 0;
 int powerLegCrushingBumpmines = 0;
 int powerLaserGun = 0;
 int powerBabonicPlague = 0;
+
 
 
 //////////////////////////
@@ -111,6 +123,7 @@ bool cooldownWeaponSwapMessage[MAXPLAYERS + 1] = {false,...};
 bool powerHatchetMassacreCooldown[MAXPLAYERS + 1] = {false,...};
 bool playerSwappedWeapons[MAXPLAYERS + 1] = {false,...};
 bool powerBabonicPlagueInfected[MAXPLAYERS + 1] = {false,...};
+bool powerHammerTimeBuried[MAXPLAYERS + 1] = {false,...};
 
 
 // Global Integers
@@ -123,6 +136,7 @@ int kingRecoveryCounter = 0;
 int effectRingSprite = 0;
 int effectLaserSprite = 0;
 int kingIsAcquiringPower = 0;
+int powerZombieAffectedTeam = 0;
 
 int colorRGB[3];
 int PlayerSpawnCount[MAXPLAYERS+1] = {0, ...};
@@ -368,10 +382,10 @@ public Action OnPlayerRunCmd(int client, int &buttons, int &impulse, float unuse
 	}
 
 	// If thg king power chooser is enabled and the chuck norris fists or the hatchet massacre powers are enabled then execute this section
-	if(cvar_KingPowerChooser && cvar_PowerChuckNorrisFists | cvar_PowerHatchetMassacre)
+	if(cvar_KingPowerChooser && cvar_PowerChuckNorrisFists | cvar_PowerHatchetMassacre | cvar_PowerHammerTime)
 	{
 		// If the currently active power is either hatchet massacre or chuck norris fists then execute this section
-		if(powerChuckNorris | powerHatchetMassacre)
+		if(powerChuckNorris | powerHatchetMassacre | powerHammerTime)
 		{
 			// If the client is not alive then execute this section
 			if(!IsPlayerAlive(client))
@@ -639,6 +653,42 @@ public Action OnWeaponCanUse(int client, int weapon)
 				return Plugin_Continue;
 			}
 		}
+
+		// If the currently active power is Blast Cannon then execute this section
+		if(powerBlastCannon)
+		{
+			// If the entity is a sawedoff shotgun then excute this section
+			if(StrEqual(ClassName, "weapon_sawedoff", false))
+			{
+				return Plugin_Continue;
+			}
+		}
+
+		// If the currently active power is Deagle Headshot then execute this section
+		if(powerDeagleHeadshot)
+		{
+			PrintToChatAll("debug - ClassName is %s", ClassName);
+
+			// If the entity is a deagle then excute this section
+			if(StrEqual(ClassName, "weapon_deagle", false))
+			{
+				return Plugin_Continue;
+			}
+		}
+
+		// If the currently active power is Hammer Time then execute this section
+		if(powerHammerTime)
+		{
+			PrintToChatAll("debug - ClassName is %s", ClassName);
+
+			// If the entity is a hammer then excute this section
+			if(StrEqual(ClassName, "weapon_melee", false))
+			{
+				EquipPlayerWeapon(client, weapon);
+
+				return Plugin_Continue;
+			}
+		}
 	}
 
 	// If the weapon's entity name is the same as weapon_knife or weapon_healthshot then execute this section
@@ -868,6 +918,9 @@ public Action Event_PlayerDeath(Handle event, const char[] name, bool dontBroadc
 	{
 		return Plugin_Continue;
 	}
+
+	// Removes the cooldown that is being set when the client is buried, if the Hammer Time power is active
+	PowerHammerTimeDeath(client);
 
 	// Removes the zombie screen overlay if the zombie apocalypse power is active
 	ZombieApocalypseOnDeath(client);
@@ -2815,6 +2868,36 @@ public Action Timer_CleanFloor(Handle timer)
 			}
 		}
 
+		// If the currently active power is Blast Cannon then execute this section
+		if(powerBlastCannon)
+		{
+			// If the entity is a sawedoff shotgun then excute this section
+			if(StrEqual(className, "weapon_sawedoff", false))
+			{
+				continue;
+			}
+		}
+
+		// If the currently active power is Deagle Headshot then execute this section
+		if(powerDeagleHeadshot)
+		{
+			// If the entity is a deagle then excute this section
+			if(StrEqual(className, "weapon_deagle", false))
+			{
+				continue;
+			}
+		}
+
+		// If the currently active power is Hammer Time then execute this section
+		if(powerHammerTime)
+		{
+			// If the entity is a hammer then excute this section
+			if(StrEqual(className, "weapon_hammer", false))
+			{
+				continue;
+			}
+		}
+
 		// If the entity has an ownership relation then execute this section
 		if(GetEntPropEnt(entity, Prop_Data, "m_hOwnerEntity") != -1)
 		{
@@ -2961,6 +3044,12 @@ public Action Timer_GiveGoldenKnife(Handle Timer, int client)
 
 	// If the currently active power is chuck norris fists then execute this section
 	if(powerChuckNorris)
+	{
+		return Plugin_Continue;
+	}
+
+	// If the currently active power is hammer time then execute this section
+	if(powerHammerTime)
 	{
 		return Plugin_Continue;
 	}
@@ -3845,10 +3934,109 @@ public Action ChooseKingPower(int client)
 			PowerZombieApocalypse(client);
 
 			// 
-			PrintToChatAll("Power Babonic Plague - [ %i | %i ]", chosenPower, powersAvailable);
+			PrintToChatAll("Power Zombie Apocalypse - [ %i | %i ]", chosenPower, powersAvailable);
 		}
 	}
 
+
+	// If the cvar for the Blast Cannon power is enabled then execute this section
+	if(cvar_PowerBlastCannon)
+	{
+		// Adds +1 to the current value of the powersAvailable variable
+		powersAvailable++;
+
+		PrintToChatAll("Debug Power - PA %i | C %i", powersAvailable, chosenPower);
+
+		// If the value contained within chosenPower is the same as the value stored in powersAvailable then execute this section
+		if(chosenPower == powersAvailable)
+		{
+			// Gives the client a shotgun that deals reduced damage but pushed people back
+			PowerBlastCannon(client);
+
+			// 
+			PrintToChatAll("Power Blast Cannon - [ %i | %i ]", chosenPower, powersAvailable);
+		}
+	}
+
+
+	// If the cvar for the Deagle Headshot power is enabled then execute this section
+	if(cvar_PowerDeagleHeadshot)
+	{
+		// Adds +1 to the current value of the powersAvailable variable
+		powersAvailable++;
+
+		PrintToChatAll("Debug Power - PA %i | C %i", powersAvailable, chosenPower);
+
+		// If the value contained within chosenPower is the same as the value stored in powersAvailable then execute this section
+		if(chosenPower == powersAvailable)
+		{
+			// Gives the client a desert eagle that can only deal damage when hitting the enemy's head
+			PowerDeagleHeadshot(client);
+
+			// 
+			PrintToChatAll("Power Deagle Headshot - [ %i | %i ]", chosenPower, powersAvailable);
+		}
+	}
+
+
+	// If the cvar for the Laser Pointer power is enabled then execute this section
+	if(cvar_powerLaserPointer)
+	{
+		// Adds +1 to the current value of the powersAvailable variable
+		powersAvailable++;
+
+		PrintToChatAll("Debug Power - PA %i | C %i", powersAvailable, chosenPower);
+
+		// If the value contained within chosenPower is the same as the value stored in powersAvailable then execute this section
+		if(chosenPower == powersAvailable)
+		{
+			// Gives the client the ability to press E and deal damage using a laser pointer when hovering over other players
+			PowerLaserPointer(client);
+
+			// 
+			PrintToChatAll("Power Deagle Headshot - [ %i | %i ]", chosenPower, powersAvailable);
+		}
+	}
+
+
+	// If the cvar for the Hammer Time power is enabled then execute this section
+	if(cvar_PowerHammerTime)
+	{
+		// Adds +1 to the current value of the powersAvailable variable
+		powersAvailable++;
+
+		PrintToChatAll("Debug Power - PA %i | C %i", powersAvailable, chosenPower);
+
+		// If the value contained within chosenPower is the same as the value stored in powersAvailable then execute this section
+		if(chosenPower == powersAvailable)
+		{
+			// Gives the client a hammer, and attacking enemies will knock them in to the ground
+			PowerHammerTime(client);
+
+			// 
+			PrintToChatAll("Power Hammer Time - [ %i | %i ]", chosenPower, powersAvailable);
+		}
+	}
+
+
+	// If the cvar for the doom Doom Chickens is enabled then execute this section
+	if(cvar_PowerDoomChickens)
+	{
+		// Adds +1 to the current value of the powersAvailable variable
+		powersAvailable++;
+
+		PrintToChatAll("Debug Power - PA %i | C %i", powersAvailable, chosenPower);
+
+		// If the value contained within chosenPower is the same as the value stored in powersAvailable then execute this section
+		if(chosenPower == powersAvailable)
+		{
+			// When a player dies they will spawn a chicken that deals damage and explodes
+			PowerDoomChickens(client);
+
+			// 
+			PrintToChatAll("Power Doom Chickens - [ %i | %i ]", chosenPower, powersAvailable);
+		}
+	}
 
 	// Plays the sound file that is specific to that of the newly acquired power
 	CreateTimer(2.0, Timer_PlayPowerSpecificSound, client);
@@ -3983,6 +4171,42 @@ public int countAvailablePowers()
 
 	// If the cvar for the Zombie Apocalypse power is enabled then execute this section
 	if(cvar_PowerZombieApocalypse)
+	{
+		// Adds +1 to the current value of the powersAvailable variable
+		powersAvailable++;
+	}
+
+
+	// If the cvar for the Blast Cannon power is enabled then execute this section
+	if(cvar_PowerBlastCannon)
+	{
+		// Adds +1 to the current value of the powersAvailable variable
+		powersAvailable++;
+	}
+
+	// If the cvar for the Deagle Headshot power is enabled then execute this section
+	if(cvar_PowerDeagleHeadshot)
+	{
+		// Adds +1 to the current value of the powersAvailable variable
+		powersAvailable++;
+	}
+
+	// If the cvar for the Laser Pointer power is enabled then execute this section
+	if(cvar_powerLaserPointer)
+	{
+		// Adds +1 to the current value of the powersAvailable variable
+		powersAvailable++;
+	}
+
+	// If the cvar for the Hammer Time power is enabled then execute this section
+	if(cvar_PowerHammerTime)
+	{
+		// Adds +1 to the current value of the powersAvailable variable
+		powersAvailable++;
+	}
+
+	// If the cvar for the doom Doom Chickens is enabled then execute this section
+	if(cvar_PowerDoomChickens)
 	{
 		// Adds +1 to the current value of the powersAvailable variable
 		powersAvailable++;
@@ -4125,6 +4349,44 @@ public void ResetPreviousPower()
 
 		// Turns off the zombie apocalypse power 
 		powerZombieApocalypse = false;
+	}
+
+	// If the cvar for the Blast Cannon power is enabled then execute this section
+	if(powerBlastCannon)
+	{
+		// Turns off the blast cannon king power 
+		powerBlastCannon = false;
+	}
+
+	// If the cvar for the Deagle Headshot power is enabled then execute this section
+	if(powerDeagleHeadshot)
+	{
+		// Turns off the deagle headshot king power 
+		powerDeagleHeadshot = false;
+	}
+
+	// If the cvar for the Laser Pointer power is enabled then execute this section
+	if(powerLaserPointer)
+	{
+		// Turns off the laser pointer king power 
+		powerLaserPointer = false;
+	}
+
+	// If the cvar for the Hammer Time power is enabled then execute this section
+	if(powerHammerTime)
+	{
+		// Lifts the buried cooldown from all the players
+		RemoveAllBuryCooldowns();
+
+		// Turns off the hammer time king power 
+		powerHammerTime = false;
+	}
+
+	// If the cvar for the doom Doom Chickens is enabled then execute this section
+	if(powerDoomChickens)
+	{
+		// Turns off the doom chickens king power 
+		powerDoomChickens = false;
 	}
 }
 
@@ -5416,6 +5678,133 @@ public Action OnDamageTaken(int client, int &attacker, int &inflictor, float &da
 
 		// Adds a scren overlay to the client's screen
 		ClientCommand(client, "r_screenoverlay kingmod/overlays/power_babonicplague.vmt");
+	}
+
+
+	// If the currently active power is Blast Cannon then execute this section
+	if(powerBlastCannon)
+	{
+		// If the entity is a sawedoff shotgun then excute this section
+		if(StrEqual(classname, "weapon_sawedoff", false))
+		{
+			// Changes the damage inflicted upon the victim to 0
+			// damage = 0.0;
+
+			PrintToChatAll("Sawedoff dealt %0.0f damage", damage);
+
+			return Plugin_Continue;
+		}
+	}
+
+
+	// If the currently active power is Deagle Headshot then execute this section
+	if(powerDeagleHeadshot)
+	{
+		// If the entity is a deagle then excute this section
+		if(StrEqual(classname, "weapon_deagle", false))
+		{
+			// If the damage type is headshot damage then execute this section
+			if(damagetype & CS_DMG_HEADSHOT)
+			{
+				// Creates a variable which we will use to store data within
+				char soundName[64];
+
+				// Picks a random number between 1 and 4
+				int RandomSound = GetRandomInt(1, 4);
+
+				// If the randomly picked number is 1 then execute this section
+				if(RandomSound == 1)
+				{
+					// Changes the contents of our soundName variable
+					soundName = "physics/flesh/flesh_squishy_impact_hard1.wav";
+				}
+
+				// If the randomly picked number is 2 then execute this section
+				else if(RandomSound == 2)
+				{
+					// Changes the contents of our soundName variable
+					soundName = "physics/flesh/flesh_squishy_impact_hard2.wav";
+				}
+
+				// If the randomly picked number is 3 then execute this section
+				else if(RandomSound == 3)
+				{
+					// Changes the contents of our soundName variable
+					soundName = "physics/flesh/flesh_squishy_impact_hard3.wav";
+				}
+
+				// If the randomly picked number is 4 then execute this section
+				else if(RandomSound == 4)
+				{
+					// Changes the contents of our soundName variable
+					soundName = "physics/flesh/flesh_squishy_impact_hard4.wav";
+				}
+
+				// If the sound is not already precached then execute this section
+				if(!IsSoundPrecached(soundName))
+				{	
+					// Precaches the sound file
+					PrecacheSound(soundName, true);
+				}
+
+				// Emits a sound to the specified client that only they can hear
+				EmitSoundToClient(client, soundName, SOUND_FROM_PLAYER, SNDCHAN_AUTO, SNDLEVEL_NORMAL, SND_NOFLAGS, 1.00, SNDPITCH_NORMAL, -1, NULL_VECTOR, NULL_VECTOR, true, 0.0);
+
+				return Plugin_Continue;
+			}
+
+			// Changes the damage inflicted upon the victim to 0
+			damage = 0.0;
+
+			return Plugin_Changed;
+		}
+	}
+
+
+	// If the currently active power is Hammer Time then execute this section
+	if(powerHammerTime)
+	{
+		// If the entity is a hammer then excute this section
+		if(StrEqual(classname, "player", false))
+		{
+			// If the damage is equals to 32 then execute this section
+			if(damage == 32)
+			{
+				// Changes the damage value to 65.0
+				damage = 65.0;
+			}
+
+			// If the damage is equals to 16 or 19 then execute this section
+			else
+			{
+				// Changes the damage value to 35.0
+				damage = 35.0;
+			}
+
+			// If the powerHammerTimeBuried is not on cooldown then execute this section
+			if(!powerHammerTimeBuried[client])
+			{
+				// Sets the powerHammerTimeBuried cooldown state to true
+				powerHammerTimeBuried[client] = true;
+
+				// Creates a variable called playerLocation which we will use to store data within
+				float playerLocation[3];
+
+				// Obtains the player's current location and store it within our playerLocation variable
+				GetEntPropVector(client, Prop_Send, "m_vecOrigin", playerLocation);
+
+				// Subtracts 35.0 from the player's current position on the z-axis
+				playerLocation[2] -= 42.5;
+
+				// Teleports the prop to the location where the player died
+				TeleportEntity(client, playerLocation, NULL_VECTOR, NULL_VECTOR);
+
+				// Unburies the player from the ground if the player has not died in the meantime
+				CreateTimer(2.25, Timer_HammerKnockDown, client, TIMER_FLAG_NO_MAPCHANGE);
+			}
+
+			return Plugin_Changed;
+		}
 	}
 
 	return Plugin_Continue;
@@ -6946,7 +7335,6 @@ public void ResetBabonicPlagueOnDeath(int client)
 // - Power Zombie Apocalypse - //
 /////////////////////////////////
 
-int powerZombieAffectedTeam = 0;
 
 // This happens when a king acquires the Zombie Apocalypse power 
 public void PowerZombieApocalypse(int client)
@@ -7265,6 +7653,242 @@ public Action Timer_PowerZombieApocalypseAmbience(Handle timer)
 
 	return Plugin_Continue;
 }
+
+
+
+////////////////////////////
+// - Power Blast Cannon - //
+////////////////////////////
+
+
+// This happens when a king acquires the Blast Cannon power 
+public void PowerBlastCannon(int client)
+{
+	// Turns on the Blast Cannon king power 
+	powerBlastCannon = true;
+
+	// Obtains the client's team index and store it within the powerZombieAffectedTeam variable
+	powerZombieAffectedTeam = GetClientTeam(client);
+
+	// Changes the name of the path for the sound that is will be played when the player acquires the specific power
+	powerSoundName = "kingmod/power_placeholder.mp3";
+
+	// Changes the content of the dottedLine variable to match the length of the name of power and tier
+	dottedLine = "----------------------------";
+
+	// Changes the content of the nameOfPower variable to reflect which power the king acquired
+	nameOfPower = "Blast Cannon";
+	
+	// Changes the content of the nameOfTier variable to reflect which tier of the power the king acquired
+	nameOfTier = "Tier A";
+
+	// Specifies which special weapon the king should be given
+	kingWeapon = "weapon_sawedoff";
+
+	// Gives the king a unique weapon if the current power requires one
+	CreateTimer(0.25, Timer_GiveKingUniqueWeapon, client);
+}
+
+
+
+///////////////////////////////
+// - Power Deagle Headshot - //
+///////////////////////////////
+
+
+// This happens when a king acquires the Deagle Headshot power 
+public void PowerDeagleHeadshot(int client)
+{
+	// Turns on the Deagle Headshot king power 
+	powerDeagleHeadshot = true;
+
+	// Obtains the client's team index and store it within the powerZombieAffectedTeam variable
+	powerZombieAffectedTeam = GetClientTeam(client);
+
+	// Changes the name of the path for the sound that is will be played when the player acquires the specific power
+	powerSoundName = "kingmod/power_placeholder.mp3";
+
+	// Changes the content of the dottedLine variable to match the length of the name of power and tier
+	dottedLine = "----------------------------------";
+
+	// Changes the content of the nameOfPower variable to reflect which power the king acquired
+	nameOfPower = "Deagle Headshot";
+	
+	// Changes the content of the nameOfTier variable to reflect which tier of the power the king acquired
+	nameOfTier = "Tier A";
+
+	// Specifies which special weapon the king should be given
+	kingWeapon = "weapon_deagle";
+
+	// Gives the king a unique weapon if the current power requires one
+	CreateTimer(0.25, Timer_GiveKingUniqueWeapon, client);
+}
+
+
+
+/////////////////////////////
+// - Power Laser Pointer - //
+/////////////////////////////
+
+
+// This happens when a king acquires the Laser Pointer power 
+public void PowerLaserPointer(int client)
+{
+	// Turns on the Laser Pointer king power 
+	powerLaserPointer = true;
+
+	// Obtains the client's team index and store it within the powerZombieAffectedTeam variable
+	powerZombieAffectedTeam = GetClientTeam(client);
+
+	// Changes the name of the path for the sound that is will be played when the player acquires the specific power
+	powerSoundName = "kingmod/power_placeholder.mp3";
+
+	// Changes the content of the dottedLine variable to match the length of the name of power and tier
+	dottedLine = "----------------------------";
+
+	// Changes the content of the nameOfPower variable to reflect which power the king acquired
+	nameOfPower = "Laser Pointer";
+	
+	// Changes the content of the nameOfTier variable to reflect which tier of the power the king acquired
+	nameOfTier = "Tier A";
+}
+
+
+
+///////////////////////////
+// - Power Hammer Time - //
+///////////////////////////
+
+
+// This happens when a king acquires the Hammer Time power 
+public void PowerHammerTime(int client)
+{
+	// Turns on the Hammer Time king power 
+	powerHammerTime = true;
+
+	// Obtains the client's team index and store it within the powerZombieAffectedTeam variable
+	powerZombieAffectedTeam = GetClientTeam(client);
+
+	// Changes the name of the path for the sound that is will be played when the player acquires the specific power
+	powerSoundName = "kingmod/power_placeholder.mp3";
+
+	// Changes the content of the dottedLine variable to match the length of the name of power and tier
+	dottedLine = "----------------------------";
+
+	// Changes the content of the nameOfPower variable to reflect which power the king acquired
+	nameOfPower = "Hammer Time";
+	
+	// Changes the content of the nameOfTier variable to reflect which tier of the power the king acquired
+	nameOfTier = "Tier A";
+
+	// Specifies which special weapon the king should be given
+	kingWeapon = "weapon_hammer";
+
+	// Gives the king a unique weapon if the current power requires one
+	CreateTimer(0.25, Timer_GiveKingUniqueWeapon, client);
+}
+
+
+// This happens 2.25 seconds after a player has been knocked down in the ground by the king while the Hammer Time power is active
+public Action Timer_HammerKnockDown(Handle timer, int client)
+{
+	// If the client does not meet our validation criteria then execute this section
+	if(!IsValidClient(client))
+	{
+		return Plugin_Continue;
+	}
+
+	// If the powerHammerTimeBuried is not on cooldown then execute this section
+	if(powerHammerTimeBuried[client])
+	{
+		// Creates a variable called playerLocation which we will use to store data within
+		float playerLocation[3];
+
+		// Obtains the player's current location and store it within our playerLocation variable
+		GetEntPropVector(client, Prop_Send, "m_vecOrigin", playerLocation);
+
+		// Adds 35.0 from the player's current position on the z-axis
+		playerLocation[2] += 42.5;
+
+		// Teleports the prop to the location where the player died
+		TeleportEntity(client, playerLocation, NULL_VECTOR, NULL_VECTOR);
+	}
+
+	// Sets the powerHammerTimeBuried cooldown state to false
+	powerHammerTimeBuried[client] = false;
+
+	return Plugin_Continue;
+}
+
+
+// This happens when a player dies while the hammer time power is active
+public void PowerHammerTimeDeath(int client)
+{
+	// If the Hammer Time power is not currently active then execute this section
+	if(!powerHammerTime)
+	{
+		return;
+	}
+
+	// If the powerHammerTimeBuried is not on cooldown then execute this section
+	if(powerHammerTimeBuried[client])
+	{
+		// Sets the powerHammerTimeBuried cooldown state to false
+		powerHammerTimeBuried[client] = false;
+	}
+}
+
+
+// This happens when the king dies or a new round starts
+public void RemoveAllBuryCooldowns()
+{
+	// Loops through all of the clients
+	for (int client = 1; client <= MaxClients; client++)
+	{
+		// If the client does not meet our validation criteria then execute this section
+		if(!IsValidClient(client))
+		{
+			continue;
+		}
+
+		// If the powerHammerTimeBuried is not on cooldown then execute this section
+		if(powerHammerTimeBuried[client])
+		{
+			// Sets the powerHammerTimeBuried cooldown state to false
+			powerHammerTimeBuried[client] = false;
+		}
+	}
+}
+
+
+
+/////////////////////////////
+// - Power Doom Chickens - //
+/////////////////////////////
+
+
+// This happens when a king acquires the Doom Chickens power 
+public void PowerDoomChickens(int client)
+{
+	// Turns on the Doom Chickens king power 
+	powerDoomChickens = true;
+
+	// Obtains the client's team index and store it within the powerZombieAffectedTeam variable
+	powerZombieAffectedTeam = GetClientTeam(client);
+
+	// Changes the name of the path for the sound that is will be played when the player acquires the specific power
+	powerSoundName = "kingmod/power_placeholder.mp3";
+
+	// Changes the content of the dottedLine variable to match the length of the name of power and tier
+	dottedLine = "------------------------------";
+
+	// Changes the content of the nameOfPower variable to reflect which power the king acquired
+	nameOfPower = "Doom Chickens";
+	
+	// Changes the content of the nameOfTier variable to reflect which tier of the power the king acquired
+	nameOfTier = "Tier A";
+}
+
 
 
 ////////////////////////////////

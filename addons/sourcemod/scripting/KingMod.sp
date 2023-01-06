@@ -224,6 +224,9 @@ public void OnPluginEnd()
 	PrintToChatAll("King Mod has been unloaded.");
 	PrintToChatAll("A new round will soon commence.");
 
+	// Changes the skybox back to the skybox that was saved prior to altering it to the zombie apocalypse skybox
+	PowerZombieApocalypseResetSkybox();
+
 	// Forcefully ends the round and considers it a round draw
 	CS_TerminateRound(3.0, CSRoundEnd_Draw);
 }

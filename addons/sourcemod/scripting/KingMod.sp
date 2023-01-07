@@ -52,12 +52,11 @@ bool cvar_PowerLuckyNumberSeven = false;
 bool cvar_PowerWesternShootout = false;
 bool cvar_PowerBabonicPlague = false;
 bool cvar_PowerZombieApocalypse = false;
-bool cvar_PowerBlastCannon = true;
+bool cvar_PowerBlastCannon = false;
 bool cvar_PowerDeagleHeadshot = false;
-bool cvar_powerLaserPointer = false;
+bool cvar_PowerLaserPointer = true;
 bool cvar_PowerHammerTime = false;
 bool cvar_PowerDoomChickens = false;
-
 
 int cvar_PointsNormalKill = 1;
 int cvar_PointsKingKill = 3;
@@ -102,7 +101,6 @@ int powerLaserGun = 0;
 int powerBabonicPlague = 0;
 
 
-
 //////////////////////////
 // - Global Variables - //
 //////////////////////////
@@ -111,7 +109,6 @@ int powerBabonicPlague = 0;
 // Global Booleans
 bool gameInProgress = true;
 bool mapHasPlatformSupport = false;
-
 bool isPlayerKing[MAXPLAYERS + 1] = {false,...};
 bool isPlayerProtected[MAXPLAYERS + 1] = {false,...};
 bool isPlayerControllingBot[MAXPLAYERS + 1] = {false,...};
@@ -124,6 +121,7 @@ bool powerHatchetMassacreCooldown[MAXPLAYERS + 1] = {false,...};
 bool playerSwappedWeapons[MAXPLAYERS + 1] = {false,...};
 bool powerBabonicPlagueInfected[MAXPLAYERS + 1] = {false,...};
 bool powerHammerTimeBuried[MAXPLAYERS + 1] = {false,...};
+bool LaserPointerTickCoolDown[MAXPLAYERS + 1] = {false,...};
 
 
 // Global Integers
@@ -133,23 +131,16 @@ int pointCounterT = 0;
 int pointCounterCT = 0;
 int mapHasMinimapHidden = 0;
 int kingRecoveryCounter = 0;
-int effectRingSprite = 0;
-int effectLaserSprite = 0;
-
-
-int Sprite_Smoke;
-int Sprite_Explosion;
-
-
-
 int kingIsAcquiringPower = 0;
 int powerZombieAffectedTeam = 0;
-
 int colorRGB[3];
+int effectRing = 0;
+int effectLaser = 0;
+int effectSmoke = 0;
+int effectExplosion = 0;
 int PlayerSpawnCount[MAXPLAYERS+1] = {0, ...};
 int playerHealthPreInjection[MAXPLAYERS+1] = {0, ...};
 int powerNapalmDamageTaken[MAXPLAYERS+1] = {0, ...};
-
 int EntityOwner[2049] = {-1, ...};
 
 
@@ -161,14 +152,13 @@ float platformLocation[3];
 char kingName[64];
 char kingWeapon[64];
 char colorCombination[32];
-
 char nameOfPower[64];
 char nameOfTier[16];
 char dottedLine[128];
 char powerSoundName[128];
 char skyboxName[128];
-
 char PlayerClanTag[MAXPLAYERS + 1][14];
+
 
 
 //////////////////////////
@@ -389,10 +379,10 @@ public Action OnPlayerRunCmd(int client, int &buttons, int &impulse, float unuse
 	}
 
 	// If thg king power chooser is enabled and the chuck norris fists or the hatchet massacre powers are enabled then execute this section
-	if(cvar_KingPowerChooser && cvar_PowerChuckNorrisFists | cvar_PowerHatchetMassacre | cvar_PowerHammerTime)
+	if(cvar_KingPowerChooser && cvar_PowerChuckNorrisFists | cvar_PowerHatchetMassacre | cvar_PowerHammerTime | cvar_PowerLaserPointer)
 	{
 		// If the currently active power is either hatchet massacre or chuck norris fists then execute this section
-		if(powerChuckNorris | powerHatchetMassacre | powerHammerTime)
+		if(powerChuckNorris | powerHatchetMassacre | powerHammerTime | powerLaserPointer)
 		{
 			// If the client is not alive then execute this section
 			if(!IsPlayerAlive(client))
@@ -428,6 +418,87 @@ public Action OnPlayerRunCmd(int client, int &buttons, int &impulse, float unuse
 				buttons &= ~IN_ATTACK2;
 
 				return Plugin_Changed;
+			}
+		}
+
+		// If the cvar for the Laser Pointer power is enabled then execute this section
+		if(powerLaserPointer)
+		{
+			// If the client is not the current king then execute this section
+			if(!isPlayerKing[client])
+			{
+				return Plugin_Continue;
+			}
+
+			// If the client is not alive then execute this section
+			if(!IsPlayerAlive(client))
+			{
+				return Plugin_Continue;
+			}
+
+			// If the player is pressing their USE button then execute this section
+			if(buttons & IN_USE)
+			{
+				// If the player is has not recently received a message regarding weapon swapping being blockd then execute this section 
+				if(LaserPointerTickCoolDown[client])
+				{
+					return Plugin_Continue;
+				}
+
+				// Changes the player's LaserPointerTickCoolDown state to true
+				LaserPointerTickCoolDown[client] = true;
+
+				// Removes the cooldown for announcing messages regarding the blocking of weapons
+				CreateTimer(0.083, Timer_RemoveLaserPointerTickCoolDown, client, TIMER_FLAG_NO_MAPCHANGE);
+
+				// Creates a variable which we will store data within
+				float eyeAngles[3];
+
+				// Creates a variable which we will store data within
+				float eyeLocation[3];
+				
+				// Obtains the client's eye angles and store them within our eyeAngles variable
+				GetClientEyeAngles(client, eyeAngles);
+
+				// Obtains the client's eye location and store it within our eyeLocation variable
+				GetClientEyePosition(client, eyeLocation);
+				
+				// Modifies the eyeLocation position on the z-axis by -8.0
+				eyeLocation[2] -= 8.0;
+				
+				// Checks for whether the client is aiming at a player and store it within our rayTraceHandle variable 
+				Handle rayTraceHandle = TR_TraceRayFilterEx(eyeLocation, eyeAngles, (CONTENTS_SOLID|CONTENTS_WINDOW|CONTENTS_GRATE), RayType_Infinite, TraceRayHitPlayers, client);
+				
+				// If the rayTraceHandle is not invalid then execute this section
+				if(TR_DidHit(rayTraceHandle))
+				{
+					// Creates a variable which we will store data within
+					float endLocation[3];
+
+					// Gets the end location point of our raytrace and store it within the endLocation variable
+					TR_GetEndPosition(endLocation, rayTraceHandle);
+
+					// Obtains the entity index of the player that was hit and store it within the victimPlayer variable
+					int victimPlayer = TR_GetEntityIndex(rayTraceHandle);
+
+					// Creates a laser beam using temp entities that spand from the client to he location he aims at  
+					TE_SetupBeamPoints(eyeLocation, endLocation, effectLaser, effectLaser, 0, 0, 0.25, 0.3, 0.3, 1, 0.0, {255, 0, 220, 205}, 0);
+
+					// Sends the visual effect temp entity to the relevant players
+					ShowVisualEffectToPlayers();
+
+					// If the victimPlayer does not meet our validation criteria then execute this section
+					if(!IsValidClient(victimPlayer))
+					{
+						return Plugin_Continue;
+					}
+					
+					// Inflicts 4.0 damage to the enemy upon the victim as if it was damage dealt from the king
+					DealDamageToClient(victimPlayer, client, 4, "weapon_tagrenade");
+				}
+
+				// Deletes our rayTraceHandle as we are done using it
+				delete rayTraceHandle;
 			}
 		}
 	}
@@ -541,6 +612,16 @@ public Action OnWeaponCanUse(int client, int weapon)
 	// If the client is the current king then execute this section
 	if(isPlayerKing[client])
 	{
+		// If the currently active power is Laser Pointer then execute this section
+		if(powerLaserPointer)
+		{
+			// If the weapon's entity name is not weapon_healthshot then execute this section
+			if(!StrEqual(ClassName, "weapon_healthshot", false))
+			{
+				return Plugin_Handled;
+			}
+		}
+
 		// If the weapon's entity name is weapon_knifegg then execute this section
 		if(StrEqual(ClassName, "weapon_knifegg", false))
 		{
@@ -2447,7 +2528,7 @@ public Action DisplayVisualEffects(int attacker)
 	if(cvar_EffectRing)
 	{
 		// Creates a temp entity visual efefct shaped like a ring
-		TE_SetupBeamRingPoint(playerLocation, 40.0, 2000.0, effectRingSprite, effectRingSprite, 0, 20, 1.5, 90.0, 2.0, effectColor, 1, 1);
+		TE_SetupBeamRingPoint(playerLocation, 40.0, 2000.0, effectRing, effectRing, 0, 20, 1.5, 90.0, 2.0, effectColor, 1, 1);
 
 		// Sends the visual effect temp entity to the relevant players
 		ShowVisualEffectToPlayers();
@@ -3053,6 +3134,12 @@ public Action Timer_GiveGoldenKnife(Handle Timer, int client)
 
 	// If the currently active power is hammer time then execute this section
 	if(powerHammerTime)
+	{
+		return Plugin_Continue;
+	}
+
+	// If the currently active power is Laser Pointer then execute this section
+	if(powerLaserPointer)
 	{
 		return Plugin_Continue;
 	}
@@ -3983,7 +4070,7 @@ public Action ChooseKingPower(int client)
 
 
 	// If the cvar for the Laser Pointer power is enabled then execute this section
-	if(cvar_powerLaserPointer)
+	if(cvar_PowerLaserPointer)
 	{
 		// Adds +1 to the current value of the powersAvailable variable
 		powersAvailable++;
@@ -3997,7 +4084,7 @@ public Action ChooseKingPower(int client)
 			PowerLaserPointer(client);
 
 			// 
-			PrintToChatAll("Power Deagle Headshot - [ %i | %i ]", chosenPower, powersAvailable);
+			PrintToChatAll("Power Laser Pointer - [ %i | %i ]", chosenPower, powersAvailable);
 		}
 	}
 
@@ -4195,7 +4282,7 @@ public int countAvailablePowers()
 	}
 
 	// If the cvar for the Laser Pointer power is enabled then execute this section
-	if(cvar_powerLaserPointer)
+	if(cvar_PowerLaserPointer)
 	{
 		// Adds +1 to the current value of the powersAvailable variable
 		powersAvailable++;
@@ -5735,13 +5822,13 @@ public Action OnDamageTaken(int client, int &attacker, int &inflictor, float &da
 				victimLocation[2] += 30.0;
 
 				// Create an explosion effect at the victim location
-				TE_SetupExplosion(victimLocation, Sprite_Explosion, 5.0, 1, 0, 20, 40, victimLocation);
+				TE_SetupExplosion(victimLocation, effectExplosion, 5.0, 1, 0, 20, 40, victimLocation);
 		
 				// Sends the visual effect temp entity to the relevant players
 				ShowVisualEffectToPlayers();
 
 				// Creates a smoke effect at the victim's location
-				TE_SetupSmoke(victimLocation, Sprite_Smoke, 4.0, 3);
+				TE_SetupSmoke(victimLocation, effectSmoke, 4.0, 3);
 
 				// Sends the visual effect temp entity to the relevant players
 				ShowVisualEffectToPlayers();
@@ -6963,7 +7050,7 @@ public Action WeaponFireCz75a(int client)
 		effectColor = {230, 15, 30, 255};
 
 		// Creates a temporary visual effect shaped as a line from where you stand to where the bullet was fired at
-		TE_SetupBeamPoints(playerEyeLocation, playerViewLocation, effectLaserSprite, effectLaserSprite, 10, 10, 0.7, 1.5, 1.5, 0, 0.0, effectColor, 0);
+		TE_SetupBeamPoints(playerEyeLocation, playerViewLocation, effectLaser, effectLaser, 10, 10, 0.7, 1.5, 1.5, 0, 0.0, effectColor, 0);
 	}
 
 	// If the player is on the Counter-Terrorist team then execute this section
@@ -6973,7 +7060,7 @@ public Action WeaponFireCz75a(int client)
 		effectColor = {0, 210, 250, 255};
 
 		// Creates a temporary visual effect shaped as a line from where you stand to where the bullet was fired at
-		TE_SetupBeamPoints(playerEyeLocation, playerViewLocation, effectLaserSprite, effectLaserSprite, 10, 10, 0.7, 1.5, 1.5, 0, 0.0, effectColor, 0);
+		TE_SetupBeamPoints(playerEyeLocation, playerViewLocation, effectLaser, effectLaser, 10, 10, 0.7, 1.5, 1.5, 0, 0.0, effectColor, 0);
 	}
 
 	// Sends the visual effect temp entity to the relevant players
@@ -7866,6 +7953,7 @@ public Action OnWeaponReloadPostDeagle(int weapon)
 /////////////////////////////
 
 
+
 // This happens when a king acquires the Laser Pointer power 
 public void PowerLaserPointer(int client)
 {
@@ -7886,6 +7974,35 @@ public void PowerLaserPointer(int client)
 	
 	// Changes the content of the nameOfTier variable to reflect which tier of the power the king acquired
 	nameOfTier = "Tier A";
+}
+
+
+// This happens when the king fires his cz75a while the laser gun power is currently active
+public bool TraceRayHitPlayers(int entity, int mask, int client)
+{
+	// If the entity is the same as the client then execute this section 
+	if(entity == client)
+	{
+		return false;
+	}
+	
+	return true;
+}
+
+
+// This happens 0.083 seconds after the king uses his laser pointer
+public Action Timer_RemoveLaserPointerTickCoolDown(Handle Timer, int client)
+{
+	// If the client does not meet our validation criteria then execute this section
+	if(!IsValidClient(client))
+	{
+		return Plugin_Continue;
+	}
+
+	// Changes the player's LaserPointerTickCoolDown state to false
+	LaserPointerTickCoolDown[client] = false;
+
+	return Plugin_Continue;
 }
 
 
@@ -8133,7 +8250,7 @@ public void DownloadAndPrecacheFiles()
 	// Visual Effect Sprites
 	AddFileToDownloadsTable("materials/kingmod/sprites/lgtning.vtf");
 	AddFileToDownloadsTable("materials/kingmod/sprites/lgtning.vmt");
-	effectRingSprite = PrecacheModel("materials/kingmod/sprites/lgtning.vmt");
+	effectRing = PrecacheModel("materials/kingmod/sprites/lgtning.vmt");
 
 
 	// Power Chooser System
@@ -8213,7 +8330,7 @@ public void DownloadAndPrecacheFiles()
 	AddFileToDownloadsTable("materials/kingmod/sprites/laserbeam.vtf");
 	AddFileToDownloadsTable("materials/kingmod/sprites/laserbeam.vmt");
 	AddFileToDownloadsTable("sound/kingmod/power_lasergun.mp3");
-	effectLaserSprite = PrecacheModel("materials/kingmod/sprites/laserbeam.vmt");
+	effectLaser = PrecacheModel("materials/kingmod/sprites/laserbeam.vmt");
 	PrecacheSound("kingmod/power_lasergun.mp3");
 
 
@@ -8273,12 +8390,6 @@ public void DownloadAndPrecacheFiles()
 
 
 
-
-
-
-
-
-
-	Sprite_Smoke = PrecacheModel("sprites/steam2.vmt");
-	Sprite_Explosion = PrecacheModel("sprites/blueglow2.vmt");
+	effectSmoke = PrecacheModel("sprites/steam2.vmt");
+	effectExplosion = PrecacheModel("sprites/blueglow2.vmt");
 }

@@ -52,8 +52,8 @@ bool cvar_PowerLuckyNumberSeven = false;
 bool cvar_PowerWesternShootout = false;
 bool cvar_PowerBabonicPlague = false;
 bool cvar_PowerZombieApocalypse = false;
-bool cvar_PowerBlastCannon = false;
-bool cvar_PowerDeagleHeadshot = true;
+bool cvar_PowerBlastCannon = true;
+bool cvar_PowerDeagleHeadshot = false;
 bool cvar_powerLaserPointer = false;
 bool cvar_PowerHammerTime = false;
 bool cvar_PowerDoomChickens = false;
@@ -135,6 +135,13 @@ int mapHasMinimapHidden = 0;
 int kingRecoveryCounter = 0;
 int effectRingSprite = 0;
 int effectLaserSprite = 0;
+
+
+int Sprite_Smoke;
+int Sprite_Explosion;
+
+
+
 int kingIsAcquiringPower = 0;
 int powerZombieAffectedTeam = 0;
 
@@ -5693,14 +5700,69 @@ public Action OnDamageTaken(int client, int &attacker, int &inflictor, float &da
 	if(powerBlastCannon)
 	{
 		// If the entity is a sawedoff shotgun then excute this section
-		if(StrEqual(classname, "weapon_sawedoff", false))
+		if(StrEqual(classname, "player", false))
 		{
-			// Changes the damage inflicted upon the victim to 0
-			// damage = 0.0;
+			// Changes the damage inflicted upon the victim to 8% of the normal damage
+			damage = (damage * 0.11) + 1.0;
 
 			PrintToChatAll("Sawedoff dealt %0.0f damage", damage);
 
-			return Plugin_Continue;
+			// Creates a variable to store our data within
+			float vectorLocation[3];
+
+			// Creates a variable to store our data within
+			float victimLocation[3];
+
+			// Creates a variable to store our data within
+			float attackerLocation[3];
+
+			// Obtains the client's location and store it within the victimLocation variable
+			GetEntPropVector(client, Prop_Data, "m_vecOrigin", victimLocation);
+
+			// Obtains the attacker's location and store it within the attackerLocation variable
+			GetEntPropVector(attacker, Prop_Data, "m_vecOrigin", attackerLocation);
+
+			// Changes the player's ground state, making him airborne and easier to push
+			SetEntPropEnt(client, Prop_Data, "m_hGroundEntity", -1);
+
+			// Obtains th dsitance from the victim's location to the attacker's location and store it within our distance variable
+			float distance = GetVectorDistance(victimLocation, attackerLocation);
+
+			// If the distance is lower than 500 then execute this section
+			if(distance < 500.0)
+			{
+				// Adds + 20 to the victim's location on the z-axis
+				victimLocation[2] += 30.0;
+
+				// Create an explosion effect at the victim location
+				TE_SetupExplosion(victimLocation, Sprite_Explosion, 5.0, 1, 0, 20, 40, victimLocation);
+		
+				// Sends the visual effect temp entity to the relevant players
+				ShowVisualEffectToPlayers();
+
+				// Creates a smoke effect at the victim's location
+				TE_SetupSmoke(victimLocation, Sprite_Smoke, 4.0, 3);
+
+				// Sends the visual effect temp entity to the relevant players
+				ShowVisualEffectToPlayers();
+
+				// Calculates teh force multiplier of our knockback and store it within the pushPower variable
+				float pushPower = ((500 - distance) * 0.01) + 1.0;
+
+				// Modifies the attacker's location by -15.0
+				attackerLocation[2] -= 15.0;
+
+				// Creates a vector using th attacker and victim location
+				MakeVectorFromPoints(attackerLocation, victimLocation, vectorLocation);
+
+				// Scales our vctor by the pushpower value
+				ScaleVector(vectorLocation, pushPower);
+
+				// Modifies the victim's velocity to create a knockback effect
+				TeleportEntity(client, NULL_VECTOR, NULL_VECTOR, vectorLocation);
+			}
+		
+			return Plugin_Changed;
 		}
 	}
 
@@ -7682,7 +7744,7 @@ public void PowerBlastCannon(int client)
 	powerSoundName = "kingmod/power_placeholder.mp3";
 
 	// Changes the content of the dottedLine variable to match the length of the name of power and tier
-	dottedLine = "----------------------------";
+	dottedLine = "---------------------------";
 
 	// Changes the content of the nameOfPower variable to reflect which power the king acquired
 	nameOfPower = "Blast Cannon";
@@ -8205,4 +8267,18 @@ public void DownloadAndPrecacheFiles()
 	PrecacheSound("kingmod/sfx_zombiescream.mp3");
 	PrecacheSound("kingmod/power_zombieapocalypse.mp3");
 	PrecacheSound("kingmod/power_zombieapocalypseambience.mp3");
+
+
+
+
+
+
+
+
+
+
+
+
+	Sprite_Smoke = PrecacheModel("sprites/steam2.vmt");
+	Sprite_Explosion = PrecacheModel("sprites/blueglow2.vmt");
 }

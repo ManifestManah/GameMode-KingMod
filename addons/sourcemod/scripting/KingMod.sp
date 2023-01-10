@@ -54,9 +54,9 @@ bool cvar_PowerBabonicPlague = false;
 bool cvar_PowerZombieApocalypse = false;
 bool cvar_PowerBlastCannon = false;
 bool cvar_PowerDeagleHeadshot = false;
-bool cvar_PowerLaserPointer = true;
+bool cvar_PowerLaserPointer = false;
 bool cvar_PowerHammerTime = false;
-bool cvar_PowerDoomChickens = false;
+bool cvar_PowerDoomChickens = true;
 
 int cvar_PointsNormalKill = 1;
 int cvar_PointsKingKill = 3;
@@ -1014,6 +1014,9 @@ public Action Event_PlayerDeath(Handle event, const char[] name, bool dontBroadc
 
 	// Resets the client's inferno stacks back to 0 if the currently active power is napalm 
 	ResetNapalmStacks(client);
+
+	// Creates a chicken where the player was killed if the currently active power is Doomm Chickens
+	SpawnDoomChicken(client);
 
 	// Gives the client a (33% default) chance to drop a healthshot where they stood upon dying
 	DropHealthShot(client);
@@ -4477,6 +4480,9 @@ public void ResetPreviousPower()
 	{
 		// Turns off the doom chickens king power 
 		powerDoomChickens = false;
+
+		// Removes all the chicken entitites from the map
+		DestroyChickenEntities();
 	}
 }
 
@@ -8139,6 +8145,211 @@ public void PowerDoomChickens(int client)
 	
 	// Changes the content of the nameOfTier variable to reflect which tier of the power the king acquired
 	nameOfTier = "Tier A";
+}
+
+
+public void SpawnDoomChicken(int client)
+{
+	// If the doom Doom Chickens power is not currently enabled then execute this section
+	if(!powerDoomChickens)
+	{
+		// 
+		return;
+	}
+
+	// Creates a variable to store our data within
+	float playerLocation[3];
+
+	// Obtains the location of the client and store it within the playerLocation variable
+	GetClientAbsOrigin(client, playerLocation);
+
+	// Changes the obtained player location by +64 on the z-axis
+	playerLocation[2] += 64;
+
+	// Creates a healthshot and store it's index within our entity variable
+	int entity = CreateEntityByName("chicken");
+
+	// If the entity does not meet our criteria validation then execute this section
+	if(!IsValidEntity(entity))
+	{
+		return;
+	}
+
+	float entityScale = 1.0;
+
+	int randomNumber = GetRandomInt(1, 3);
+
+	if(randomNumber == 1)
+	{
+		entityScale = 2.05;
+	}
+	else if(randomNumber == 2)
+	{
+		entityScale = 2.45;
+	}
+	else if(randomNumber == 3)
+	{
+		entityScale = 2.85;
+	}
+
+	// Changes the size of the chicken to be a value between 2.05 and 3.40
+	SetEntPropFloat(entity, Prop_Send, "m_flModelScale", entityScale);
+
+	// Changes the color of the entity to a random predefined color
+	SetRandomColor(entity);
+
+	// Attaches a light_dynamic entity to the healthshot of a random predefined color
+	SetRandomLightColor(entity);
+
+	AttachC4Bomb(entity, entityScale);
+
+	// Spawns the entity
+	DispatchSpawn(entity);
+
+	// Teleports the entity to the specified coordinates relative to the player and rotate it
+	TeleportEntity(entity, playerLocation, NULL_VECTOR, NULL_VECTOR);
+}
+
+
+// This happens when a player dies and drops a healthshot
+public Action AttachC4Bomb(int entityChicken, float entityScale)
+{
+	// Creates a prop_dynamic and store the it within the entity variable
+	int entity = CreateEntityByName("prop_dynamic");
+
+	// If the entity does not meet our criteria validation then execute this section
+	if(!IsValidEntity(entity))
+	{
+		return;
+	}
+
+	// If the model is not precached then execute this section
+	if(!IsModelPrecached("models/weapons/w_c4_planted.mdl"))
+	{
+		// Precaches the model
+		PrecacheModel("models/weapons/w_c4_planted.mdl");
+	}
+
+
+	// Changes the color of the SoulPrism to standard color
+	DispatchKeyValue(entity, "rendercolor", "255 255 255");
+
+	// Changes the model of the prop to a crown
+	DispatchKeyValue(entity, "model", "models/weapons/w_c4.mdl");
+
+	// Turns off receiving shadows for the model
+	DispatchKeyValue(entity, "disablereceiveshadows", "1");
+
+	// Turns off the model's own shadows 
+	DispatchKeyValue(entity, "disableshadows", "1");
+	
+	// Changes the solidity of the model to be unsolid
+	DispatchKeyValue(entity, "solid", "0");
+	
+	// Changes the spawn flags of the model
+	DispatchKeyValue(entity, "spawnflags", "256");
+
+	// Changes the collisiongroup to that of the ones used by weapons in CS:GO as well
+	SetEntProp(entity, Prop_Send, "m_CollisionGroup", 11);
+	
+	// Spawns the crown model in to the world
+	DispatchSpawn(entity);
+
+	// Creates a variable which we will use to store our data within
+	float entityLocation[3];
+
+	// Creates a variable which we will use to store our data within
+	float entityRotation[3];
+
+	// Modifies the placement of the light_dynamic's z-coordinate position
+	if(entityScale == 2.05)
+	{
+		// + Front / - Back
+		entityLocation[0] -= 11.0;
+
+		// + Left / - Right
+		entityLocation[1] += 10.5;
+
+		// + Up / - Down
+		entityLocation[2] += 26.0;
+
+		// Sets rotation of the entity's X, Y and Z axises
+		entityRotation[0] = 26.89;
+		entityRotation[1] = 260.28;
+		entityRotation[2] = 0.57;
+	}
+
+	if(entityScale == 2.45)
+	{
+		// + Front / - Back
+		entityLocation[0] -= 15.0;
+
+		// + Left / - Right
+		entityLocation[1] += 12.5;
+
+		// + Up / - Down
+		entityLocation[2] += 29.5;
+
+		// Sets rotation of the entity's X, Y and Z axises
+		entityRotation[0] = 26.89;
+		entityRotation[1] = 260.28;
+		entityRotation[2] = 0.57;
+	}
+
+	if(entityScale == 2.85)
+	{
+		// + Front / - Back
+		entityLocation[0] -= 14.35;
+
+		// + Left / - Right
+		entityLocation[1] += 13.05;
+
+		// + Up / - Down
+		entityLocation[2] += 33.5;
+
+		// Sets rotation of the entity's X, Y and Z axises
+		entityRotation[0] = 26.89;
+		entityRotation[1] = 260.28;
+		entityRotation[2] = 0.57;
+	}
+
+	// Changes the variantstring to !activator
+	SetVariantString("!activator");
+	
+	// Changes the parent of the light_dynamic to be the spawned healthshot
+	AcceptEntityInput(entity, "SetParent", entityChicken, entity, 0);
+	
+	// Teleports the light_dynamic to the specified coordinate location
+	TeleportEntity(entity, entityLocation, entityRotation, NULL_VECTOR);
+}
+
+
+public void DestroyChickenEntities()
+{
+	// Loops through all entities that are currently in the game
+	for (int entity = MaxClients + 1; entity <= GetMaxEntities(); entity++)
+	{
+		// If the entity does not meet our criteria of validation then execute this section
+		if(!IsValidEntity(entity))
+		{
+			continue;
+		}
+
+		// Creates a variable which we will use to store data within
+		char className[64];
+
+		// Obtains the entity's class name and store it within our className variable
+		GetEntityClassname(entity, className, sizeof(className));
+
+		// If the entity is a dronegun then execute this section
+		if(!StrEqual(className, "chicken"))
+		{	
+			continue;
+		}
+
+		// Kills the weapon entity, removing it from the game
+		AcceptEntityInput(entity, "Kill");
+	}
 }
 
 

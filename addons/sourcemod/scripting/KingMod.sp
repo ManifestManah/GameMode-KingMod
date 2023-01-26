@@ -8148,12 +8148,12 @@ public void PowerDoomChickens(int client)
 }
 
 
+// This happens when a player a player dies
 public void SpawnDoomChicken(int client)
 {
 	// If the doom Doom Chickens power is not currently enabled then execute this section
 	if(!powerDoomChickens)
 	{
-		// 
 		return;
 	}
 
@@ -8175,20 +8175,30 @@ public void SpawnDoomChicken(int client)
 		return;
 	}
 
+	// Defines the default entity's model scale to be 1.0
 	float entityScale = 1.0;
 
+	// Picks a random number between 1 and 3 and store it within the randomNumber
 	int randomNumber = GetRandomInt(1, 3);
 
+	// If the value stored within the randomNumber value is 1 then execute this section
 	if(randomNumber == 1)
 	{
+		// Changes the entity's model scale to 2.05 
 		entityScale = 2.05;
 	}
+
+	// If the value stored within the randomNumber value is 2 then execute this section
 	else if(randomNumber == 2)
 	{
+		// Changes the entity's model scale to 2.45
 		entityScale = 2.45;
 	}
+
+	// If the value stored within the randomNumber value is 3 then execute this section
 	else if(randomNumber == 3)
 	{
+		// Changes the entity's model scale to 2.85
 		entityScale = 2.85;
 	}
 
@@ -8201,6 +8211,7 @@ public void SpawnDoomChicken(int client)
 	// Attaches a light_dynamic entity to the healthshot of a random predefined color
 	SetRandomLightColor(entity);
 
+	// Adds a C4 explosive bomb model and attaches it on to the chicken
 	AttachC4Bomb(entity, entityScale);
 
 	// Spawns the entity
@@ -8229,7 +8240,6 @@ public Action AttachC4Bomb(int entityChicken, float entityScale)
 		// Precaches the model
 		PrecacheModel("models/weapons/w_c4_planted.mdl");
 	}
-
 
 	// Changes the color of the SoulPrism to standard color
 	DispatchKeyValue(entity, "rendercolor", "255 255 255");
@@ -8324,6 +8334,7 @@ public Action AttachC4Bomb(int entityChicken, float entityScale)
 }
 
 
+// This happens when round starts or when the king dies while the doom chicken power is active
 public void DestroyChickenEntities()
 {
 	// Loops through all entities that are currently in the game
@@ -8351,6 +8362,11 @@ public void DestroyChickenEntities()
 		AcceptEntityInput(entity, "Kill");
 	}
 }
+
+
+
+
+
 
 
 

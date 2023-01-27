@@ -122,6 +122,7 @@ bool playerSwappedWeapons[MAXPLAYERS + 1] = {false,...};
 bool powerBabonicPlagueInfected[MAXPLAYERS + 1] = {false,...};
 bool powerHammerTimeBuried[MAXPLAYERS + 1] = {false,...};
 bool LaserPointerTickCoolDown[MAXPLAYERS + 1] = {false,...};
+bool powerDoomChickensExplosive[MAXPLAYERS + 1] = {false,...};
 
 
 // Global Integers
@@ -5053,6 +5054,22 @@ public void OnEntityCreated(int entity, const char[] classname)
 		// Adds a hook to the deagle after it has been spawned allowing us to alter the deagle's behavior
 		SDKHook(entity, SDKHook_SpawnPost, entity_DeagleSpawned);
 	}
+
+
+	// If the currently active power is Doom Chickens then execute this section
+	if(powerDoomChickens)
+	{
+		PrintToChatAll("The entity spawned is: %s", classname);
+
+		// If the entity that was created is not a chicken then execute this section
+		if(!StrEqual(classname, "chicken", false))
+		{
+			return;
+		}
+
+		// Adds a hook to the chicken after it has been spawned allowing us to alter chicken entity's behavior
+		SDKHook(entity, SDKHook_SpawnPost, entity_DoomChickenSpawned);
+	}
 }
 
 
@@ -8365,7 +8382,42 @@ public void DestroyChickenEntities()
 
 
 
+// TO Do
 
+
+// This happens when a chicken has been spawned
+public Action entity_DoomChickenSpawned(int entity)
+{
+	// If the entity does not meet our criteria validation then execute this section
+	if(!IsValidEntity(entity))
+	{
+		return Plugin_Continue;
+	}
+
+	// Sets the explosive status of the chicken to false
+	powerDoomChickensExplosive[entity] = false;
+	
+	// Allows the spawned chicken to be able to explode after 2.5 seconds has passed
+	CreateTimer(2.5, Timer_PowerDoomChickenCanExplode, entity, TIMER_FLAG_NO_MAPCHANGE);
+
+	return Plugin_Continue;
+}
+
+
+// This happens 2.5 seconds after a doom chicken has spawned
+public Action Timer_PowerDoomChickenCanExplode(Handle Timer, int entity)
+{
+	// If the entity does not meet our criteria validation then execute this section
+	if(!IsValidEntity(entity))
+	{
+		return Plugin_Continue;
+	}
+
+	// Sets the explosive status of the chicken to true
+	powerDoomChickensExplosive[entity] = true;
+
+	return Plugin_Continue;
+}
 
 
 

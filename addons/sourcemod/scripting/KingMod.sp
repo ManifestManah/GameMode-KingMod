@@ -207,6 +207,9 @@ public void OnPluginStart()
 	// Creates a timer that will apply babonic plague's effects every 1.5 second if the babonic plague king power is currently active
 	CreateTimer(1.5, Timer_PowerBabonicPlagueLoop, _, TIMER_REPEAT);
 
+	// Creates a timer that will update the chickens in the level's explosion status, every 1 second when the doom chicken king power is currently active
+	CreateTimer(1.0, Timer_PowerDoomChickensLoop, _, TIMER_REPEAT);
+
 	// Creates a timer that will update the team score hud every 1.0 second
 	CreateTimer(1.0, Timer_UpdateTeamScoreHud, _, TIMER_REPEAT);
 
@@ -8381,10 +8384,6 @@ public void DestroyChickenEntities()
 }
 
 
-
-// TO Do
-
-
 // This happens when a chicken has been spawned
 public Action entity_DoomChickenSpawned(int entity)
 {
@@ -8419,6 +8418,139 @@ public Action Timer_PowerDoomChickenCanExplode(Handle Timer, int entity)
 	return Plugin_Continue;
 }
 
+
+// This happens once every 1.0 seconds
+public Action Timer_PowerDoomChickensLoop(Handle timer)
+{
+	// If thg king power chooser is enabled and the doom chickens power is enabled then execute this section
+	if(!cvar_KingPowerChooser && !cvar_PowerDoomChickens)
+	{
+		return Plugin_Continue;
+	}
+
+	// If the doom Doom Chickens power is not currently enabled then execute this section
+	if(!powerDoomChickens)
+	{
+		return Plugin_Continue;
+	}
+
+	// Creates a variable to store our data within 
+	int entity = INVALID_ENT_REFERENCE;
+
+	// Loops through the entities and execute this section if the entity has the classname prop_dynamic_override
+	while ((entity = FindEntityByClassname(entity, "chicken")) != INVALID_ENT_REFERENCE)
+	{
+		// If the entity does not meet our criteria validation then execute this section
+		if(!IsValidEntity(entity))
+		{
+			continue;
+		}
+
+		// If the chicken's explosion status is currently false then execute this section
+		if(!powerDoomChickensExplosive[entity])
+		{
+			continue;
+		}
+
+		// Creates a variable to store our data within
+		float chickenLocation[3];
+
+		// Loops through all of the clients
+		for (int client = 1; client <= MaxClients; client++)
+		{
+			// If the client does not meet our validation criteria then execute this section
+			if(!IsValidClient(client))
+			{
+				continue;
+			}
+
+			// If the client is not alive then execute this section
+			if(!IsPlayerAlive(client))
+			{
+				continue;
+			}
+
+			// If the client is not on the King team then execute this section
+			if(GetClientTeam(client) != kingIsOnTeam)
+			{
+				continue;
+			}
+
+			// Creates a variable to store our data within
+			float playerLocation[3];
+
+			// Obtains the entity's location and store it within the chickenLocation variable
+			GetEntPropVector(entity, Prop_Data, "m_vecOrigin", chickenLocation);
+
+			// Obtains the client's location and store it within the playerLocation variable
+			GetEntPropVector(client, Prop_Data, "m_vecOrigin", playerLocation);
+
+			// Obtains th dsitance from the chicken entity's location to the player's location and store it within our distance variable
+			float distance = GetVectorDistance(chickenLocation, playerLocation);
+
+			// If the distance is lower than 225 then execute this section
+			if(distance < 225.0)
+			{
+				// Adds +13 to the chicken's location on the z-axis
+				chickenLocation[2] += 13.0;
+
+				// Create an explosion effect at the chicken's location
+				TE_SetupExplosion(chickenLocation, effectExplosion, 5.0, 1, 0, 20, 40, chickenLocation);
+
+				// Sends the visual effect temp entity to the relevant players
+				ShowVisualEffectToPlayers();
+
+				// Inflicts 500.0 damage to the client as if it was damage dealt from the king
+				DealDamageToClient(client, kingIndex, 500, "weapon_c4");
+
+				// Removes the entity from the game
+				AcceptEntityInput(entity, "Kill");
+
+				// Creates a variable which we will store data within
+				char randomSound[128];
+
+				// Picks a random number between 1 to 3
+				int randomNumber = GetRandomInt(1, 3);
+
+				// If the randomNumber is 1 then execute this section
+				if(randomNumber == 1)
+				{
+					// Defines the randomly chosen sound's path
+					randomSound = "weapons/hegrenade/explode1.wav";
+				}
+
+				// If the randomNumber is 2 then execute this section
+				else if(randomNumber == 2)
+				{
+					// Defines the randomly chosen sound's path
+					randomSound = "weapons/hegrenade/explode2.wav";
+				}
+
+				// If the randomNumber is 3 then execute this section
+				else
+				{
+					// Defines the randomly chosen sound's path
+					randomSound = "weapons/hegrenade/explode3.wav";
+				}
+
+				// If the sound is not already precached then execute this section
+				if(!IsSoundPrecached(randomSound))
+				{	
+					// Precaches the sound file
+					PrecacheSound(randomSound, true);
+				}
+
+				// Changes the volume depending on how far from the chicken the player is
+				float soundVolume = ((0.60 / 225) * distance) + 0.40;
+
+				// Emits a sound to the specified client that only they can hear
+				EmitSoundToClient(client, randomSound, SOUND_FROM_PLAYER, SNDCHAN_AUTO, SNDLEVEL_NORMAL, SND_NOFLAGS, soundVolume, SNDPITCH_NORMAL, -1, NULL_VECTOR, NULL_VECTOR, true, 0.0);
+			}
+		}
+	}
+
+	return Plugin_Continue;
+}
 
 
 

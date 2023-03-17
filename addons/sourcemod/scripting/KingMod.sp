@@ -236,8 +236,11 @@ public void OnPluginStart()
 // This happens when the plugin is unloaded
 public void OnPluginEnd()
 {
-	PrintToChatAll("King Mod has been unloaded.");
-	PrintToChatAll("A new round will soon commence.");
+/*	PrintToChatAll("King Mod has been unloaded.");
+	PrintToChatAll("A new round will soon commence.");	*/
+
+	CPrintToChatAll("%t", "Chat - Mod Unloaded");
+	CPrintToChatAll("%t", "Chat - Round Commencing Soon");
 
 	// Changes the skybox back to the skybox that was saved prior to altering it to the zombie apocalypse skybox
 	PowerZombieApocalypseResetSkybox();
@@ -351,7 +354,8 @@ public void OnClientDisconnect(int client)
 	// Changes the kingName variable's value to just be None
 	kingName = "None";
 
-	PrintToChatAll("Debug: The king has disconnected from the game");
+/*	PrintToChatAll("Debug: The king has disconnected from the game"); */
+	CPrintToChatAll("%t", "Chat - King Disconncted");
 
 	return;
 }
@@ -584,12 +588,14 @@ public Action OnPlayerRunCmd(int client, int &buttons, int &impulse, float unuse
 			// Changes the isPlayerControllingBot to true
 			isPlayerControllingBot[client] = true;
 
-			PrintToChat(client, "You took over a bot");
+			/* PrintToChat(client, "You took over a bot"); */
+			CPrintToChat(client, "%t", "Chat - Bot Overtaken");
 
 			return Plugin_Continue;
 		}
 
-		PrintToChat(client, "You cannot take over the bot if it is the current king");
+		/* PrintToChat(client, "You cannot take over the bot if it is the current king"); */
+		CPrintToChat(client, "%t", "Chat - Bot Takeover Impossible");
 
 		return Plugin_Handled;
 	}
@@ -868,7 +874,8 @@ public Action OnWeaponCanSwitchTo(int client, int weapon)
 		// Changes the player's cooldownWeaponSwapMessage state to true
 		cooldownWeaponSwapMessage[client] = true;
 
-		PrintToChat(client, "KingMod You cannot change weapon once you have begun the injection procss");
+		/* PrintToChat(client, "KingMod You cannot change weapon once you have begun the injection procss"); */
+		CPrintToChat(client, "%t", "Chat - Injection In Progress");
 
 		// Removes the cooldown for announcing messages regarding the blocking of weapons
 		CreateTimer(1.0, Timer_RemoveCooldownWeaponSwapMessage, client, TIMER_FLAG_NO_MAPCHANGE);
@@ -1080,7 +1087,8 @@ public Action Event_PlayerDeath(Handle event, const char[] name, bool dontBroadc
 		// Strips the player of the clantag which indicates that the player is the current king 
 		RemoveClanTag(client);
 
-		PrintToChat(client, "Debug: You lost your kingship because you committed suicide");
+		/* PrintToChat(client, "Debug: You lost your kingship because you committed suicide"); */
+		CPrintToChat(client, "%t", "Chat - Kingship Lost Suicide");
 
 		// Changes the indicator of which team the King is currently on be none
 		kingIsOnTeam = 0;
@@ -1108,11 +1116,15 @@ public Action Event_PlayerDeath(Handle event, const char[] name, bool dontBroadc
 
 			// Changes the killed player's king status to false
 			isPlayerKing[client] = false;
-			PrintToChat(client, "Debug: You lost your kingship as you were killed");
+			
+			/* PrintToChat(client, "Debug: You lost your kingship as you were killed"); */
+			CPrintToChat(client, "%t", "Chat - Kingship Lost Killed");
 
 			// Changes the attacking player's king status to true
 			isPlayerKing[attacker] = true;
-			PrintToChat(attacker, "Debug: You stole the king title from the enemy that died");
+
+			/* PrintToChat(attacker, "Debug: You stole the king title from the enemy that died"); */
+			CPrintToChat(attacker, "%t", "Chat - Kingship Acquired Stolen");
 
 			// Removes any currently present king crowns from the game
 			RemoveCrownEntity();
@@ -1224,7 +1236,9 @@ public Action Event_PlayerDeath(Handle event, const char[] name, bool dontBroadc
 
 	// Changes the attacking player's king status to true
 	isPlayerKing[attacker] = true;
-	PrintToChat(attacker, "Debug: You became the new king");
+
+	/* PrintToChat(attacker, "Debug: You became the new king"); */
+	CPrintToChat(attacker, "%t", "Chat - Kingship Acquired Free");
 
 	// Removes any currently present king crowns from the game
 	RemoveCrownEntity();
@@ -1335,7 +1349,8 @@ public Action Event_RoundStart(Handle event, const char[] name, bool dontBroadca
 	// Resets the counter-terrorists' team score back to 0
 	pointCounterCT = 0;
 
-	PrintToChatAll("Debug: A new round has started, kill an enemy to become the first King");
+	/* PrintToChatAll("Debug: A new round has started, kill an enemy to become the first King"); */
+	CPrintToChatAll("%t", "Chat - King None New Round");
 
 	// Creates a variable with the value of the terrorist and counter-terrorist teams' current score added together
 	int initialRound = GetTeamScore(2) + GetTeamScore(3);
@@ -1396,8 +1411,8 @@ public Action Event_RoundEnd(Handle event, const char[] name, bool dontBroadcast
 		{
 			// Sends a colored multi-language message to everyone in the chat area
 			// CPrintToChat(client, "%t", "Terrorists Won", pointCounterT, pointCounterCT);
-			PrintToChat(client, "T Won - T: %i CT: %i", pointCounterT, pointCounterCT);
-
+			/* PrintToChat(client, "T Won - T: %i CT: %i", pointCounterT, pointCounterCT); */
+			CPrintToChat(client, "%t", "Chat - Round End T Won", pointCounterT, pointCounterCT);
 		}
 
 		// If the Terrorist team have less points than the Counter-Terrorist team then execute this section
@@ -1405,7 +1420,8 @@ public Action Event_RoundEnd(Handle event, const char[] name, bool dontBroadcast
 		{
 			// Sends a colored multi-language message to everyone in the chat area
 			// CPrintToChat(client, "%t", "Counter-Terrorists Won", pointCounterT, pointCounterCT);
-			PrintToChat(client, "CT Won - T: %i CT: %i", pointCounterT, pointCounterCT);
+			/* PrintToChat(client, "CT Won - T: %i CT: %i", pointCounterT, pointCounterCT); */
+			CPrintToChat(client, "%t", "Chat - Round End CT Won", pointCounterT, pointCounterCT);
 		}
 
 		// If the Terrorist team have the same amount of points as the Counter-Terrorist team then execute this section
@@ -1413,7 +1429,8 @@ public Action Event_RoundEnd(Handle event, const char[] name, bool dontBroadcast
 		{
 			// Sends a colored multi-language message to everyone in the chat area
 			// CPrintToChat(client, "%t", "Round Draw", pointCounterT, pointCounterCT);
-			PrintToChat(client, "Round Draw - T: %i CT: %i", pointCounterT, pointCounterCT);
+			/* PrintToChat(client, "Round Draw - T: %i CT: %i", pointCounterT, pointCounterCT); */
+			CPrintToChat(client, "%t", "Chat - Round End Draw", pointCounterT, pointCounterCT);
 		}
 	}
 
@@ -1596,8 +1613,10 @@ public void LateLoadSupport()
 	// Changes the kingName variable's value to just be None
 	kingName = "None";
 
-	PrintToChatAll("King Mod has been loaded. ");
-	PrintToChatAll("A new round will soon commence.");
+/*	PrintToChatAll("King Mod has been loaded. ");
+	PrintToChatAll("A new round will soon commence."); */
+	CPrintToChatAll("%t", "Chat - Mod loaded");
+	CPrintToChatAll("%t", "Chat - Round Commencing Soon");
 
 	// Calls upon the Timer_TerminateRound function after 3.0 seconds
 	CreateTimer(3.0, Timer_TerminateRound, _, TIMER_FLAG_NO_MAPCHANGE);
@@ -1661,7 +1680,8 @@ public void RestartGameConvarChanged(Handle cvar, const char[] oldVal, const cha
 		// Changes the value of our mp_restartgame back to 0
 		restartGame.IntValue = 0;
 
-		PrintToChatAll("King Mod: Please try not to use mp_restartgame, change the map instead.");
+/*		PrintToChatAll("King Mod: Please try not to use mp_restartgame, change the map instead."); */
+		CPrintToChatAll("%t", "Chat - Restart Game Disabled");
 	}
 }
 
@@ -2465,7 +2485,8 @@ public Action KingRecovery(int client)
 
 	// Sends a colored multi-language message in the chat area
 	// CPrintToChat(client, "%t", "Recovery Starts");
-	PrintToChat(client, "King Recovery Started");
+	/* PrintToChat(client, "King Recovery Started"); */
+	CPrintToChat(client, "%t", "Chat - King Recovery Started");
 
 	// If the sound is not already precached then execute this section
 	if(!IsSoundPrecached("kingmod/recovery_initiated.mp3"))
@@ -2995,7 +3016,7 @@ public Action Timer_CleanFloor(Handle timer)
 			return Plugin_Continue;
 		}
 
-		PrintToChatAll("Debug removed weapon %s", className);
+//		PrintToChatAll("Debug removed weapon %s", className);
 
 		// Removes the entity from the map 
 		AcceptEntityInput(entity, "Kill");
@@ -3216,7 +3237,8 @@ public Action Timer_InjectHealthshot(Handle Timer, int client)
 
 	// Obtains the player's current health and store it within the playerHealth variable
 	int playerHealth = playerHealthPreInjection[client];
-	PrintToChat(client, "Debug playerHealth initial HP: %i", playerHealth);
+
+//	PrintToChat(client, "Debug playerHealth initial HP: %i", playerHealth);
 
 	// Adds the value of recoveredHealth to the value stored within our playerHealth variable
 	playerHealth += recoveredHealth;
@@ -3261,12 +3283,13 @@ public Action Timer_InjectHealthshot(Handle Timer, int client)
 			// Changes the player's health to the value of playerHealth
 			SetEntProp(client, Prop_Send, "m_iHealth", playerHealth, 1);
 
-			PrintToChat(client, "playerHealth HP: %i", playerHealth);
+//			PrintToChat(client, "playerHealth HP: %i", playerHealth);
 		}
 	}
 
 	// Sends a multi-language message in the chat to the client
-	PrintToChat(client, "The healthshot recovered %i of your health", recoveredHealth);
+	/* PrintToChat(client, "The healthshot recovered %i of your health", recoveredHealth); */
+	CPrintToChat(client, "%t", "Chat - King Recovery Started");
 
 	// Changes the player's cooldownWeaponSwapMessage state to false
 	cooldownWeaponSwapMessage[client] = false;
@@ -3590,7 +3613,8 @@ public Action Timer_RecoverHealth(Handle Timer, int client)
 
 		// Sends a colored multi-language message in the chat area
 		// CPrintToChat(client, "%t", "Regeneration Protocol Completed");
-		PrintToChat(client, "King Recovery Has Ended");
+		/* PrintToChat(client, "King Recovery Has Ended"); */
+		CPrintToChat(client, "%t", "Chat - King Recovery Has Ended");
 
 		// If the sound is not already precached then execute this section
 		if(!IsSoundPrecached("kingmod/recovery_complete.mp3"))
@@ -3710,6 +3734,9 @@ public Action ChooseKingPower(int client)
 	// Picks a value between 1 to the value stored within our powersAvailable variable
 	int chosenPower = GetRandomInt(1, powersAvailable);
 
+
+	/* TO DO: Translations for powers */
+
 	// Resets the value of powersAvailable back to 0
 	powersAvailable = 0;
 
@@ -3753,8 +3780,6 @@ public Action ChooseKingPower(int client)
 		// Adds +1 to the current value of the powersAvailable variable
 		powersAvailable++;
 
-		PrintToChatAll("Debug Power - PA %i | C %i", powersAvailable, chosenPower);
-
 		// If the value contained within chosenPower is the same as the value stored in powersAvailable then execute this section
 		if(chosenPower == powersAvailable)
 		{
@@ -3771,8 +3796,6 @@ public Action ChooseKingPower(int client)
 	{
 		// Adds +1 to the current value of the powersAvailable variable
 		powersAvailable++;
-
-		PrintToChatAll("Debug Power - PA %i | C %i", powersAvailable, chosenPower);
 
 		// If the value contained within chosenPower is the same as the value stored in powersAvailable then execute this section
 		if(chosenPower == powersAvailable)
@@ -3791,8 +3814,6 @@ public Action ChooseKingPower(int client)
 		// Adds +1 to the current value of the powersAvailable variable
 		powersAvailable++;
 
-		PrintToChatAll("Debug Power - PA %i | C %i", powersAvailable, chosenPower);
-
 		// If the value contained within chosenPower is the same as the value stored in powersAvailable then execute this section
 		if(chosenPower == powersAvailable)
 		{
@@ -3809,8 +3830,6 @@ public Action ChooseKingPower(int client)
 	{
 		// Adds +1 to the current value of the powersAvailable variable
 		powersAvailable++;
-
-		PrintToChatAll("Debug Power - PA %i | C %i", powersAvailable, chosenPower);
 
 		// If the value contained within chosenPower is the same as the value stored in powersAvailable then execute this section
 		if(chosenPower == powersAvailable)
@@ -3829,8 +3848,6 @@ public Action ChooseKingPower(int client)
 		// Adds +1 to the current value of the powersAvailable variable
 		powersAvailable++;
 
-		PrintToChatAll("Debug Power - PA %i | C %i", powersAvailable, chosenPower);
-
 		// If the value contained within chosenPower is the same as the value stored in powersAvailable then execute this section
 		if(chosenPower == powersAvailable)
 		{
@@ -3847,8 +3864,6 @@ public Action ChooseKingPower(int client)
 	{
 		// Adds +1 to the current value of the powersAvailable variable
 		powersAvailable++;
-
-		PrintToChatAll("Debug Power - PA %i | C %i", powersAvailable, chosenPower);
 
 		// If the value contained within chosenPower is the same as the value stored in powersAvailable then execute this section
 		if(chosenPower == powersAvailable)
@@ -3867,8 +3882,6 @@ public Action ChooseKingPower(int client)
 		// Adds +1 to the current value of the powersAvailable variable
 		powersAvailable++;
 
-		PrintToChatAll("Debug Power - PA %i | C %i", powersAvailable, chosenPower);
-
 		// If the value contained within chosenPower is the same as the value stored in powersAvailable then execute this section
 		if(chosenPower == powersAvailable)
 		{
@@ -3886,8 +3899,6 @@ public Action ChooseKingPower(int client)
 		// Adds +1 to the current value of the powersAvailable variable
 		powersAvailable++;
 
-		PrintToChatAll("Debug Power - PA %i | C %i", powersAvailable, chosenPower);
-
 		// If the value contained within chosenPower is the same as the value stored in powersAvailable then execute this section
 		if(chosenPower == powersAvailable)
 		{
@@ -3904,8 +3915,6 @@ public Action ChooseKingPower(int client)
 	{
 		// Adds +1 to the current value of the powersAvailable variable
 		powersAvailable++;
-
-		PrintToChatAll("Debug Power - PA %i | C %i", powersAvailable, chosenPower);
 
 		// If the value contained within chosenPower is the same as the value stored in powersAvailable then execute this section
 		if(chosenPower == powersAvailable)
@@ -3925,8 +3934,6 @@ public Action ChooseKingPower(int client)
 		// Adds +1 to the current value of the powersAvailable variable
 		powersAvailable++;
 
-		PrintToChatAll("Debug Power - PA %i | C %i", powersAvailable, chosenPower);
-
 		// If the value contained within chosenPower is the same as the value stored in powersAvailable then execute this section
 		if(chosenPower == powersAvailable)
 		{
@@ -3943,8 +3950,6 @@ public Action ChooseKingPower(int client)
 	{
 		// Adds +1 to the current value of the powersAvailable variable
 		powersAvailable++;
-
-		PrintToChatAll("Debug Power - PA %i | C %i", powersAvailable, chosenPower);
 
 		// If the value contained within chosenPower is the same as the value stored in powersAvailable then execute this section
 		if(chosenPower == powersAvailable)
@@ -3963,8 +3968,6 @@ public Action ChooseKingPower(int client)
 		// Adds +1 to the current value of the powersAvailable variable
 		powersAvailable++;
 
-		PrintToChatAll("Debug Power - PA %i | C %i", powersAvailable, chosenPower);
-
 		// If the value contained within chosenPower is the same as the value stored in powersAvailable then execute this section
 		if(chosenPower == powersAvailable)
 		{
@@ -3981,8 +3984,6 @@ public Action ChooseKingPower(int client)
 	{
 		// Adds +1 to the current value of the powersAvailable variable
 		powersAvailable++;
-
-		PrintToChatAll("Debug Power - PA %i | C %i", powersAvailable, chosenPower);
 
 		// If the value contained within chosenPower is the same as the value stored in powersAvailable then execute this section
 		if(chosenPower == powersAvailable)
@@ -4002,8 +4003,6 @@ public Action ChooseKingPower(int client)
 		// Adds +1 to the current value of the powersAvailable variable
 		powersAvailable++;
 
-		PrintToChatAll("Debug Power - PA %i | C %i", powersAvailable, chosenPower);
-
 		// If the value contained within chosenPower is the same as the value stored in powersAvailable then execute this section
 		if(chosenPower == powersAvailable)
 		{
@@ -4021,8 +4020,6 @@ public Action ChooseKingPower(int client)
 	{
 		// Adds +1 to the current value of the powersAvailable variable
 		powersAvailable++;
-
-		PrintToChatAll("Debug Power - PA %i | C %i", powersAvailable, chosenPower);
 
 		// If the value contained within chosenPower is the same as the value stored in powersAvailable then execute this section
 		if(chosenPower == powersAvailable)
@@ -4042,8 +4039,6 @@ public Action ChooseKingPower(int client)
 		// Adds +1 to the current value of the powersAvailable variable
 		powersAvailable++;
 
-		PrintToChatAll("Debug Power - PA %i | C %i", powersAvailable, chosenPower);
-
 		// If the value contained within chosenPower is the same as the value stored in powersAvailable then execute this section
 		if(chosenPower == powersAvailable)
 		{
@@ -4061,8 +4056,6 @@ public Action ChooseKingPower(int client)
 	{
 		// Adds +1 to the current value of the powersAvailable variable
 		powersAvailable++;
-
-		PrintToChatAll("Debug Power - PA %i | C %i", powersAvailable, chosenPower);
 
 		// If the value contained within chosenPower is the same as the value stored in powersAvailable then execute this section
 		if(chosenPower == powersAvailable)
@@ -4082,8 +4075,6 @@ public Action ChooseKingPower(int client)
 		// Adds +1 to the current value of the powersAvailable variable
 		powersAvailable++;
 
-		PrintToChatAll("Debug Power - PA %i | C %i", powersAvailable, chosenPower);
-
 		// If the value contained within chosenPower is the same as the value stored in powersAvailable then execute this section
 		if(chosenPower == powersAvailable)
 		{
@@ -4102,8 +4093,6 @@ public Action ChooseKingPower(int client)
 		// Adds +1 to the current value of the powersAvailable variable
 		powersAvailable++;
 
-		PrintToChatAll("Debug Power - PA %i | C %i", powersAvailable, chosenPower);
-
 		// If the value contained within chosenPower is the same as the value stored in powersAvailable then execute this section
 		if(chosenPower == powersAvailable)
 		{
@@ -4121,8 +4110,6 @@ public Action ChooseKingPower(int client)
 	{
 		// Adds +1 to the current value of the powersAvailable variable
 		powersAvailable++;
-
-		PrintToChatAll("Debug Power - PA %i | C %i", powersAvailable, chosenPower);
 
 		// If the value contained within chosenPower is the same as the value stored in powersAvailable then execute this section
 		if(chosenPower == powersAvailable)
@@ -5062,7 +5049,7 @@ public void OnEntityCreated(int entity, const char[] classname)
 	// If the currently active power is Doom Chickens then execute this section
 	if(powerDoomChickens)
 	{
-		PrintToChatAll("The entity spawned is: %s", classname);
+		PrintToChatAll("Debug: The entity spawned is: %s", classname);
 
 		// If the entity that was created is not a chicken then execute this section
 		if(!StrEqual(classname, "chicken", false))
@@ -5593,7 +5580,8 @@ public Action OnDamageTaken(int client, int &attacker, int &inflictor, float &da
 			SetEntProp(attacker, Prop_Send, "m_iHealth", playerHealth, 1);
 		}
 
-		PrintToChat(attacker, "Kingmod You leeched %i health from your enemy", RoundToFloor(leechedHealth));
+		/* PrintToChat(attacker, "Kingmod You leeched %i health from your enemy", RoundToFloor(leechedHealth)); */
+		CPrintToChat(attacker, "%t", "Chat - Power Vampire Attack", RoundToFloor(leechedHealth));
 	}
 
 	// Creates a variable to store our data within
@@ -5711,14 +5699,12 @@ public Action OnDamageTaken(int client, int &attacker, int &inflictor, float &da
 					// Changes the damage value to 9000.0
 					damage = 9000.0;
 
-					PrintToChat(attacker, "Chuck Norris' punch completely obliterated you by dealing %i", RoundToFloor(damage));
+					/* PrintToChat(attacker, "Chuck Norris' punch completely obliterated you by dealing %i", RoundToFloor(damage)); */
+					CPrintToChat(attacker, "%t", "Chat - Power Chuck Norris Attack", RoundToFloor(damage));
+
 				}
 			}
 		}
-
-		PrintToChat(attacker, "damage %0.2f", damage);
-
-		PrintToChat(attacker, "attacker weapon %s", classname);
 
 		return Plugin_Changed;
 	}
@@ -5771,7 +5757,8 @@ public Action OnDamageTaken(int client, int &attacker, int &inflictor, float &da
 			damage = damage + ((bonusDamage / 100) * damage);
 
 			// Sends a message in the chat area only visible to the specified client
-			PrintToChat(attacker, "KingMod: You rolled 7 (%i + %i) dealing %i%% bonus damage", diceOne, diceTwo, bonusDamage);
+			/* PrintToChat(attacker, "KingMod: You rolled 7 (%i + %i) dealing %i%% bonus damage", diceOne, diceTwo, bonusDamage); */
+			CPrintToChat(attacker, "%t", "Chat - Power Lucky Number Seven Attack One", diceOne, diceTwo, bonusDamage);
 
 			return Plugin_Changed;
 		}
@@ -5780,7 +5767,8 @@ public Action OnDamageTaken(int client, int &attacker, int &inflictor, float &da
 		else
 		{
 			// Sends a message in the chat area only visible to the specified client
-			PrintToChat(attacker, "KingMod: You rolled %i (%i & %i) and dealt normal damage", diceOne + diceTwo, diceOne, diceTwo);
+			/* PrintToChat(attacker, "KingMod: You rolled %i (%i & %i) and dealt normal damage", diceOne + diceTwo, diceOne, diceTwo); */
+			CPrintToChat(attacker, "%t", "Chat - Power Lucky Number Seven Attack Two", diceOne + diceTwo, diceOne, diceTwo);
 		}
 	}
 
@@ -5818,7 +5806,7 @@ public Action OnDamageTaken(int client, int &attacker, int &inflictor, float &da
 			// Changes the damage inflicted upon the victim to 8% of the normal damage
 			damage = (damage * 0.11) + 1.0;
 
-			PrintToChatAll("Sawedoff dealt %0.0f damage", damage);
+			PrintToChatAll("DEBUG: Sawedoff dealt %0.0f damage", damage);
 
 			// Creates a variable to store our data within
 			float vectorLocation[3];
@@ -6144,7 +6132,8 @@ public Action Timer_PowerNapalmCheckHealth(Handle timer)
 			continue;
 		}
 
-		PrintToChat(client, "KingMod: You died from the severe burns!");
+/*		PrintToChat(client, "KingMod: You died from the severe burns!");*/
+		CPrintToChat(client, "%t", "Chat - Power Napalm Victim");
 
 		// Inflicts 50 damage to the client from the king
 		DealDamageToClient(client, kingIndex, 50, "inferno");
@@ -6937,6 +6926,7 @@ public void SelectChuckNorirsJoke()
 		}
 	}
 
+	// TO DO - Translations for this???
 	// Sends a message in the chat to all players online
 	PrintToChatAll("Chuck Norris Fact #%i", randomJoke);
 	PrintToChatAll("- %s", chuckNorrisJoke);

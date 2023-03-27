@@ -122,7 +122,7 @@ bool playerSwappedWeapons[MAXPLAYERS + 1] = {false,...};
 bool powerBabonicPlagueInfected[MAXPLAYERS + 1] = {false,...};
 bool powerHammerTimeBuried[MAXPLAYERS + 1] = {false,...};
 bool LaserPointerTickCoolDown[MAXPLAYERS + 1] = {false,...};
-bool powerDoomChickensExplosive[MAXPLAYERS + 1] = {false,...};
+bool powerDoomChickensExplosive[2049] = {false,...};
 
 
 // Global Integers
@@ -208,7 +208,7 @@ public void OnPluginStart()
 	CreateTimer(1.5, Timer_PowerBabonicPlagueLoop, _, TIMER_REPEAT);
 
 	// Creates a timer that will update the chickens in the level's explosion status, every 1 second when the doom chicken king power is currently active
-	CreateTimer(1.0, Timer_PowerDoomChickensLoop, _, TIMER_REPEAT);
+	CreateTimer(0.25, Timer_PowerDoomChickensLoop, _, TIMER_REPEAT);
 
 	// Creates a timer that will update the team score hud every 1.0 second
 	CreateTimer(1.0, Timer_UpdateTeamScoreHud, _, TIMER_REPEAT);
@@ -8478,8 +8478,8 @@ public Action Timer_PowerDoomChickensLoop(Handle timer)
 			// Obtains th dsitance from the chicken entity's location to the player's location and store it within our distance variable
 			float distance = GetVectorDistance(chickenLocation, playerLocation);
 
-			// If the distance is lower than 225 then execute this section
-			if(distance < 225.0)
+			// If the distance is lower than 130 then execute this section
+			if(distance < 130.0)
 			{
 				// Adds +13 to the chicken's location on the z-axis
 				chickenLocation[2] += 13.0;
@@ -8490,8 +8490,8 @@ public Action Timer_PowerDoomChickensLoop(Handle timer)
 				// Sends the visual effect temp entity to the relevant players
 				ShowVisualEffectToPlayers();
 
-				// Inflicts 500.0 damage to the client as if it was damage dealt from the king
-				DealDamageToClient(client, kingIndex, 500, "weapon_c4");
+				// Inflicts 150.0 to 180 explosion damage to the client as if it was damage dealt from the king 
+				DealDamageToClient(client, kingIndex, GetRandomInt(150, 180), "weapon_c4");
 
 				// Removes the entity from the game
 				AcceptEntityInput(entity, "Kill");

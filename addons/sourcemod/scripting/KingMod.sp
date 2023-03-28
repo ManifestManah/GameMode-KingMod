@@ -35,27 +35,27 @@ bool cvar_EffectTesla = true;
 bool cvar_EffectRing = true;
 bool cvar_KingPowerChooser = true;
 
-bool cvar_PowerImpregnableArmor = false;
-bool cvar_PowerMovementSpeed = false;
-bool cvar_PowerStickyGrenades = false;
-bool cvar_PowerScoutNoScope = false;
-bool cvar_PowerCarpetBombingFlashbangs = false;
-bool cvar_PowerNapalm = false;
-bool cvar_PowerRiot = false;
-bool cvar_PowerVampire = false;
-bool cvar_PowerBreachCharges = false;
-bool cvar_PowerLegCrushingBumpmines = false;
-bool cvar_PowerHatchetMassacre = false;
-bool cvar_PowerChuckNorrisFists = false;
-bool cvar_PowerLaserGun = false;
-bool cvar_PowerLuckyNumberSeven = false;
-bool cvar_PowerWesternShootout = false;
-bool cvar_PowerBabonicPlague = false;
-bool cvar_PowerZombieApocalypse = false;
-bool cvar_PowerBlastCannon = false;
-bool cvar_PowerDeagleHeadshot = false;
-bool cvar_PowerLaserPointer = false;
-bool cvar_PowerHammerTime = false;
+bool cvar_PowerImpregnableArmor = true;
+bool cvar_PowerMovementSpeed = true;
+bool cvar_PowerStickyGrenades = true;
+bool cvar_PowerScoutNoScope = true;
+bool cvar_PowerCarpetBombingFlashbangs = true;
+bool cvar_PowerNapalm = true;
+bool cvar_PowerRiot = true;
+bool cvar_PowerVampire = true;
+bool cvar_PowerBreachCharges = true;
+bool cvar_PowerLegCrushingBumpmines = true;
+bool cvar_PowerHatchetMassacre = true;
+bool cvar_PowerChuckNorrisFists = true;
+bool cvar_PowerLaserGun = true;
+bool cvar_PowerLuckyNumberSeven = true;
+bool cvar_PowerWesternShootout = true;
+bool cvar_PowerBabonicPlague = true;
+bool cvar_PowerZombieApocalypse = true;
+bool cvar_PowerBlastCannon = true;
+bool cvar_PowerDeagleHeadshot = true;
+bool cvar_PowerLaserPointer = true;
+bool cvar_PowerHammerTime = true;
 bool cvar_PowerDoomChickens = true;
 
 int cvar_PointsNormalKill = 1;
@@ -170,6 +170,9 @@ char PlayerClanTag[MAXPLAYERS + 1][14];
 // This happens when the plugin is loaded
 public void OnPluginStart()
 {
+	// Loads the translaltion file which we intend to use
+	LoadTranslations("manifest_kingmod.phrases");
+
 	// Finds the sv_cheats convar and store it within our conVarCheats value
 	ConVar conVarCheats = FindConVar("sv_cheats");
 
@@ -227,20 +230,30 @@ public void OnPluginStart()
 
 	// Allows the modification to be loaded while the server is running, without causing gameplay issues
 	LateLoadSupport();
-
-	// Loads the translaltion file which we intend to use
-// TO DO	LoadTranslations("manifest_kingmod.phrases");
 }
 
 
 // This happens when the plugin is unloaded
 public void OnPluginEnd()
 {
-/*	PrintToChatAll("King Mod has been unloaded.");
-	PrintToChatAll("A new round will soon commence.");	*/
+	// Loops through all of the clients
+	for (int client = 1; client <= MaxClients; client++)
+	{
+		// If the client does not meet our validation criteria then execute this section
+		if(!IsValidClient(client))
+		{
+			continue;
+		}
 
-	CPrintToChatAll("%t", "Chat - Mod Unloaded");
-	CPrintToChatAll("%t", "Chat - Round Commencing Soon");
+		// If the client is a bot then execute this section
+		if(IsFakeClient(client))
+		{
+			continue;
+		}
+
+		CPrintToChat(client, "%t", "Chat - Mod Unloaded");
+		CPrintToChat(client, "%t", "Chat - Round Commencing Soon");
+	}
 
 	// Changes the skybox back to the skybox that was saved prior to altering it to the zombie apocalypse skybox
 	PowerZombieApocalypseResetSkybox();
@@ -354,8 +367,23 @@ public void OnClientDisconnect(int client)
 	// Changes the kingName variable's value to just be None
 	kingName = "None";
 
-/*	PrintToChatAll("Debug: The king has disconnected from the game"); */
-	CPrintToChatAll("%t", "Chat - King Disconncted");
+	// Loops through all of the clients
+	for (int i = 1; i <= MaxClients; i++)
+	{
+		// If the client does not meet our validation criteria then execute this section
+		if(!IsValidClient(i))
+		{
+			continue;
+		}
+
+		// If the client is a bot then execute this section
+		if(IsFakeClient(i))
+		{
+			continue;
+		}
+
+		CPrintToChat(i, "%t", "Chat - King Disconncted");
+	}
 
 	return;
 }
@@ -588,13 +616,11 @@ public Action OnPlayerRunCmd(int client, int &buttons, int &impulse, float unuse
 			// Changes the isPlayerControllingBot to true
 			isPlayerControllingBot[client] = true;
 
-			/* PrintToChat(client, "You took over a bot"); */
 			CPrintToChat(client, "%t", "Chat - Bot Overtaken");
 
 			return Plugin_Continue;
 		}
 
-		/* PrintToChat(client, "You cannot take over the bot if it is the current king"); */
 		CPrintToChat(client, "%t", "Chat - Bot Takeover Impossible");
 
 		return Plugin_Handled;
@@ -874,7 +900,6 @@ public Action OnWeaponCanSwitchTo(int client, int weapon)
 		// Changes the player's cooldownWeaponSwapMessage state to true
 		cooldownWeaponSwapMessage[client] = true;
 
-		/* PrintToChat(client, "KingMod You cannot change weapon once you have begun the injection procss"); */
 		CPrintToChat(client, "%t", "Chat - Injection In Progress");
 
 		// Removes the cooldown for announcing messages regarding the blocking of weapons
@@ -1087,7 +1112,6 @@ public Action Event_PlayerDeath(Handle event, const char[] name, bool dontBroadc
 		// Strips the player of the clantag which indicates that the player is the current king 
 		RemoveClanTag(client);
 
-		/* PrintToChat(client, "Debug: You lost your kingship because you committed suicide"); */
 		CPrintToChat(client, "%t", "Chat - Kingship Lost Suicide");
 
 		// Changes the indicator of which team the King is currently on be none
@@ -1117,13 +1141,11 @@ public Action Event_PlayerDeath(Handle event, const char[] name, bool dontBroadc
 			// Changes the killed player's king status to false
 			isPlayerKing[client] = false;
 			
-			/* PrintToChat(client, "Debug: You lost your kingship as you were killed"); */
 			CPrintToChat(client, "%t", "Chat - Kingship Lost Killed");
 
 			// Changes the attacking player's king status to true
 			isPlayerKing[attacker] = true;
 
-			/* PrintToChat(attacker, "Debug: You stole the king title from the enemy that died"); */
 			CPrintToChat(attacker, "%t", "Chat - Kingship Acquired Stolen");
 
 			// Removes any currently present king crowns from the game
@@ -1237,7 +1259,6 @@ public Action Event_PlayerDeath(Handle event, const char[] name, bool dontBroadc
 	// Changes the attacking player's king status to true
 	isPlayerKing[attacker] = true;
 
-	/* PrintToChat(attacker, "Debug: You became the new king"); */
 	CPrintToChat(attacker, "%t", "Chat - Kingship Acquired Free");
 
 	// Removes any currently present king crowns from the game
@@ -1349,8 +1370,23 @@ public Action Event_RoundStart(Handle event, const char[] name, bool dontBroadca
 	// Resets the counter-terrorists' team score back to 0
 	pointCounterCT = 0;
 
-	/* PrintToChatAll("Debug: A new round has started, kill an enemy to become the first King"); */
-	CPrintToChatAll("%t", "Chat - King None New Round");
+	// Loops through all of the clients
+	for (int client = 1; client <= MaxClients; client++)
+	{
+		// If the client does not meet our validation criteria then execute this section
+		if(!IsValidClient(client))
+		{
+			continue;
+		}
+
+		// If the client is a bot then execute this section
+		if(IsFakeClient(client))
+		{
+			continue;
+		}
+
+		CPrintToChat(client, "%t", "Chat - King None New Round");
+	}
 
 	// Creates a variable with the value of the terrorist and counter-terrorist teams' current score added together
 	int initialRound = GetTeamScore(2) + GetTeamScore(3);
@@ -1410,8 +1446,6 @@ public Action Event_RoundEnd(Handle event, const char[] name, bool dontBroadcast
 		if(pointCounterT > pointCounterCT)
 		{
 			// Sends a colored multi-language message to everyone in the chat area
-			// CPrintToChat(client, "%t", "Terrorists Won", pointCounterT, pointCounterCT);
-			/* PrintToChat(client, "T Won - T: %i CT: %i", pointCounterT, pointCounterCT); */
 			CPrintToChat(client, "%t", "Chat - Round End T Won", pointCounterT, pointCounterCT);
 		}
 
@@ -1419,8 +1453,6 @@ public Action Event_RoundEnd(Handle event, const char[] name, bool dontBroadcast
 		else if(pointCounterT < pointCounterCT)
 		{
 			// Sends a colored multi-language message to everyone in the chat area
-			// CPrintToChat(client, "%t", "Counter-Terrorists Won", pointCounterT, pointCounterCT);
-			/* PrintToChat(client, "CT Won - T: %i CT: %i", pointCounterT, pointCounterCT); */
 			CPrintToChat(client, "%t", "Chat - Round End CT Won", pointCounterT, pointCounterCT);
 		}
 
@@ -1428,8 +1460,6 @@ public Action Event_RoundEnd(Handle event, const char[] name, bool dontBroadcast
 		else
 		{
 			// Sends a colored multi-language message to everyone in the chat area
-			// CPrintToChat(client, "%t", "Round Draw", pointCounterT, pointCounterCT);
-			/* PrintToChat(client, "Round Draw - T: %i CT: %i", pointCounterT, pointCounterCT); */
 			CPrintToChat(client, "%t", "Chat - Round End Draw", pointCounterT, pointCounterCT);
 		}
 	}
@@ -1613,10 +1643,24 @@ public void LateLoadSupport()
 	// Changes the kingName variable's value to just be None
 	kingName = "None";
 
-/*	PrintToChatAll("King Mod has been loaded. ");
-	PrintToChatAll("A new round will soon commence."); */
-	CPrintToChatAll("%t", "Chat - Mod loaded");
-	CPrintToChatAll("%t", "Chat - Round Commencing Soon");
+	// Loops through all of the clients
+	for (int client = 1; client <= MaxClients; client++)
+	{
+		// If the client does not meet our validation criteria then execute this section
+		if(!IsValidClient(client))
+		{
+			continue;
+		}
+
+		// If the client is a bot then execute this section
+		if(IsFakeClient(client))
+		{
+			continue;
+		}
+
+		CPrintToChat(client, "%t", "Chat - Mod Loaded");
+		CPrintToChat(client, "%t", "Chat - Round Commencing Soon");
+	}
 
 	// Calls upon the Timer_TerminateRound function after 3.0 seconds
 	CreateTimer(3.0, Timer_TerminateRound, _, TIMER_FLAG_NO_MAPCHANGE);
@@ -1680,8 +1724,23 @@ public void RestartGameConvarChanged(Handle cvar, const char[] oldVal, const cha
 		// Changes the value of our mp_restartgame back to 0
 		restartGame.IntValue = 0;
 
-/*		PrintToChatAll("King Mod: Please try not to use mp_restartgame, change the map instead."); */
-		CPrintToChatAll("%t", "Chat - Restart Game Disabled");
+		// Loops through all of the clients
+		for (int client = 1; client <= MaxClients; client++)
+		{
+			// If the client does not meet our validation criteria then execute this section
+			if(!IsValidClient(client))
+			{
+				continue;
+			}
+
+			// If the client is a bot then execute this section
+			if(IsFakeClient(client))
+			{
+				continue;
+			}
+
+			CPrintToChat(client, "%t", "Chat - Restart Game Disabled");
+		}
 	}
 }
 
@@ -2484,8 +2543,6 @@ public Action KingRecovery(int client)
 	isRecoveryOnCooldown[client] = true;
 
 	// Sends a colored multi-language message in the chat area
-	// CPrintToChat(client, "%t", "Recovery Starts");
-	/* PrintToChat(client, "King Recovery Started"); */
 	CPrintToChat(client, "%t", "Chat - King Recovery Started");
 
 	// If the sound is not already precached then execute this section
@@ -3016,8 +3073,6 @@ public Action Timer_CleanFloor(Handle timer)
 			return Plugin_Continue;
 		}
 
-//		PrintToChatAll("Debug removed weapon %s", className);
-
 		// Removes the entity from the map 
 		AcceptEntityInput(entity, "Kill");
 	}
@@ -3238,8 +3293,6 @@ public Action Timer_InjectHealthshot(Handle Timer, int client)
 	// Obtains the player's current health and store it within the playerHealth variable
 	int playerHealth = playerHealthPreInjection[client];
 
-//	PrintToChat(client, "Debug playerHealth initial HP: %i", playerHealth);
-
 	// Adds the value of recoveredHealth to the value stored within our playerHealth variable
 	playerHealth += recoveredHealth;
 
@@ -3282,14 +3335,11 @@ public Action Timer_InjectHealthshot(Handle Timer, int client)
 		{
 			// Changes the player's health to the value of playerHealth
 			SetEntProp(client, Prop_Send, "m_iHealth", playerHealth, 1);
-
-//			PrintToChat(client, "playerHealth HP: %i", playerHealth);
 		}
 	}
 
 	// Sends a multi-language message in the chat to the client
-	/* PrintToChat(client, "The healthshot recovered %i of your health", recoveredHealth); */
-	CPrintToChat(client, "%t", "Chat - King Recovery Started");
+	CPrintToChat(client, "%t", "Chat - Injection Recovery", recoveredHealth);
 
 	// Changes the player's cooldownWeaponSwapMessage state to false
 	cooldownWeaponSwapMessage[client] = false;
@@ -3612,9 +3662,7 @@ public Action Timer_RecoverHealth(Handle Timer, int client)
 		SetEntityRenderColor(client, 255, 255, 255, 255);
 
 		// Sends a colored multi-language message in the chat area
-		// CPrintToChat(client, "%t", "Regeneration Protocol Completed");
-		/* PrintToChat(client, "King Recovery Has Ended"); */
-		CPrintToChat(client, "%t", "Chat - King Recovery Has Ended");
+		CPrintToChat(client, "%t", "Chat - King Recovery Ended");
 
 		// If the sound is not already precached then execute this section
 		if(!IsSoundPrecached("kingmod/recovery_complete.mp3"))
@@ -3625,7 +3673,6 @@ public Action Timer_RecoverHealth(Handle Timer, int client)
 
 		// Emits a sound to the specified client that only they can hear
 		EmitSoundToClient(client, "kingmod/recovery_complete.mp3", SOUND_FROM_PLAYER, SNDCHAN_AUTO, SNDLEVEL_NORMAL, SND_NOFLAGS, 1.00, SNDPITCH_NORMAL, -1, NULL_VECTOR, NULL_VECTOR, true, 0.0);
-
 	}
 
 	return Plugin_Continue;
@@ -3752,7 +3799,7 @@ public Action ChooseKingPower(int client)
 			// Gives the client a heavy assault suit, a random armor value and applies a screen overlay
 			PowerImpregnableArmor(client);
 
-			// 
+			// TODO TO DO TO DO: NOTE
 			PrintToChatAll("Power impregnable Armor - [ %i | %i ]", chosenPower, powersAvailable);
 		}
 	}
@@ -5049,8 +5096,6 @@ public void OnEntityCreated(int entity, const char[] classname)
 	// If the currently active power is Doom Chickens then execute this section
 	if(powerDoomChickens)
 	{
-		PrintToChatAll("Debug: The entity spawned is: %s", classname);
-
 		// If the entity that was created is not a chicken then execute this section
 		if(!StrEqual(classname, "chicken", false))
 		{
@@ -5580,7 +5625,6 @@ public Action OnDamageTaken(int client, int &attacker, int &inflictor, float &da
 			SetEntProp(attacker, Prop_Send, "m_iHealth", playerHealth, 1);
 		}
 
-		/* PrintToChat(attacker, "Kingmod You leeched %i health from your enemy", RoundToFloor(leechedHealth)); */
 		CPrintToChat(attacker, "%t", "Chat - Power Vampire Attack", RoundToFloor(leechedHealth));
 	}
 
@@ -5699,7 +5743,6 @@ public Action OnDamageTaken(int client, int &attacker, int &inflictor, float &da
 					// Changes the damage value to 9000.0
 					damage = 9000.0;
 
-					/* PrintToChat(attacker, "Chuck Norris' punch completely obliterated you by dealing %i", RoundToFloor(damage)); */
 					CPrintToChat(attacker, "%t", "Chat - Power Chuck Norris Attack", RoundToFloor(damage));
 
 				}
@@ -5757,7 +5800,6 @@ public Action OnDamageTaken(int client, int &attacker, int &inflictor, float &da
 			damage = damage + ((bonusDamage / 100) * damage);
 
 			// Sends a message in the chat area only visible to the specified client
-			/* PrintToChat(attacker, "KingMod: You rolled 7 (%i + %i) dealing %i%% bonus damage", diceOne, diceTwo, bonusDamage); */
 			CPrintToChat(attacker, "%t", "Chat - Power Lucky Number Seven Attack One", diceOne, diceTwo, bonusDamage);
 
 			return Plugin_Changed;
@@ -5767,7 +5809,6 @@ public Action OnDamageTaken(int client, int &attacker, int &inflictor, float &da
 		else
 		{
 			// Sends a message in the chat area only visible to the specified client
-			/* PrintToChat(attacker, "KingMod: You rolled %i (%i & %i) and dealt normal damage", diceOne + diceTwo, diceOne, diceTwo); */
 			CPrintToChat(attacker, "%t", "Chat - Power Lucky Number Seven Attack Two", diceOne + diceTwo, diceOne, diceTwo);
 		}
 	}
@@ -5805,8 +5846,6 @@ public Action OnDamageTaken(int client, int &attacker, int &inflictor, float &da
 		{
 			// Changes the damage inflicted upon the victim to 8% of the normal damage
 			damage = (damage * 0.11) + 1.0;
-
-			PrintToChatAll("DEBUG: Sawedoff dealt %0.0f damage", damage);
 
 			// Creates a variable to store our data within
 			float vectorLocation[3];
@@ -6132,7 +6171,6 @@ public Action Timer_PowerNapalmCheckHealth(Handle timer)
 			continue;
 		}
 
-/*		PrintToChat(client, "KingMod: You died from the severe burns!");*/
 		CPrintToChat(client, "%t", "Chat - Power Napalm Victim");
 
 		// Inflicts 50 damage to the client from the king
@@ -6689,247 +6727,33 @@ public void PowerChuckNorrisFists(int client)
 // This happens when a king acquires the chuck norris fists power
 public void SelectChuckNorirsJoke()
 {
-	// Picks a random number and store it within the randomJoke variable
-	int randomJoke = GetRandomInt(1, 46);
-
 	// Creates a variable which we will store our data within
 	char chuckNorrisJoke[256];
 
-	// Creates a switch statement to manage outcomes depnding on the value of our randomVariable
-	switch(randomJoke)
+	// Picks a random number and store it within the randomJoke variable
+	int randomJoke = GetRandomInt(1, 46);
+
+	// Combines the translation string name and the joke's number and store it within chuckNorrisJoke variable
+	FormatEx(chuckNorrisJoke, sizeof(chuckNorrisJoke), "Chat - Chuck Norris Joke %i", randomJoke);
+
+	// Loops through all of the clients
+	for (int client = 1; client <= MaxClients; client++)
 	{
-		// If the value of the randomJoke variable is 1 then execute this section
-		case 1:
+		// If the client does not meet our validation criteria then execute this section
+		if(!IsValidClient(client))
 		{
-			// Changes the contents of the chuckNorrisJoke variable
-			chuckNorrisJoke = "Chuck Norris can strangle you with a cordless phone.";
+			continue;
 		}
 
-		case 2:
+		// If the client is a bot then execute this section
+		if(IsFakeClient(client))
 		{
-			chuckNorrisJoke = "Death once had a near-Chuck-Norris experience.";
-		}
-		
-		case 3:
-		{
-			chuckNorrisJoke = "When Chuck Norris writes, he makes paper bleed.";
+			continue;
 		}
 
-		case 4:
-		{
-			chuckNorrisJoke = "Chuck Norris makes onions cry.";
-		}
-
-		case 5:
-		{
-			chuckNorrisJoke = "Chuck Norris can kill two stones with one bird.";
-		}
-
-		case 6:
-		{
-			chuckNorrisJoke = "The dark is afraid of Chuck Norris.";
-		}
-
-		case 7:
-		{
-			chuckNorrisJoke = "Chuck Norris does not hunt because the word hunting implies the possibility of failure. Chuck Norris goes killing.";
-		}
-
-		case 8:
-		{
-			chuckNorrisJoke = "Chuck Norris once won a game of Connect Four in three moves.";
-		}
-
-		case 9:
-		{
-			chuckNorrisJoke = "A cobra once bit Chuck Norris' leg. After five days of excruciating pain, the cobra died.";
-		}
-
-		case 10:
-		{
-			chuckNorrisJoke = "Chuck Norris stands faster than anyone can run.";
-		}
-
-		case 11:
-		{
-			chuckNorrisJoke = "Chuck Norris counted to infinity... Twice.";
-		}
-
-		case 12:
-		{
-			chuckNorrisJoke = "If you want a list of Chuck Norris' enemies, just check the extinct species list.";
-		}
-		
-		case 13:
-		{
-			chuckNorrisJoke = "On the 7th day, God rested ... Chuck Norris took over.";
-		}
-
-		case 14:
-		{
-			chuckNorrisJoke = "The chief export of Chuck Norris is pain.";
-		}
-
-		case 15:
-		{
-			chuckNorrisJoke = "Chuck Norris does not sleep. He waits.";
-		}
-
-		case 16:
-		{
-			chuckNorrisJoke = "Chuck Norris does not own a stove, oven, or microwave, because revenge is a dish best served cold.";
-		}
-
-		case 17:
-		{
-			chuckNorrisJoke = "Since 1940, the year Chuck Norris was born, roundhouse kick related deaths have increased 13,000 percent.";
-		}
-
-		case 18:
-		{
-			chuckNorrisJoke = "Chuck Norris' tears cure cancer. Too bad he has never cried.";
-		}
-		
-		case 19:
-		{
-			chuckNorrisJoke = "The dinosaurs looked at Chuck Norris the wrong way once. You know what happened to them.";
-		}
-
-		case 20:
-		{
-			chuckNorrisJoke = "In the Beginning there was nothing ... then Chuck Norris roundhouse kicked nothing and told it to get a job.";
-		}
-
-		case 21:
-		{
-			chuckNorrisJoke = "Chuck Norris breathes air ... Three times a day.";
-		}
-
-		case 22:
-		{
-			chuckNorrisJoke = "Time waits for no man. Unless that man is Chuck Norris.";
-		}
-		
-		case 23:
-		{
-			chuckNorrisJoke = "Chuck Norris doesn't read books. He stares them down until he gets the information he wants.";
-		}
-
-		case 24:
-		{
-			chuckNorrisJoke = "Chuck Norris once punched a man in the soul.";
-		}
-
-		case 25:
-		{
-			chuckNorrisJoke = "Chuck Norris once had a heart attack. His heart lost.";
-		}
-
-		case 26:
-		{
-			chuckNorrisJoke = "The only time Chuck Norris was ever wrong was when he thought he had made a mistake.";
-		}
-
-		case 27:
-		{
-			chuckNorrisJoke = "The quickest way to a man's heart is with Chuck Norris's fist.";
-		}
-
-		case 28:
-		{
-			chuckNorrisJoke = "Chuck Norris used to beat up his shadow because it was following to close. It now stands 15 feet behind him.";
-		}
-		
-		case 29:
-		{
-			chuckNorrisJoke = "Outer space exists because it's too afraid to be on the same planet with Chuck Norris.";
-		}
-
-		case 30:
-		{
-			chuckNorrisJoke = "When Chuck Norris does a pushup, he's pushing the Earth down.";
-		}
-
-		case 31:
-		{
-			chuckNorrisJoke = "Chuck Norris is the reason why Waldo is hiding.";
-		}
-
-		case 32:
-		{
-			chuckNorrisJoke = "The Great Wall of China was originally created to keep Chuck Norris out. It didn’t work.";
-		}
-		
-		case 33:
-		{
-			chuckNorrisJoke = "Chuck Norris is the only man to ever defeat a brick wall in a game of tennis.";
-		}
-
-		case 34:
-		{
-			chuckNorrisJoke = "Chuck Norris once ordered a steak in a restaurant. The steak did what it was told.";
-		}
-
-		case 35:
-		{
-			chuckNorrisJoke = "Chuck Norris can cook minute rice in 30 seconds.";
-		}
-
-		case 36:
-		{
-			chuckNorrisJoke = "Chuck Norris once beat the sun in a staring contest.";
-		}
-
-		case 37:
-		{
-			chuckNorrisJoke = "Chuck Norris doesn't breathe, he holds air hostage.";
-		}
-
-		case 38:
-		{
-			chuckNorrisJoke = "Before he forgot a gift for Chuck Norris, Santa Claus was real.";
-		}
-		
-		case 39:
-		{
-			chuckNorrisJoke = "Chuck Norris can start a fire with an ice cube.";
-		}
-
-		case 40:
-		{
-			chuckNorrisJoke = "When Chuck Norris stares into the abyss, the abyss nervously looks away.";
-		}
-
-		case 41:
-		{
-			chuckNorrisJoke = "COVID-19 is desperate to develop a vaccine against Chuck Norris.";
-		}
-		
-		case 43:
-		{
-			chuckNorrisJoke = "When Chuck Norris steps on a piece of lego, the lego cries.";
-		}
-
-		case 44:
-		{
-			chuckNorrisJoke = "The Dead Sea was alive before Chuck Norris swam there.";
-		}
-
-		case 45:
-		{
-			chuckNorrisJoke = "The Swiss Army uses Chuck Norris Knives.";
-		}
-
-		case 46:
-		{
-			chuckNorrisJoke = "Chuck Norris knows Victoria’s secret.";
-		}
+		CPrintToChat(client, "%t", "Chat - Chuck Norris Fact", randomJoke);
+		CPrintToChat(client, "%t", chuckNorrisJoke);
 	}
-
-	// TO DO - Translations for this???
-	// Sends a message in the chat to all players online
-	PrintToChatAll("Chuck Norris Fact #%i", randomJoke);
-	PrintToChatAll("- %s", chuckNorrisJoke);
 }
 
 
@@ -8461,7 +8285,7 @@ public Action Timer_PowerDoomChickensLoop(Handle timer)
 			}
 
 			// If the client is not on the King team then execute this section
-			if(GetClientTeam(client) != kingIsOnTeam)
+			if(GetClientTeam(client) == kingIsOnTeam)
 			{
 				continue;
 			}

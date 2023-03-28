@@ -1,0 +1,381 @@
+"Phrases"
+{
+	// Create a custom function for all places that uses CPrintToChatALL
+	// as it will not necessarily send everybody the correct translation
+	// phrase, but may cause mixups of languages
+
+	"Chat - Mod Loaded"
+	{
+		"en"			"{green}[King Mod]:{default} The modification has been{lightgreen} loaded{default}."
+	}
+
+	"Chat - Mod Unloaded"
+	{
+		"en"			"{green}[King Mod]:{default} The modification has been{lightgreen} unloaded{default}."
+	}
+
+	"Chat - Round Commencing Soon"
+	{
+		"en"			"{green}[King Mod]:{default} A{lightgreen} new round{default} will soon commence."
+	}
+
+	"Chat - Restart Game Disabled"
+	{
+		"en"			"{green}[King Mod]:{default} Please try not to use{lightgreen} mp_restartgame{default}, change the map instead."
+	}
+
+	"Chat - Round End T Won"
+	{
+		"#format" 		"{1:i},{2:i}"
+		"en"			"{green}[King Mod]:{default} The{lightgreen} terrorists won{default} with a score of {lightgreen}{1} (T){default} - {lightgreen}{2} (CT){default} points."
+	}
+
+	"Chat - Round End CT Won"
+	{
+		"#format" 		"{1:i},{2:i}"
+		"en"			"{green}[King Mod]:{default} The{lightgreen} cpunter-terrorists won{default} with a score of {lightgreen}{2} (CT){default} - {lightgreen}{1} (T){default} points."
+	}
+
+	"Chat - Round End Draw"
+	{
+		"#format" 		"{1:i},{2:i}"
+		"en"			"{green}[King Mod]:{default} The round ended in{lightgreen} a draw{default} with a score of {lightgreen}{1} (T){default} - {lightgreen}{2} (CT){default} points."
+	}
+
+	"Chat - Bot Overtaken"
+	{
+		"en"			"{green}[King Mod]:{default} You took over{lightgreen} a bot{default}."
+	}
+
+	"Chat - Bot Takeover Impossible"
+	{
+		"en"			"{green}[King Mod]:{default} You cannot take over the bot, if it is the{lightgreen} current king{default}."
+	}
+
+	"Chat - Injection In Progress"
+	{
+		"en"			"{green}[King Mod]:{default} You cannot change weapons while using{lightgreen} health injections{default}."
+	}
+	"Chat - Injection Recovery"
+	{
+		"#format" 		"{1:i}"
+		"en"			"{green}[King Mod]:{default} The health injection provided you with{lightgreen} {1} health{default}."
+	}
+
+	"Chat - King Disconncted"
+	{
+		"en"			"{green}[King Mod]:{default} The king has{lightgreen} disconnected{default} from the game."
+	}
+
+	"Chat - Kingship Lost Suicide"
+	{
+		"en"			"{green}[King Mod]:{default} You{lightgreen} committed suicide{default} and lost your title as king."
+	}
+
+	"Chat - Kingship Lost Killed"
+	{
+		"en"			"{green}[King Mod]:{default} You{lightgreen} were killed{default} and lost your title as King."
+	}
+
+	"Chat - Kingship Acquired Stolen"
+	{
+		"en"			"{green}[King Mod]:{default} You{lightgreen} killed the king{default} and acquired the title as the new King."
+	}
+
+	"Chat - Kingship Acquired Free"
+	{
+		"en"			"{green}[King Mod]:{default} You have become{lightgreen} King{default}."
+	}
+
+	"Chat - King None New Round"
+	{
+		"en"			"{green}[King Mod]:{default} Kill an enemy to become the round's{lightgreen} First King{default}."
+	}
+
+	"Chat - King Recovery Started"
+	{
+		"en"			"{green}[King Mod]:{default} Your wounds begun to{lightgreen} rapidly regenerate{default}."
+	}
+
+	"Chat - King Recovery Ended"
+	{
+		"en"			"{green}[King Mod]:{default} Your wounds are no longer{lightgreen} rapidly regenerating{default}."
+	}
+
+
+	////////////////////////////////
+	// - Power Specific Phrases - // 
+	////////////////////////////////
+
+	"Chat - Power Vampire Attack"
+	{
+		"#format" 		"{1:i}"
+		"en"			"{green}[King Mod]:{default} You leeched{lightgreen} {1} health{default} from your enemy."
+	}
+
+	"Chat - Power Chuck Norris Attack"
+	{
+		"#format" 		"{1:i}"
+		"en"			"{green}[King Mod]:{default} Chuck Norris' punch dealt{lightgreen} {1} damage{default} completely obliterating you."
+	}
+
+	"Chat - Power Lucky Number Seven Attack One"
+	{
+		"#format" 		"{1:i},{2:i},{3:i}"
+		"en"			"{green}[King Mod]:{default} You rolled 7{lightgreen} {1} + {2}{default} dealing{lightgreen} {3}%%{default} bonus damage."
+	}
+
+	"Chat - Power Lucky Number Seven Attack Two"
+	{
+		"#format" 		"{1:i},{2:i},{3:i}"
+		"en"			"{green}[King Mod]:{default} You rolled {1}{lightgreen} {2} + {3}{default} dealing normal damage."
+	}
+
+	"Chat - Power Napalm Victim"
+	{
+		"en"			"{green}[King Mod]:{default} You died from your{lightgreen} severe burns{default}."
+	}
+
+
+
+	///////////////////////////////////
+	// - Chuck Norris Fact Phrases - // 
+	///////////////////////////////////
+
+	"Chat - Power Chuck Norris Attack"
+	{
+		"#format" 		"{1:i}"
+		"en"			"{green}[King Mod]:{default} Chuck Norris' punch dealt{lightgreen} {1} damage{default} completely obliterating you."
+	}
+
+	"Chat - Chuck Norris Fact"
+	{
+		"#format" 		"{1:i}"
+		"en"			"{green}[King Mod]:{default} Chuck Norris Fact #{1}"
+	}
+
+	"Chat - Chuck Norris Joke 1"
+	{
+		"en"			"{green}[King Mod]:{default} Chuck Norris can strangle you with a cordless phone."
+	}
+
+	"Chat - Chuck Norris Joke 2"
+	{
+		"en"			"{green}[King Mod]:{default} Death once had a near-Chuck-Norris experience."
+	}
+	
+	"Chat - Chuck Norris Joke 3"
+	{
+		"en"			"{green}[King Mod]:{default} When Chuck Norris writes, he makes paper bleed."
+	}
+
+	"Chat - Chuck Norris Joke 4"
+	{
+		"en"			"{green}[King Mod]:{default} Chuck Norris makes onions cry."
+	}
+
+	"Chat - Chuck Norris Joke 5"
+	{
+		"en"			"{green}[King Mod]:{default} Chuck Norris can kill two stones with one bird."
+	}
+
+	"Chat - Chuck Norris Joke 6"
+	{
+		"en"			"{green}[King Mod]:{default} The dark is afraid of Chuck Norris."
+	}
+
+	"Chat - Chuck Norris Joke 7"
+	{
+		"en"			"{green}[King Mod]:{default} Chuck Norris does not hunt because the word hunting implies the possibility of failure. Chuck Norris goes killing."
+	}
+
+	"Chat - Chuck Norris Joke 8"
+	{
+		"en"			"{green}[King Mod]:{default} Chuck Norris once won a game of Connect Four in three moves."
+	}
+
+	"Chat - Chuck Norris Joke 9"
+	{
+		"en"			"{green}[King Mod]:{default} A cobra once bit Chuck Norris' leg. After five days of excruciating pain, the cobra died."
+	}
+
+	"Chat - Chuck Norris Joke 10"
+	{
+		"en"			"{green}[King Mod]:{default} Chuck Norris stands faster than anyone can run."
+	}
+
+	"Chat - Chuck Norris Joke 11"
+	{
+		"en"			"{green}[King Mod]:{default} Chuck Norris counted to infinity... Twice."
+	}
+
+	"Chat - Chuck Norris Joke 12"
+	{
+		"en"			"{green}[King Mod]:{default} If you want a list of Chuck Norris' enemies, just check the extinct species list."
+	}
+	
+	"Chat - Chuck Norris Joke 13"
+	{
+		"en"			"{green}[King Mod]:{default} On the 7th day, God rested ... Chuck Norris took over."
+	}
+
+	"Chat - Chuck Norris Joke 14"
+	{
+		"en"			"{green}[King Mod]:{default} The chief export of Chuck Norris is pain."
+	}
+
+	"Chat - Chuck Norris Joke 15"
+	{
+		"en"			"{green}[King Mod]:{default} Chuck Norris does not sleep. He waits."
+	}
+
+	"Chat - Chuck Norris Joke 16"
+	{
+		"en"			"{green}[King Mod]:{default} Chuck Norris does not own a stove, oven, or microwave, because revenge is a dish best served cold."
+	}
+
+	"Chat - Chuck Norris Joke 17"
+	{
+		"en"			"{green}[King Mod]:{default} Since 1940, the year Chuck Norris was born, roundhouse kick related deaths have increased 13,000 percent."
+	}
+
+	"Chat - Chuck Norris Joke 18"
+	{
+		"en"			"{green}[King Mod]:{default} Chuck Norris' tears cure cancer. Too bad he has never cried."
+	}
+	
+	"Chat - Chuck Norris Joke 19"
+	{
+		"en"			"{green}[King Mod]:{default} The dinosaurs looked at Chuck Norris the wrong way once. You know what happened to them."
+	}
+
+	"Chat - Chuck Norris Joke 20"
+	{
+		"en"			"{green}[King Mod]:{default} In the Beginning there was nothing ... then Chuck Norris roundhouse kicked nothing and told it to get a job."
+	}
+
+	"Chat - Chuck Norris Joke 21"
+	{
+		"en"			"{green}[King Mod]:{default} Chuck Norris breathes air ... Three times a day."
+	}
+
+	"Chat - Chuck Norris Joke 22"
+	{
+		"en"			"{green}[King Mod]:{default} Time waits for no man. Unless that man is Chuck Norris."
+	}
+	
+	"Chat - Chuck Norris Joke 23"
+	{
+		"en"			"{green}[King Mod]:{default} Chuck Norris doesn't read books. He stares them down until he gets the information he wants."
+	}
+
+	"Chat - Chuck Norris Joke 24"
+	{
+		"en"			"{green}[King Mod]:{default} Chuck Norris once punched a man in the soul."
+	}
+
+	"Chat - Chuck Norris Joke 25"
+	{
+		"en"			"{green}[King Mod]:{default} Chuck Norris once had a heart attack. His heart lost."
+	}
+
+	"Chat - Chuck Norris Joke 26"
+	{
+		"en"			"{green}[King Mod]:{default} The only time Chuck Norris was ever wrong was when he thought he had made a mistake."
+	}
+
+	"Chat - Chuck Norris Joke 27"
+	{
+		"en"			"{green}[King Mod]:{default} The quickest way to a man's heart is with Chuck Norris's fist."
+	}
+
+	"Chat - Chuck Norris Joke 28"
+	{
+		"en"			"{green}[King Mod]:{default} Chuck Norris used to beat up his shadow because it was following to close. It now stands 15 feet behind him."
+	}
+	
+	"Chat - Chuck Norris Joke 29"
+	{
+		"en"			"{green}[King Mod]:{default} Outer space exists because it's too afraid to be on the same planet with Chuck Norris."
+	}
+
+	"Chat - Chuck Norris Joke 30"
+	{
+		"en"			"{green}[King Mod]:{default} When Chuck Norris does a pushup, he's pushing the Earth down."
+	}
+
+	"Chat - Chuck Norris Joke 31"
+	{
+		"en"			"{green}[King Mod]:{default} Chuck Norris is the reason why Waldo is hiding."
+	}
+
+	"Chat - Chuck Norris Joke 32"
+	{
+		"en"			"{green}[King Mod]:{default} The Great Wall of China was originally created to keep Chuck Norris out. It didn’t work."
+	}
+	
+	"Chat - Chuck Norris Joke 33"
+	{
+		"en"			"{green}[King Mod]:{default} Chuck Norris is the only man to ever defeat a brick wall in a game of tennis."
+	}
+
+	"Chat - Chuck Norris Joke 34"
+	{
+		"en"			"{green}[King Mod]:{default} Chuck Norris once ordered a steak in a restaurant. The steak did what it was told."
+	}
+
+	"Chat - Chuck Norris Joke 35"
+	{
+		"en"			"{green}[King Mod]:{default} Chuck Norris can cook minute rice in 30 seconds."
+	}
+
+	"Chat - Chuck Norris Joke 36"
+	{
+		"en"			"{green}[King Mod]:{default} Chuck Norris once beat the sun in a staring contest."
+	}
+
+	"Chat - Chuck Norris Joke 37"
+	{
+		"en"			"{green}[King Mod]:{default} Chuck Norris doesn't breathe, he holds air hostage."
+	}
+
+	"Chat - Chuck Norris Joke 38"
+	{
+		"en"			"{green}[King Mod]:{default} Before he forgot a gift for Chuck Norris, Santa Claus was real."
+	}
+	
+	"Chat - Chuck Norris Joke 39"
+	{
+		"en"			"{green}[King Mod]:{default} Chuck Norris can start a fire with an ice cube."
+	}
+
+	"Chat - Chuck Norris Joke 40"
+	{
+		"en"			"{green}[King Mod]:{default} When Chuck Norris stares into the abyss, the abyss nervously looks away."
+	}
+
+	"Chat - Chuck Norris Joke 41"
+	{
+		"en"			"{green}[King Mod]:{default} COVID-19 is desperate to develop a vaccine against Chuck Norris."
+	}
+	
+	"Chat - Chuck Norris Joke 43"
+	{
+		"en"			"{green}[King Mod]:{default} When Chuck Norris steps on a piece of lego, the lego cries."
+	}
+
+	"Chat - Chuck Norris Joke 44"
+	{
+		"en"			"{green}[King Mod]:{default} The Dead Sea was alive before Chuck Norris swam there."
+	}
+
+	"Chat - Chuck Norris Joke 45"
+	{
+		"en"			"{green}[King Mod]:{default} The Swiss Army uses Chuck Norris Knives."
+	}
+
+	"Chat - Chuck Norris Joke 46"
+	{
+		"en"			"{green}[King Mod]:{default} Chuck Norris knows Victoria’s secret."
+	}
+}

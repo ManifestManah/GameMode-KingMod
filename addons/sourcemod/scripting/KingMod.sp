@@ -225,6 +225,12 @@ public void OnPluginStart()
 	// Adds a hook for mp_restartgame to prevent the usage of it
 	PreventRestartGameUsage();
 
+	// Fixes an issue with the Hud Hint displaying a dollar sign symbol
+	FixDollarSign();
+
+	// Fixes an issue with the hint area not displaying html colors
+	AllowHtmlHintMessages();
+
 	// Adds all of the game mode's required files to the download list and precaches content that needs precaching
 	DownloadAndPrecacheFiles();
 
@@ -8451,6 +8457,125 @@ public Action Command_DeveloperMenu(int client, int args)
 }
 
 
+
+/*	Thanks to Phoenix (˙·٠●Феникс●٠·˙) and Franc1sco franug 
+	for their Fix Hint Color Message plugin release. The code
+	below is practically identical to their release, and was
+	included in this plugin simply to make the life easier for
+	the users of the game mode. The original plugin can be
+	found as a stand alone at the link below:
+	- https://github.com/Franc1sco/FixHintColorMessages 	*/
+
+UserMsg g_TextMsg;
+UserMsg g_HintText;
+UserMsg g_KeyHintText;
+
+public void AllowHtmlHintMessages()
+{
+	g_TextMsg = GetUserMessageId("TextMsg");
+	g_KeyHintText = GetUserMessageId("KeyHintText");
+	g_HintText = GetUserMessageId("HintText");
+	
+	HookUserMessage(g_KeyHintText, HintTextHook, true);
+	HookUserMessage(g_HintText, HintTextHook, true);
+}
+
+
+public Action HintTextHook(UserMsg msg_id, Protobuf msg, const int[] players, int playersNum, bool reliable, bool init)
+{
+	char szBuf[2048];
+	
+	if(msg_id == g_KeyHintText)
+	{
+		msg.ReadString("hints", szBuf, sizeof szBuf, 0);
+	}
+	else
+	{
+		msg.ReadString("text", szBuf, sizeof szBuf);
+	}
+	
+	if(StrContains(szBuf, "</") != -1)
+	{
+		DataPack hPack = new DataPack();
+		
+		hPack.WriteCell(playersNum);
+		
+		for(int i = 0; i < playersNum; i++)
+		{
+			hPack.WriteCell(players[i]);
+		}
+		
+		hPack.WriteString(szBuf);
+		
+		hPack.Reset();
+		
+		RequestFrame(HintTextFix, hPack);
+		
+		return Plugin_Handled;
+	}
+	
+	return Plugin_Continue;
+}
+
+
+public void HintTextFix(DataPack hPack)
+{
+	int iCountNew = 0, iCountOld = hPack.ReadCell();
+	
+	int iPlayers[MAXPLAYERS+1];
+	
+	for(int i = 0, iPlayer; i < iCountOld; i++)
+	{
+		iPlayer = hPack.ReadCell();
+		
+		if(IsClientInGame(iPlayer))
+		{
+			iPlayers[iCountNew++] = iPlayer;
+		}
+	}
+	
+	if(iCountNew != 0)
+	{
+		char szBuf[2048];
+		
+		hPack.ReadString(szBuf, sizeof szBuf);
+		
+		Protobuf hMessage = view_as<Protobuf>(StartMessageEx(g_TextMsg, iPlayers, iCountNew, USERMSG_RELIABLE|USERMSG_BLOCKHOOKS));
+		
+		if(hMessage)
+		{
+			hMessage.SetInt("msg_dst", 4);
+			hMessage.AddString("params", "#SFUI_ContractKillStart");
+			
+			Format(szBuf, sizeof szBuf, "</font>%s<script>", szBuf);
+			hMessage.AddString("params", szBuf);
+			
+			hMessage.AddString("params", NULL_STRING);
+			hMessage.AddString("params", NULL_STRING);
+			hMessage.AddString("params", NULL_STRING);
+			
+			EndMessage();
+		}
+	}
+	
+	hPack.Close();
+}
+
+
+public void FixDollarSign()
+{
+	/*	Thanks to MaZa for sharing his fix which removes the
+	dollar sign that would appear in the HUD messages.
+	The two resource files below are identical to those that
+	are found in his plugin, and the original plugin can be
+	found as a stand alone at the link below:
+	- https://github.com/xMaZax/fix_hint_dollar 	*/
+
+	AddFileToDownloadsTable("resource/closecaption_english.txt");
+	AddFileToDownloadsTable("resource/closecaption_russian.txt");
+}
+
+
 //////////////////////////////////////
 // - Download & Precache Function - //
 //////////////////////////////////////
@@ -8609,11 +8734,6 @@ public void DownloadAndPrecacheFiles()
 	PrecacheSound("kingmod/sfx_zombiescream.mp3");
 	PrecacheSound("kingmod/power_zombieapocalypse.mp3");
 	PrecacheSound("kingmod/power_zombieapocalypseambience.mp3");
-
-
-
-
-
 
 	effectSmoke = PrecacheModel("sprites/steam2.vmt");
 	effectExplosion = PrecacheModel("sprites/blueglow2.vmt");

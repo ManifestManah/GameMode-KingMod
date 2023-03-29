@@ -107,6 +107,116 @@
 	// - Power Specific Phrases - // 
 	////////////////////////////////
 
+	"Chat - Power Impregnable Armor"
+	{
+		"en"			"{green}[King Mod]:{default} The king acquired the{lightgreen} Impregnable Armor{default} power."
+	}
+
+	"Chat - Power Movement Speed"
+	{
+		"en"			"{green}[King Mod]:{default} The king acquired the{lightgreen} Movement Speed{default} power."
+	}
+
+	"Chat - Power Sticky Grenades"
+	{
+		"en"			"{green}[King Mod]:{default} The king acquired the{lightgreen} Sticky Grenades{default} power."
+	}
+
+	"Chat - Power Scout No Scope"
+	{
+		"en"			"{green}[King Mod]:{default} The king acquired the{lightgreen} Scout No Scope{default} power."
+	}
+
+	"Chat - Power Carpet Bombing Flashbangs"
+	{
+		"en"			"{green}[King Mod]:{default} The king acquired the{lightgreen} Carpet Bombing Flashbangs{default} power."
+	}
+
+	"Chat - Power Napalm"
+	{
+		"en"			"{green}[King Mod]:{default} The king acquired the{lightgreen} Napalm{default} power."
+	}
+
+	"Chat - Power Riot"
+	{
+		"en"			"{green}[King Mod]:{default} The king acquired the{lightgreen} Riot{default} power."
+	}
+
+	"Chat - Power Vampire"
+	{
+		"en"			"{green}[King Mod]:{default} The king acquired the{lightgreen} Vampire{default} power."
+	}
+
+	"Chat - Power Breachcharges"
+	{
+		"en"			"{green}[King Mod]:{default} The king acquired the{lightgreen} Power Breachcharges{default} power."
+	}
+
+	"Chat - Power Leg Crushing Bumpmines"
+	{
+		"en"			"{green}[King Mod]:{default} The king acquired the{lightgreen} Leg Crushing Bumpmines{default} power."
+	}
+
+	"Chat - Power Hatchet Massacre"
+	{
+		"en"			"{green}[King Mod]:{default} The king acquired the{lightgreen} Hatchet Massacre{default} power."
+	}
+
+	"Chat - Power Chuck Norris Fists"
+	{
+		"en"			"{green}[King Mod]:{default} The king acquired the{lightgreen} Chuck Norris Fists{default} power."
+	}
+
+	"Chat - Power Laser Gun"
+	{
+		"en"			"{green}[King Mod]:{default} The king acquired the{lightgreen} Laser Gun{default} power."
+	}
+
+	"Chat - Power Lucky Number Seven"
+	{
+		"en"			"{green}[King Mod]:{default} The king acquired the{lightgreen} Lucky Number Seven{default} power."
+	}
+
+	"Chat - Power Western Shootout"
+	{
+		"en"			"{green}[King Mod]:{default} The king acquired the{lightgreen} Western Shootout{default} power."
+	}
+
+	"Chat - Power Babonic Plague"
+	{
+		"en"			"{green}[King Mod]:{default} The king acquired the{lightgreen} Babonic Plague{default} power."
+	}
+
+	"Chat - Power Zombie Apocalypse"
+	{
+		"en"			"{green}[King Mod]:{default} The king acquired the{lightgreen} Zombie Apocalypse{default} power."
+	}
+
+	"Chat - Power Blast Cannon"
+	{
+		"en"			"{green}[King Mod]:{default} The king acquired the{lightgreen} Blast Cannon{default} power."
+	}
+
+	"Chat - Power Deagle Headshot"
+	{
+		"en"			"{green}[King Mod]:{default} The king acquired the{lightgreen} Deagle Headshot{default} power."
+	}
+
+	"Chat - Power Laser Pointer"
+	{
+		"en"			"{green}[King Mod]:{default} The king acquired the{lightgreen} Laser Pointer{default} power."
+	}
+
+	"Chat - Power Hammer Time"
+	{
+		"en"			"{green}[King Mod]:{default} The king acquired the{lightgreen} Hammer Time{default} power."
+	}
+
+	"Chat - Power Doom Chickens"
+	{
+		"en"			"{green}[King Mod]:{default} The king acquired the{lightgreen} Doom Chickens{default} power."
+	}
+
 	"Chat - Power Vampire Attack"
 	{
 		"#format" 		"{1:i}"
@@ -151,7 +261,7 @@
 	"Chat - Chuck Norris Fact"
 	{
 		"#format" 		"{1:i}"
-		"en"			"{green}[King Mod]:{default} Chuck Norris Fact #{1}"
+		"en"			"{green}[King Mod]:{default} Chuck Norris Fact{lightgreen} #{1}"
 	}
 
 	"Chat - Chuck Norris Joke 1"

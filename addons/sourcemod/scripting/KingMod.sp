@@ -3793,6 +3793,11 @@ public Action ChooseKingPower(int client)
 	// Resets the value of powersAvailable back to 0
 	powersAvailable = 0;
 
+	// Creates a variable which we will use to store data within
+	char translationMessage[128];
+
+	translationMessage = "None";
+
 	// If the cvar for the impregnable armor power is enabled then execute this section
 	if(cvar_PowerImpregnableArmor)
 	{
@@ -3805,8 +3810,8 @@ public Action ChooseKingPower(int client)
 			// Gives the client a heavy assault suit, a random armor value and applies a screen overlay
 			PowerImpregnableArmor(client);
 
-			// TODO TO DO TO DO: NOTE
-			PrintToChatAll("Power impregnable Armor - [ %i | %i ]", chosenPower, powersAvailable);
+			// Changes the contents of our translationMessage variable
+			translationMessage = "Chat - Power Impregnable Armor";
 		}
 	}
 
@@ -3822,8 +3827,8 @@ public Action ChooseKingPower(int client)
 			// INcreases the movement speed of all the players
 			PowerMovementSpeed();
 
-			// 
-			PrintToChatAll("Movement Speed - [ %i | %i ]", chosenPower, powersAvailable);
+			// Changes the contents of our translationMessage variable
+			translationMessage = "Chat - Power Movement Speed";
 		}
 	}
 
@@ -3839,8 +3844,8 @@ public Action ChooseKingPower(int client)
 			// Gives the client an infinite amount of grenades and let the grenades stick to walls, objects and players
 			PowerStickyGrenades(client);
 
-			// 
-			PrintToChatAll("Power Sticky Grenades - [ %i | %i ]", chosenPower, powersAvailable);
+			// Changes the contents of our translationMessage variable
+			translationMessage = "Chat - Power Sticky Grenades";
 		}
 	}
 
@@ -3856,8 +3861,8 @@ public Action ChooseKingPower(int client)
 			// Gives the client a ssg08 but the player is unable to use the weapon's scope 
 			PowerScoutNoScope(client);
 
-			// 
-			PrintToChatAll("Power Scout No Scope - [ %i | %i ]", chosenPower, powersAvailable);
+			// Changes the contents of our translationMessage variable
+			translationMessage = "Chat - Power Scout No Scope";
 		}
 	}
 
@@ -3873,8 +3878,8 @@ public Action ChooseKingPower(int client)
 			// Gives the client an infinite amount of flashbangs that duplicates themselves when thrown and deal damage 1337 upon collision
 			PowerCarpetBombingFlashbangs(client);
 
-			// 
-			PrintToChatAll("Power Carpet Bombing Flashbangs - [ %i | %i ]", chosenPower, powersAvailable);
+			// Changes the contents of our translationMessage variable
+			translationMessage = "Chat - Power Carpet Bombing Flashbangs";
 		}
 	}
 
@@ -3890,8 +3895,8 @@ public Action ChooseKingPower(int client)
 			// Gives the client an infinite amount of molotovs, the fire from the molotovs will cause players to catch on fire
 			PowerNapalm(client);
 
-			// 
-			PrintToChatAll("Power Napalm - [ %i | %i ]", chosenPower, powersAvailable);
+			// Changes the contents of our translationMessage variable
+			translationMessage = "Chat - Power Napalm";
 		}
 	}
 
@@ -3907,8 +3912,8 @@ public Action ChooseKingPower(int client)
 			// Gives the client a riot shield, and changes everybody's health to 1
 			PowerRiot(client);
 
-			// 
-			PrintToChatAll("Power Riot - [ %i | %i ]", chosenPower, powersAvailable);
+			// Changes the contents of our translationMessage variable
+			translationMessage = "Chat - Power Riot";
 		}
 	}
 
@@ -3924,8 +3929,8 @@ public Action ChooseKingPower(int client)
 			// Gives the client a the ability to leech a percentage of health from the enemy he attacks
 			PowerVampire();
 
-			// 
-			PrintToChatAll("Power Vampire - [ %i | %i ]", chosenPower, powersAvailable);
+			// Changes the contents of our translationMessage variable
+			translationMessage = "Chat - Power Vampire";
 		}
 	}
 
@@ -3941,8 +3946,8 @@ public Action ChooseKingPower(int client)
 			// Gives the client a large stack of breachcharges to plant and detonate
 			PowerBreachCharges(client);
 
-			// 
-			PrintToChatAll("Power Breachcharges - [ %i | %i ]", chosenPower, powersAvailable);
+			// Changes the contents of our translationMessage variable
+			translationMessage = "Chat - Power Breachcharges";
 		}
 	}
 
@@ -3958,8 +3963,8 @@ public Action ChooseKingPower(int client)
 			// Gives the client a large stack of bumpmines, and causes all fall damage taken by enemies to be dealt by the king 
 			PowerLegCrushingBumpmines(client);
 
-			// 
-			PrintToChatAll("Power Leg Crushing Bumpmines - [ %i | %i ]", chosenPower, powersAvailable);
+			// Changes the contents of our translationMessage variable
+			translationMessage = "Chat - Power Leg Crushing Bumpmines";
 		}
 	}
 
@@ -3975,11 +3980,10 @@ public Action ChooseKingPower(int client)
 			// Gives the client an axe that deals additional damage, and applies blood to the victim's screen 
 			PowerHatchetMassacre(client);
 
-			// 
-			PrintToChatAll("Power Hatchet Massacre - [ %i | %i ]", chosenPower, powersAvailable);
+			// Changes the contents of our translationMessage variable
+			translationMessage = "Chat - Power Hatchet Massacre";
 		}
 	}
-
 
 	// If the cvar for the chuck norris fists power is enabled then execute this section
 	if(cvar_PowerChuckNorrisFists)
@@ -3993,8 +3997,8 @@ public Action ChooseKingPower(int client)
 			// Gives the client a pair of fists that deals high damage 
 			PowerChuckNorrisFists(client);
 
-			// 
-			PrintToChatAll("Power Chuck Norris Fists - [ %i | %i ]", chosenPower, powersAvailable);
+			// Changes the contents of our translationMessage variable
+			translationMessage = "Chat - Power Chuck Norris Fists";
 		}
 	}
 
@@ -4010,8 +4014,8 @@ public Action ChooseKingPower(int client)
 			// Gives the client a cz-auto which deals 3, 4 or 5 damage with no recoil and unlimited ammo that shoots lasers 
 			PowerLaserGun(client);
 
-			// 
-			PrintToChatAll("Power Laser Gun Fists - [ %i | %i ]", chosenPower, powersAvailable);
+			// Changes the contents of our translationMessage variable
+			translationMessage = "Chat - Power Laser Gun";
 		}
 	}
 
@@ -4027,8 +4031,8 @@ public Action ChooseKingPower(int client)
 			// When attacking an enemy two dices will be rolled and if the number is 7 then the king deals bonus damage 
 			PowerLuckyNumberSeven(client);
 
-			// 
-			PrintToChatAll("Power Laser Gun Fists - [ %i | %i ]", chosenPower, powersAvailable);
+			// Changes the contents of our translationMessage variable
+			translationMessage = "Chat - Power Lucky Number Seven";
 		}
 	}
 
@@ -4044,11 +4048,10 @@ public Action ChooseKingPower(int client)
 			// Gives the king a revolver that always deals 50 damage, only contains 2 bullets and cannot use secondary attacks
 			PowerWesternShootout(client);
 
-			// 
-			PrintToChatAll("Power Western Shootout - [ %i | %i ]", chosenPower, powersAvailable);
+			// Changes the contents of our translationMessage variable
+			translationMessage = "Chat - Power Western Shootout";
 		}
 	}
-
 
 	// If the cvar for the Babonic Plague power is enabled then execute this section
 	if(cvar_PowerBabonicPlague)
@@ -4062,11 +4065,10 @@ public Action ChooseKingPower(int client)
 			// When the king attacks an enemy they will take damage over time and have their vision distorted
 			PowerBabonicPlague(client);
 
-			// 
-			PrintToChatAll("Power Babonic Plague - [ %i | %i ]", chosenPower, powersAvailable);
+			// Changes the contents of our translationMessage variable
+			translationMessage = "Chat - Power Babonic Plague";
 		}
 	}
-
 
 	// If the cvar for the Zombie Apocalypse power is enabled then execute this section
 	if(cvar_PowerZombieApocalypse)
@@ -4080,11 +4082,10 @@ public Action ChooseKingPower(int client)
 			// Turns the king's team in to zombies, increasing their health but slows them down, changes the skies and ambience sounds
 			PowerZombieApocalypse(client);
 
-			// 
-			PrintToChatAll("Power Zombie Apocalypse - [ %i | %i ]", chosenPower, powersAvailable);
+			// Changes the contents of our translationMessage variable
+			translationMessage = "Chat - Power Zombie Apocalypse";
 		}
 	}
-
 
 	// If the cvar for the Blast Cannon power is enabled then execute this section
 	if(cvar_PowerBlastCannon)
@@ -4098,11 +4099,10 @@ public Action ChooseKingPower(int client)
 			// Gives the client a shotgun that deals reduced damage but pushed people back
 			PowerBlastCannon(client);
 
-			// 
-			PrintToChatAll("Power Blast Cannon - [ %i | %i ]", chosenPower, powersAvailable);
+			// Changes the contents of our translationMessage variable
+			translationMessage = "Chat - Power Blast Cannon";
 		}
 	}
-
 
 	// If the cvar for the Deagle Headshot power is enabled then execute this section
 	if(cvar_PowerDeagleHeadshot)
@@ -4116,11 +4116,10 @@ public Action ChooseKingPower(int client)
 			// Gives the client a desert eagle that can only deal damage when hitting the enemy's head
 			PowerDeagleHeadshot(client);
 
-			// 
-			PrintToChatAll("Power Deagle Headshot - [ %i | %i ]", chosenPower, powersAvailable);
+			// Changes the contents of our translationMessage variable
+			translationMessage = "Chat - Power Deagle Headshot";
 		}
 	}
-
 
 	// If the cvar for the Laser Pointer power is enabled then execute this section
 	if(cvar_PowerLaserPointer)
@@ -4134,11 +4133,10 @@ public Action ChooseKingPower(int client)
 			// Gives the client the ability to press E and deal damage using a laser pointer when hovering over other players
 			PowerLaserPointer(client);
 
-			// 
-			PrintToChatAll("Power Laser Pointer - [ %i | %i ]", chosenPower, powersAvailable);
+			// Changes the contents of our translationMessage variable
+			translationMessage = "Chat - Power Laser Pointer";
 		}
 	}
-
 
 	// If the cvar for the Hammer Time power is enabled then execute this section
 	if(cvar_PowerHammerTime)
@@ -4152,11 +4150,10 @@ public Action ChooseKingPower(int client)
 			// Gives the client a hammer, and attacking enemies will knock them in to the ground
 			PowerHammerTime(client);
 
-			// 
-			PrintToChatAll("Power Hammer Time - [ %i | %i ]", chosenPower, powersAvailable);
+			// Changes the contents of our translationMessage variable
+			translationMessage = "Chat - Power Hammer Time";
 		}
 	}
-
 
 	// If the cvar for the doom Doom Chickens is enabled then execute this section
 	if(cvar_PowerDoomChickens)
@@ -4170,8 +4167,29 @@ public Action ChooseKingPower(int client)
 			// When a player dies they will spawn a chicken that deals damage and explodes
 			PowerDoomChickens(client);
 
-			// 
-			PrintToChatAll("Power Doom Chickens - [ %i | %i ]", chosenPower, powersAvailable);
+			// Changes the contents of our translationMessage variable
+			translationMessage = "Chat - Power Doom Chickens";
+		}
+	}
+
+	if(!StrEqual(translationMessage, "None", false))
+	{
+		// Loops through all of the clients
+		for (int i = 1; i <= MaxClients; i++)
+		{
+			// If the client does not meet our validation criteria then execute this section
+			if(!IsValidClient(i))
+			{
+				continue;
+			}
+
+			// If the client is a bot then execute this section
+			if(IsFakeClient(i))
+			{
+				continue;
+			}
+
+			CPrintToChat(i, "%t", translationMessage);
 		}
 	}
 

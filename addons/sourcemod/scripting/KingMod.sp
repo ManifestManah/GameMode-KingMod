@@ -30,46 +30,46 @@ public Plugin myinfo =
 // - Planned Convars - //
 /////////////////////////
 
-bool cvar_HideMoneyHud = true;
-bool cvar_EffectTesla = true;
-bool cvar_EffectRing = true;
-bool cvar_KingPowerChooser = true;
+ConVar cvar_HideMoneyHud;
+ConVar cvar_EffectTesla;
+ConVar cvar_EffectRing;
+ConVar cvar_KingPowerChooser;
 
-bool cvar_PowerImpregnableArmor = true;
-bool cvar_PowerMovementSpeed = true;
-bool cvar_PowerStickyGrenades = true;
-bool cvar_PowerScoutNoScope = true;
-bool cvar_PowerCarpetBombingFlashbangs = true;
-bool cvar_PowerNapalm = true;
-bool cvar_PowerRiot = true;
-bool cvar_PowerVampire = true;
-bool cvar_PowerBreachCharges = true;
-bool cvar_PowerLegCrushingBumpmines = true;
-bool cvar_PowerHatchetMassacre = true;
-bool cvar_PowerChuckNorrisFists = true;
-bool cvar_PowerLaserGun = true;
-bool cvar_PowerLuckyNumberSeven = true;
-bool cvar_PowerWesternShootout = true;
-bool cvar_PowerBabonicPlague = true;
-bool cvar_PowerZombieApocalypse = true;
-bool cvar_PowerBlastCannon = true;
-bool cvar_PowerDeagleHeadshot = true;
-bool cvar_PowerLaserPointer = true;
-bool cvar_PowerHammerTime = true;
-bool cvar_PowerDoomChickens = true;
+ConVar cvar_PowerImpregnableArmor;
+ConVar cvar_PowerMovementSpeed;
+ConVar cvar_PowerStickyGrenades;
+ConVar cvar_PowerScoutNoScope;
+ConVar cvar_PowerCarpetBombingFlashbangs;
+ConVar cvar_PowerNapalm;
+ConVar cvar_PowerRiot;
+ConVar cvar_PowerVampire;
+ConVar cvar_PowerBreachCharges;
+ConVar cvar_PowerLegCrushingBumpmines;
+ConVar cvar_PowerHatchetMassacre;
+ConVar cvar_PowerChuckNorrisFists;
+ConVar cvar_PowerLaserGun;
+ConVar cvar_PowerLuckyNumberSeven;
+ConVar cvar_PowerWesternShootout;
+ConVar cvar_PowerBabonicPlague;
+ConVar cvar_PowerZombieApocalypse;
+ConVar cvar_PowerBlastCannon;
+ConVar cvar_PowerDeagleHeadshot;
+ConVar cvar_PowerLaserPointer;
+ConVar cvar_PowerHammerTime;
+ConVar cvar_PowerDoomChickens;
 
-int cvar_PointsNormalKill = 1;
-int cvar_PointsKingKill = 3;
-int cvar_DropChance = 33;
-int cvar_KingHealth = 200;
-int cvar_SentryGunHealth = 999; // Please note setting this to 999 or above will turn the sentry guns invulnerable
-int cvar_SentryGunVolumePercentage = 12;
+ConVar cvar_PointsNormalKill;
+ConVar cvar_PointsKingKill;
+ConVar cvar_DropChance;
+ConVar cvar_KingHealth;
+ConVar cvar_SentryGunHealth; // Please note setting this to 999 or above will turn the sentry guns invulnerable
+ConVar cvar_SentryGunVolumePercentage;
 
-float cvar_RespawnTime = 1.50;
-float cvar_ImmobilityTime = 3.00;
-float cvar_SpawnProtectionDuration = 3.0;
-float cvar_RecoveryCooldownDuration = 10.00;
-float cvar_HealthshotExpirationTime = 10.0;
+ConVar cvar_RespawnTime;
+ConVar cvar_ImmobilityTime;
+ConVar cvar_SpawnProtectionDuration;
+ConVar cvar_RecoveryCooldownDuration;
+ConVar cvar_HealthshotExpirationTime;
 
 
 ////////////////////////////////
@@ -236,7 +236,67 @@ public void OnPluginStart()
 
 	// Allows the modification to be loaded while the server is running, without causing gameplay issues
 	LateLoadSupport();
+
+	CreateModSpecificConvars();
 }
+
+
+
+public void CreateModSpecificConvars()
+{
+	///////////////////////////////
+	// - Configuration Convars - //
+	///////////////////////////////
+
+	cvar_PointsNormalKill = 			CreateConVar("KM_PointsForNormalKills", 			"1", 		"How many points should a team receive for killing an enemy player? - [Default = 1]");
+	cvar_PointsKingKill = 				CreateConVar("KM_PointsForKingKills", 				"3", 		"How many points should a team receive for killing the enemy king? - [Default = 3]");
+	cvar_KingHealth = 					CreateConVar("KM_KingHealth", 						"200", 		"How much health should the king have? - [Default = 200]");
+
+	cvar_HideMoneyHud = 				CreateConVar("KM_HideMoneyHud", 					"1",	 	"Should the money hud be hidden? - [Default = 1]");
+
+	cvar_DropChance = 					CreateConVar("KM_HealthshotDropChance", 			"33", 		"How likely, in percentage, is it that a player should drop a healthshot upon their death? - [Default = 33]");
+
+	cvar_SentryGunHealth =				CreateConVar("KM_SentryGunHealth",					"999", 		"How much health should a sentry gun have? (999 means immortal) - [Default = 999]");
+	cvar_SentryGunVolumePercentage = 	CreateConVar("KM_SentryGunVolume",					"12",		"How loud volume should a sentry gun's firing sound be at in percentage? - [Default = 12]");
+
+	cvar_RespawnTime = 					CreateConVar("KM_RespawnTime", 						"1.50",	 	"How many seconds should it take before a player is respawned? - [Default = 1.50]");
+	cvar_ImmobilityTime = 				CreateConVar("KM_ImmobilityTime", 					"3.00", 	"When a new king is chosen, for how many seconds should the new king be immobilized for? - [Default = 3.00]");
+	cvar_SpawnProtectionDuration = 		CreateConVar("KM_SpawnProtectionTime", 				"3.00", 	"How many seconds should a player be protected for after spawning? - [Default = 3.00]");
+	cvar_RecoveryCooldownDuration = 	CreateConVar("KM_RecoveryCooldownTime", 			"10.0",		"How many seconds should it take before the king's regeneration is off cooldown? - [Default = 10.00]");
+	cvar_HealthshotExpirationTime = 	CreateConVar("KM_HealshotExpirationTime", 			"10.0", 	"How many seconds should a healthshot stay on the ground for before it is removed? - [Default = 10.00]");
+
+	cvar_EffectRing = 					CreateConVar("KM_EffectRing", 						"1",	 	"Should a visual effect ring be displayed when a new king is chosen? - [Default = 1]");
+	cvar_EffectTesla = 					CreateConVar("KM_EffectTesla", 						"1",	 	"Should a visual effect tesla coil be displayed when a new king is chosen? - [Default = 1]");
+
+	cvar_KingPowerChooser = 			CreateConVar("KM_PowerChooserModule", 				"1",	 	"Should the power chooser module be available? - [Default = 1]");
+
+	cvar_PowerImpregnableArmor = 		CreateConVar("KM_Power_ImpregnableArmor", 			"1",	 	"Should the impregnable armor power be available? - [Default = 1]");
+	cvar_PowerMovementSpeed = 			CreateConVar("KM_Power_MovementSpeed", 				"1",	 	"Should the movement speed power be available? - [Default = 1]");
+	cvar_PowerStickyGrenades = 			CreateConVar("KM_Power_StickyGrenades", 			"1",	 	"Should the sticky grenades power be available? - [Default = 1]");
+	cvar_PowerScoutNoScope = 			CreateConVar("KM_Power_ScoutNoScope", 				"1",	 	"Should the scout no-scope power be available? - [Default = 1]");
+	cvar_PowerCarpetBombingFlashbangs = CreateConVar("KM_Power_CarpetBombingFlashbangs", 	"1",	 	"Should the carpet bombing flashbangs power be available? - [Default = 1]");
+	cvar_PowerNapalm = 					CreateConVar("KM_Power_Napalm", 					"1",	 	"Should the napalm power be available? - [Default = 1]");
+	cvar_PowerRiot = 					CreateConVar("KM_Power_Riot", 						"1",	 	"Should the riot power be available? - [Default = 1]");
+	cvar_PowerVampire = 				CreateConVar("KM_Power_Vampire", 					"1",	 	"Should the vampire power be available? - [Default = 1]");
+	cvar_PowerBreachCharges = 			CreateConVar("KM_Power_BreachCharges", 				"1",	 	"Should the breachcharges power be available? - [Default = 1]");
+	cvar_PowerLegCrushingBumpmines = 	CreateConVar("KM_Power_LegCrushingBumpmines", 		"1",	 	"Should the leg crushing bumpmines power be available? - [Default = 1]");
+	cvar_PowerHatchetMassacre = 		CreateConVar("KM_Power_HatchetMassacre", 			"1",	 	"Should the hatchet massacre power be available? - [Default = 1]");
+	cvar_PowerChuckNorrisFists = 		CreateConVar("KM_Power_ChuckNorrisFists", 			"1",	 	"Should the chuck norris fists power be available? - [Default = 1]");
+	cvar_PowerLaserGun = 				CreateConVar("KM_Power_LaserGun", 					"1",	 	"Should the laser gun power be available? - [Default = 1]");
+	cvar_PowerLuckyNumberSeven = 		CreateConVar("KM_Power_LuckyNumberSeven", 			"1",	 	"Should the lucky number seven power be available? - [Default = 1]");
+	cvar_PowerWesternShootout = 		CreateConVar("KM_Power_WesternShootout", 			"1",	 	"Should the western shootout power be available? - [Default = 1]");
+	cvar_PowerBabonicPlague = 			CreateConVar("KM_Power_BabonicPlague", 				"1",	 	"Should the babonic plague power be available? - [Default = 1]");
+	cvar_PowerZombieApocalypse = 		CreateConVar("KM_Power_ZombieApocalypse", 			"1",	 	"Should the zombie apocalypse power be available? - [Default = 1]");
+	cvar_PowerBlastCannon = 			CreateConVar("KM_Power_BlastCannon", 				"1",	 	"Should the blast cannon power be available? - [Default = 1]");
+	cvar_PowerDeagleHeadshot = 			CreateConVar("KM_Power_DeagleHeadshot", 			"1",	 	"Should the deagle headshot power be available? - [Default = 1]");
+	cvar_PowerLaserPointer = 			CreateConVar("KM_Power_LaserPointer", 				"1",	 	"Should the laser pointer power be available? - [Default = 1]");
+	cvar_PowerHammerTime = 				CreateConVar("KM_Power_HammerTime", 				"1",	 	"Should the hammer time power be available? - [Default = 1]");
+	cvar_PowerDoomChickens = 			CreateConVar("KM_Power_DoomChickens", 				"1",	 	"Should the doom chickens power be available? - [Default = 1]");
+
+	// Automatically generates a config file that contains our variables
+	AutoExecConfig(true, "cfg/sourcemod/KingMod/kingmod_convars");
+}
+
 
 
 // This happens when the plugin is unloaded
@@ -405,7 +465,7 @@ public Action CommandListenerJoinTeam(int client, const char[] command, int numA
 	}
 
 	// Calls upon the Timer_RespawnPlayer function after (1.5 default) seconds
-	CreateTimer(cvar_RespawnTime, Timer_RespawnPlayer, client, TIMER_FLAG_NO_MAPCHANGE);
+	CreateTimer(GetConVarFloat(cvar_RespawnTime), Timer_RespawnPlayer, client, TIMER_FLAG_NO_MAPCHANGE);
 
 	return Plugin_Continue;
 }
@@ -421,7 +481,7 @@ public Action OnPlayerRunCmd(int client, int &buttons, int &impulse, float unuse
 	}
 
 	// If thg king power chooser is enabled and the chuck norris fists or the hatchet massacre powers are enabled then execute this section
-	if(cvar_KingPowerChooser && cvar_PowerChuckNorrisFists | cvar_PowerHatchetMassacre | cvar_PowerHammerTime | cvar_PowerLaserPointer)
+	if(GetConVarBool(cvar_KingPowerChooser) && GetConVarBool(cvar_PowerChuckNorrisFists) | GetConVarBool(cvar_PowerHatchetMassacre) | GetConVarBool(cvar_PowerHammerTime) | GetConVarBool(cvar_PowerLaserPointer))
 	{
 		// If the currently active power is either hatchet massacre or chuck norris fists then execute this section
 		if(powerChuckNorris | powerHatchetMassacre | powerHammerTime | powerLaserPointer)
@@ -984,7 +1044,7 @@ public Action SoundHookSentryGuns(int clients[64], int& numClients, char sample[
 	}
 
 	// Changes the volume of the dronegun to (12% default) of the normal volume
-	volume = (volume / 100) * cvar_SentryGunVolumePercentage;
+	volume = (volume / 100) * GetConVarInt(cvar_SentryGunVolumePercentage);
 	
 	return Plugin_Changed;
 }
@@ -1064,7 +1124,7 @@ public Action Event_PlayerDeath(Handle event, const char[] name, bool dontBroadc
 	DropHealthShot(client);
 
 	// Calls upon the Timer_RespawnPlayer function after (1.5 default) seconds
-	CreateTimer(cvar_RespawnTime, Timer_RespawnPlayer, client, TIMER_FLAG_NO_MAPCHANGE);
+	CreateTimer(GetConVarFloat(cvar_RespawnTime), Timer_RespawnPlayer, client, TIMER_FLAG_NO_MAPCHANGE);
 
 	// If the client is not a controlled bot then execute this section
 	if(isPlayerControllingBot[client])
@@ -1167,7 +1227,7 @@ public Action Event_PlayerDeath(Handle event, const char[] name, bool dontBroadc
 			AssignClanTag(attacker);
 
 			// Changes the health of the player to (200 default)
-			SetEntProp(attacker, Prop_Send, "m_iHealth", cvar_KingHealth, 1);
+			SetEntProp(attacker, Prop_Send, "m_iHealth", GetConVarInt(cvar_KingHealth), 1);
 
 			// Removes all of the bumpmine projectile entities from the map
 			RemoveAllBumpMines();
@@ -1200,7 +1260,7 @@ public Action Event_PlayerDeath(Handle event, const char[] name, bool dontBroadc
 				SetEntPropFloat(attacker, Prop_Data, "m_flLaggedMovementValue", 0.0);
 
 				// After (3.0 default) seconds has passed the king will have normal movement once again
-				CreateTimer(cvar_ImmobilityTime, Timer_UnfreezeKing, attacker, TIMER_FLAG_NO_MAPCHANGE);
+				CreateTimer(GetConVarFloat(cvar_ImmobilityTime), Timer_UnfreezeKing, attacker, TIMER_FLAG_NO_MAPCHANGE);
 			}
 
 			// Creates visual effects at the location of the new king
@@ -1216,7 +1276,7 @@ public Action Event_PlayerDeath(Handle event, const char[] name, bool dontBroadc
 				kingIsOnTeam = 2;
 
 				// Adds the value of cvar_PointsKingKill to the pointCounterT variable's value
-				pointCounterT += cvar_PointsKingKill;
+				pointCounterT += GetConVarInt(cvar_PointsKingKill);
 			}
 
 			// If the attacker is on the Coutner-Terrorist team then execute this section
@@ -1226,7 +1286,7 @@ public Action Event_PlayerDeath(Handle event, const char[] name, bool dontBroadc
 				kingIsOnTeam = 3;
 
 				// Adds the value of cvar_PointsKingKill to the pointCounterCT variable's value
-				pointCounterCT += cvar_PointsKingKill;
+				pointCounterCT += GetConVarInt(cvar_PointsKingKill);
 			}
 
 			return Plugin_Continue;
@@ -1241,7 +1301,7 @@ public Action Event_PlayerDeath(Handle event, const char[] name, bool dontBroadc
 				if(kingIsOnTeam == 2)
 				{
 					// Adds the value of cvar_PointsNormalKill to the pointCounterT variable's value
-					pointCounterT += cvar_PointsNormalKill;
+					pointCounterT += GetConVarInt(cvar_PointsNormalKill);
 				}
 			}
 
@@ -1251,7 +1311,7 @@ public Action Event_PlayerDeath(Handle event, const char[] name, bool dontBroadc
 				if(kingIsOnTeam == 3)
 				{
 					// Adds the value of cvar_PointsNormalKill to the pointCounterCT variable's value
-					pointCounterCT += cvar_PointsNormalKill;
+					pointCounterCT += GetConVarInt(cvar_PointsNormalKill);
 				}
 			}
 
@@ -1277,7 +1337,7 @@ public Action Event_PlayerDeath(Handle event, const char[] name, bool dontBroadc
 	GiveCrown(attacker);
 
 	// Changes the health of the player to (200 default)
-	SetEntProp(attacker, Prop_Send, "m_iHealth", cvar_KingHealth, 1);
+	SetEntProp(attacker, Prop_Send, "m_iHealth", GetConVarInt(cvar_KingHealth), 1);
 
 	// Removes all of the bumpmine projectile entities from the map
 	RemoveAllBumpMines();
@@ -1310,7 +1370,7 @@ public Action Event_PlayerDeath(Handle event, const char[] name, bool dontBroadc
 		SetEntPropFloat(attacker, Prop_Data, "m_flLaggedMovementValue", 0.0);
 
 		// After (3.0 default) seconds has passed the king will have normal movement once again
-		CreateTimer(cvar_ImmobilityTime, Timer_UnfreezeKing, attacker, TIMER_FLAG_NO_MAPCHANGE);
+		CreateTimer(GetConVarFloat(cvar_ImmobilityTime), Timer_UnfreezeKing, attacker, TIMER_FLAG_NO_MAPCHANGE);
 	}
 
 	// Assigsn a clantag to the player which indicates that the player is the current king
@@ -1508,7 +1568,7 @@ public Action Event_PlayerTeam(Handle event, const char[] name, bool dontBroadca
 	}
 
 	// Calls upon the Timer_RespawnPlayer function after (1.5 default) seconds
-	CreateTimer(cvar_RespawnTime, Timer_RespawnPlayer, client, TIMER_FLAG_NO_MAPCHANGE);
+	CreateTimer(GetConVarFloat(cvar_RespawnTime), Timer_RespawnPlayer, client, TIMER_FLAG_NO_MAPCHANGE);
 
 	return Plugin_Continue;
 }
@@ -1518,7 +1578,7 @@ public Action Event_PlayerTeam(Handle event, const char[] name, bool dontBroadca
 public Action Event_PlayerFalldamage(Handle event, const char[] name, bool dontBroadcast)
 {
 	// If the cvar_KingPowerChooser is not enabled then execute this section
-	if(!cvar_KingPowerChooser)
+	if(!GetConVarBool(cvar_KingPowerChooser))
 	{
 		return Plugin_Continue;
 	}
@@ -1776,7 +1836,7 @@ public void ChangeSentryGunHealth()
 		}
 
 		// Changes the sentry gun's health
-		SetEntityHealth(entity, cvar_SentryGunHealth);
+		SetEntityHealth(entity, GetConVarInt(cvar_SentryGunHealth));
 	}
 }
 
@@ -1874,7 +1934,7 @@ void CheckForPlatformSupport()
 public void HudElementMoney()
 {
 	// If the cvar_HideMoneyHud is set to true then execute this section
-	if(cvar_HideMoneyHud)
+	if(GetConVarBool(cvar_HideMoneyHud))
 	{
 		// Changes the two server variables in order to remove the money hud element and money related messages
 		SetConVar("mp_playercashawards", "0");
@@ -2188,7 +2248,7 @@ public Action GrantPlayerSpawnProtection(int client)
 	pack.WriteCell(PlayerSpawnCount[client]);
 
 	// After (3.5 default) seconds remove the spawn protection from the player
-	CreateTimer(cvar_SpawnProtectionDuration, Timer_ExpireSpawnProtection, pack, TIMER_FLAG_NO_MAPCHANGE);
+	CreateTimer(GetConVarFloat(cvar_SpawnProtectionDuration), Timer_ExpireSpawnProtection, pack, TIMER_FLAG_NO_MAPCHANGE);
 }
 
 
@@ -2264,8 +2324,8 @@ public Action InjectHealthshot(int client)
 // This function is called upon whenever a player is killed
 public Action DropHealthShot(int client)
 {
-	// If the cvar_KingPowerChooser is enabled and either cvar_PowerRiot or cvar_PowerZombieApocalypse is enabled then execute this section
-	if(cvar_KingPowerChooser && cvar_PowerRiot | cvar_PowerZombieApocalypse)
+	// If the cvar_KingPowerChooser is enabled and either GetConVarBool(cvar_PowerRiot) or GetConVarBool(cvar_PowerZombieApocalypse) is enabled then execute this section
+	if(GetConVarBool(cvar_KingPowerChooser) && GetConVarBool(cvar_PowerRiot) | GetConVarBool(cvar_PowerZombieApocalypse))
 	{
 		return Plugin_Continue;
 	}
@@ -2277,7 +2337,7 @@ public Action DropHealthShot(int client)
 	}
 
 	// If the randomly chosen number is larger than the value of the cvar_DropChance then execute this section
-	if(cvar_DropChance <= GetRandomInt(1, 100))
+	if(GetConVarInt(cvar_DropChance) <= GetRandomInt(1, 100))
 	{
 		return Plugin_Continue;
 	}
@@ -2322,7 +2382,7 @@ public Action DropHealthShot(int client)
 	TeleportEntity(entity, playerLocation, entityRotation, NULL_VECTOR);
 
 	// Calls our Timer_RemoveSpawnedHealthShotInjection function to remove any healthshots that hasn't been picked up within the last 5 seconds
-	CreateTimer(cvar_HealthshotExpirationTime, Timer_RemoveHealthShot, entity, TIMER_FLAG_NO_MAPCHANGE);
+	CreateTimer(GetConVarFloat(cvar_HealthshotExpirationTime), Timer_RemoveHealthShot, entity, TIMER_FLAG_NO_MAPCHANGE);
 
 	return Plugin_Continue;
 }
@@ -2507,7 +2567,7 @@ public void RespawnOvertakenBots()
 		}
 
 		// Calls upon the Timer_RespawnPlayer function after (1.5 default) seconds
-		CreateTimer(cvar_RespawnTime, Timer_RespawnPlayer, i, TIMER_FLAG_NO_MAPCHANGE);
+		CreateTimer(GetConVarFloat(cvar_RespawnTime), Timer_RespawnPlayer, i, TIMER_FLAG_NO_MAPCHANGE);
 	}
 }
 
@@ -2569,7 +2629,7 @@ public Action KingRecovery(int client)
 	CreateTimer(0.0, Timer_RecoverHealth, client, TIMER_FLAG_NO_MAPCHANGE);
 
 	// After a few seconds calls upon our 
-	CreateTimer(cvar_RecoveryCooldownDuration, Timer_RemoveRecoveryCooldown, client, TIMER_FLAG_NO_MAPCHANGE);
+	CreateTimer(GetConVarFloat(cvar_RecoveryCooldownDuration), Timer_RemoveRecoveryCooldown, client, TIMER_FLAG_NO_MAPCHANGE);
 
 	return Plugin_Continue;
 }
@@ -2579,7 +2639,7 @@ public Action KingRecovery(int client)
 public Action DisplayVisualEffects(int attacker)
 {
 	// If neither ring or tesla effects are enabled then execute this section
-	if(!cvar_EffectRing && !cvar_EffectTesla)
+	if(!GetConVarBool(cvar_EffectRing) && !GetConVarBool(cvar_EffectTesla))
 	{
 		return Plugin_Continue;
 	}
@@ -2617,7 +2677,7 @@ public Action DisplayVisualEffects(int attacker)
 	}
 
 	// If effect rings are enabled then execute this section
-	if(cvar_EffectRing)
+	if(GetConVarBool(cvar_EffectRing))
 	{
 		// Creates a temp entity visual efefct shaped like a ring
 		TE_SetupBeamRingPoint(playerLocation, 40.0, 2000.0, effectRing, effectRing, 0, 20, 1.5, 90.0, 2.0, effectColor, 1, 1);
@@ -2627,7 +2687,7 @@ public Action DisplayVisualEffects(int attacker)
 	}
 
 	// If tesla effects are enabled then execute this section
-	if(!cvar_EffectTesla)
+	if(!GetConVarBool(cvar_EffectTesla))
 	{
 		return Plugin_Continue;
 	}
@@ -3179,7 +3239,7 @@ public Action Timer_AutoJoinTeam(Handle timer, int client)
 	ChangeClientTeam(client, teamChoice);
 
 	// Calls upon the Timer_RespawnPlayer function after (1.5 default) seconds
-	CreateTimer(cvar_RespawnTime, Timer_RespawnPlayer, client, TIMER_FLAG_NO_MAPCHANGE);
+	CreateTimer(GetConVarFloat(cvar_RespawnTime), Timer_RespawnPlayer, client, TIMER_FLAG_NO_MAPCHANGE);
 
 	return Plugin_Continue;
 }
@@ -3744,7 +3804,7 @@ public Action Timer_TeslaEffectKill(Handle timer, int edict)
 public Action ChooseKingPower(int client)
 {
 	// If the cvar_KingPowerChooser is not enabled then execute this section
-	if(!cvar_KingPowerChooser)
+	if(!GetConVarBool(cvar_KingPowerChooser))
 	{
 		return Plugin_Continue;
 	}
@@ -3800,7 +3860,7 @@ public Action ChooseKingPower(int client)
 	translationMessage = "None";
 
 	// If the cvar for the impregnable armor power is enabled then execute this section
-	if(cvar_PowerImpregnableArmor)
+	if(GetConVarBool(cvar_PowerImpregnableArmor))
 	{
 		// Adds +1 to the current value of the powersAvailable variable
 		powersAvailable++;
@@ -3817,7 +3877,7 @@ public Action ChooseKingPower(int client)
 	}
 
 	// If the cvar for the movement speed power is enabled then execute this section
-	if(cvar_PowerMovementSpeed)
+	if(GetConVarBool(cvar_PowerMovementSpeed))
 	{
 		// Adds +1 to the current value of the powersAvailable variable
 		powersAvailable++;
@@ -3834,7 +3894,7 @@ public Action ChooseKingPower(int client)
 	}
 
 	// If the cvar for the sticky grenades power is enabled then execute this section
-	if(cvar_PowerStickyGrenades)
+	if(GetConVarBool(cvar_PowerStickyGrenades))
 	{
 		// Adds +1 to the current value of the powersAvailable variable
 		powersAvailable++;
@@ -3851,7 +3911,7 @@ public Action ChooseKingPower(int client)
 	}
 
 	// If the cvar for the scout no scope power is enabled then execute this section
-	if(cvar_PowerScoutNoScope)
+	if(GetConVarBool(cvar_PowerScoutNoScope))
 	{
 		// Adds +1 to the current value of the powersAvailable variable
 		powersAvailable++;
@@ -3868,7 +3928,7 @@ public Action ChooseKingPower(int client)
 	}
 
 	// If the cvar for the carpet bombing flashbangs power is enabled then execute this section
-	if(cvar_PowerCarpetBombingFlashbangs)
+	if(GetConVarBool(cvar_PowerCarpetBombingFlashbangs))
 	{
 		// Adds +1 to the current value of the powersAvailable variable
 		powersAvailable++;
@@ -3885,7 +3945,7 @@ public Action ChooseKingPower(int client)
 	}
 
 	// If the cvar for the napalm power is enabled then execute this section
-	if(cvar_PowerNapalm)
+	if(GetConVarBool(cvar_PowerNapalm))
 	{
 		// Adds +1 to the current value of the powersAvailable variable
 		powersAvailable++;
@@ -3902,7 +3962,7 @@ public Action ChooseKingPower(int client)
 	}
 
 	// If the cvar for the riot power is enabled then execute this section
-	if(cvar_PowerRiot)
+	if(GetConVarBool(cvar_PowerRiot))
 	{
 		// Adds +1 to the current value of the powersAvailable variable
 		powersAvailable++;
@@ -3919,7 +3979,7 @@ public Action ChooseKingPower(int client)
 	}
 
 	// If the cvar for the vampire power is enabled then execute this section
-	if(cvar_PowerVampire)
+	if(GetConVarBool(cvar_PowerVampire))
 	{
 		// Adds +1 to the current value of the powersAvailable variable
 		powersAvailable++;
@@ -3936,7 +3996,7 @@ public Action ChooseKingPower(int client)
 	}
 
 	// If the cvar for the breachcharges power is enabled then execute this section
-	if(cvar_PowerBreachCharges)
+	if(GetConVarBool(cvar_PowerBreachCharges))
 	{
 		// Adds +1 to the current value of the powersAvailable variable
 		powersAvailable++;
@@ -3953,7 +4013,7 @@ public Action ChooseKingPower(int client)
 	}
 
 	// If the cvar for the leg crushing bumpmines power is enabled then execute this section
-	if(cvar_PowerLegCrushingBumpmines)
+	if(GetConVarBool(cvar_PowerLegCrushingBumpmines))
 	{
 		// Adds +1 to the current value of the powersAvailable variable
 		powersAvailable++;
@@ -3970,7 +4030,7 @@ public Action ChooseKingPower(int client)
 	}
 
 	// If the cvar for the hatchet massacre power is enabled then execute this section
-	if(cvar_PowerHatchetMassacre)
+	if(GetConVarBool(cvar_PowerHatchetMassacre))
 	{
 		// Adds +1 to the current value of the powersAvailable variable
 		powersAvailable++;
@@ -3987,7 +4047,7 @@ public Action ChooseKingPower(int client)
 	}
 
 	// If the cvar for the chuck norris fists power is enabled then execute this section
-	if(cvar_PowerChuckNorrisFists)
+	if(GetConVarBool(cvar_PowerChuckNorrisFists))
 	{
 		// Adds +1 to the current value of the powersAvailable variable
 		powersAvailable++;
@@ -4004,7 +4064,7 @@ public Action ChooseKingPower(int client)
 	}
 
 	// If the cvar for the laser gun power is enabled then execute this section
-	if(cvar_PowerLaserGun)
+	if(GetConVarBool(cvar_PowerLaserGun))
 	{
 		// Adds +1 to the current value of the powersAvailable variable
 		powersAvailable++;
@@ -4021,7 +4081,7 @@ public Action ChooseKingPower(int client)
 	}
 
 	// If the cvar for the lucky number seven power is enabled then execute this section
-	if(cvar_PowerLuckyNumberSeven)
+	if(GetConVarBool(cvar_PowerLuckyNumberSeven))
 	{
 		// Adds +1 to the current value of the powersAvailable variable
 		powersAvailable++;
@@ -4038,7 +4098,7 @@ public Action ChooseKingPower(int client)
 	}
 
 	// If the cvar for the western shootout power is enabled then execute this section
-	if(cvar_PowerWesternShootout)
+	if(GetConVarBool(cvar_PowerWesternShootout))
 	{
 		// Adds +1 to the current value of the powersAvailable variable
 		powersAvailable++;
@@ -4055,7 +4115,7 @@ public Action ChooseKingPower(int client)
 	}
 
 	// If the cvar for the Babonic Plague power is enabled then execute this section
-	if(cvar_PowerBabonicPlague)
+	if(GetConVarBool(cvar_PowerBabonicPlague))
 	{
 		// Adds +1 to the current value of the powersAvailable variable
 		powersAvailable++;
@@ -4072,7 +4132,7 @@ public Action ChooseKingPower(int client)
 	}
 
 	// If the cvar for the Zombie Apocalypse power is enabled then execute this section
-	if(cvar_PowerZombieApocalypse)
+	if(GetConVarBool(cvar_PowerZombieApocalypse))
 	{
 		// Adds +1 to the current value of the powersAvailable variable
 		powersAvailable++;
@@ -4089,7 +4149,7 @@ public Action ChooseKingPower(int client)
 	}
 
 	// If the cvar for the Blast Cannon power is enabled then execute this section
-	if(cvar_PowerBlastCannon)
+	if(GetConVarBool(cvar_PowerBlastCannon))
 	{
 		// Adds +1 to the current value of the powersAvailable variable
 		powersAvailable++;
@@ -4106,7 +4166,7 @@ public Action ChooseKingPower(int client)
 	}
 
 	// If the cvar for the Deagle Headshot power is enabled then execute this section
-	if(cvar_PowerDeagleHeadshot)
+	if(GetConVarBool(cvar_PowerDeagleHeadshot))
 	{
 		// Adds +1 to the current value of the powersAvailable variable
 		powersAvailable++;
@@ -4123,7 +4183,7 @@ public Action ChooseKingPower(int client)
 	}
 
 	// If the cvar for the Laser Pointer power is enabled then execute this section
-	if(cvar_PowerLaserPointer)
+	if(GetConVarBool(cvar_PowerLaserPointer))
 	{
 		// Adds +1 to the current value of the powersAvailable variable
 		powersAvailable++;
@@ -4140,7 +4200,7 @@ public Action ChooseKingPower(int client)
 	}
 
 	// If the cvar for the Hammer Time power is enabled then execute this section
-	if(cvar_PowerHammerTime)
+	if(GetConVarBool(cvar_PowerHammerTime))
 	{
 		// Adds +1 to the current value of the powersAvailable variable
 		powersAvailable++;
@@ -4157,7 +4217,7 @@ public Action ChooseKingPower(int client)
 	}
 
 	// If the cvar for the doom Doom Chickens is enabled then execute this section
-	if(cvar_PowerDoomChickens)
+	if(GetConVarBool(cvar_PowerDoomChickens))
 	{
 		// Adds +1 to the current value of the powersAvailable variable
 		powersAvailable++;
@@ -4214,119 +4274,119 @@ public int countAvailablePowers()
 	int powersAvailable = 0;
 
 	// If the cvar for the impregnable armor power is enabled then execute this section
-	if(cvar_PowerImpregnableArmor)
+	if(GetConVarBool(cvar_PowerImpregnableArmor))
 	{
 		// Adds +1 to the current value of the powersAvailable variable
 		powersAvailable++;
 	}
 
 	// If the cvar for the Movement Speed power is enabled then execute this section
-	if(cvar_PowerMovementSpeed)
+	if(GetConVarBool(cvar_PowerMovementSpeed))
 	{
 		// Adds +1 to the current value of the powersAvailable variable
 		powersAvailable++;
 	}
 
 	// If the cvar for the sticky grenades power is enabled then execute this section
-	if(cvar_PowerStickyGrenades)
+	if(GetConVarBool(cvar_PowerStickyGrenades))
 	{
 		// Adds +1 to the current value of the powersAvailable variable
 		powersAvailable++;
 	}
 
 	// If the cvar for the scout no scope power is enabled then execute this section
-	if(cvar_PowerScoutNoScope)
+	if(GetConVarBool(cvar_PowerScoutNoScope))
 	{
 		// Adds +1 to the current value of the powersAvailable variable
 		powersAvailable++;
 	}
 
 	// If the cvar for the carpet bombing flashbangs power is enabled then execute this section
-	if(cvar_PowerCarpetBombingFlashbangs)
+	if(GetConVarBool(cvar_PowerCarpetBombingFlashbangs))
 	{
 		// Adds +1 to the current value of the powersAvailable variable
 		powersAvailable++;
 	}
 
 	// If the cvar for the napalm power is enabled then execute this section
-	if(cvar_PowerNapalm)
+	if(GetConVarBool(cvar_PowerNapalm))
 	{
 		// Adds +1 to the current value of the powersAvailable variable
 		powersAvailable++;
 	}
 
 	// If the cvar for the riot power is enabled then execute this section
-	if(cvar_PowerRiot)
+	if(GetConVarBool(cvar_PowerRiot))
 	{
 		// Adds +1 to the current value of the powersAvailable variable
 		powersAvailable++;
 	}
 
 	// If the cvar for the vampire power is enabled then execute this section
-	if(cvar_PowerVampire)
+	if(GetConVarBool(cvar_PowerVampire))
 	{
 		// Adds +1 to the current value of the powersAvailable variable
 		powersAvailable++;
 	}
 
 	// If the cvar for the breachcharges power is enabled then execute this section
-	if(cvar_PowerBreachCharges)
+	if(GetConVarBool(cvar_PowerBreachCharges))
 	{
 		// Adds +1 to the current value of the powersAvailable variable
 		powersAvailable++;
 	}
 
 	// If the cvar for the leg crushing bumpmines power is enabled then execute this section
-	if(cvar_PowerLegCrushingBumpmines)
+	if(GetConVarBool(cvar_PowerLegCrushingBumpmines))
 	{
 		// Adds +1 to the current value of the powersAvailable variable
 		powersAvailable++;
 	}
 
 	// If the cvar for the hatchet massacre power is enabled then execute this section
-	if(cvar_PowerHatchetMassacre)
+	if(GetConVarBool(cvar_PowerHatchetMassacre))
 	{
 		// Adds +1 to the current value of the powersAvailable variable
 		powersAvailable++;
 	}
 
 	// If the cvar for the chuck norris fists power is enabled then execute this section
-	if(cvar_PowerChuckNorrisFists)
+	if(GetConVarBool(cvar_PowerChuckNorrisFists))
 	{
 		// Adds +1 to the current value of the powersAvailable variable
 		powersAvailable++;
 	}
 
 	// If the cvar for the laser gun power is enabled then execute this section
-	if(cvar_PowerLaserGun)
+	if(GetConVarBool(cvar_PowerLaserGun))
 	{
 		// Adds +1 to the current value of the powersAvailable variable
 		powersAvailable++;
 	}
 
 	// If the cvar for the lucky number seven power is enabled then execute this section
-	if(cvar_PowerLuckyNumberSeven)
+	if(GetConVarBool(cvar_PowerLuckyNumberSeven))
 	{
 		// Adds +1 to the current value of the powersAvailable variable
 		powersAvailable++;
 	}
 
 	// If the cvar for the western shootout power is enabled then execute this section
-	if(cvar_PowerWesternShootout)
+	if(GetConVarBool(cvar_PowerWesternShootout))
 	{
 		// Adds +1 to the current value of the powersAvailable variable
 		powersAvailable++;
 	}
 
 	// If the cvar for the Babonic Plague power is enabled then execute this section
-	if(cvar_PowerBabonicPlague)
+	if(GetConVarBool(cvar_PowerBabonicPlague))
 	{
 		// Adds +1 to the current value of the powersAvailable variable
 		powersAvailable++;
 	}
 
 	// If the cvar for the Zombie Apocalypse power is enabled then execute this section
-	if(cvar_PowerZombieApocalypse)
+	if(GetConVarBool(cvar_PowerZombieApocalypse))
 	{
 		// Adds +1 to the current value of the powersAvailable variable
 		powersAvailable++;
@@ -4334,35 +4394,35 @@ public int countAvailablePowers()
 
 
 	// If the cvar for the Blast Cannon power is enabled then execute this section
-	if(cvar_PowerBlastCannon)
+	if(GetConVarBool(cvar_PowerBlastCannon))
 	{
 		// Adds +1 to the current value of the powersAvailable variable
 		powersAvailable++;
 	}
 
 	// If the cvar for the Deagle Headshot power is enabled then execute this section
-	if(cvar_PowerDeagleHeadshot)
+	if(GetConVarBool(cvar_PowerDeagleHeadshot))
 	{
 		// Adds +1 to the current value of the powersAvailable variable
 		powersAvailable++;
 	}
 
 	// If the cvar for the Laser Pointer power is enabled then execute this section
-	if(cvar_PowerLaserPointer)
+	if(GetConVarBool(cvar_PowerLaserPointer))
 	{
 		// Adds +1 to the current value of the powersAvailable variable
 		powersAvailable++;
 	}
 
 	// If the cvar for the Hammer Time power is enabled then execute this section
-	if(cvar_PowerHammerTime)
+	if(GetConVarBool(cvar_PowerHammerTime))
 	{
 		// Adds +1 to the current value of the powersAvailable variable
 		powersAvailable++;
 	}
 
 	// If the cvar for the doom Doom Chickens is enabled then execute this section
-	if(cvar_PowerDoomChickens)
+	if(GetConVarBool(cvar_PowerDoomChickens))
 	{
 		// Adds +1 to the current value of the powersAvailable variable
 		powersAvailable++;
@@ -4670,7 +4730,7 @@ public Action Timer_GiveKingUniqueWeapon(Handle timer, int client)
 public void RemoveKingPowerEffects()
 {
 	// If the cvar_KingPowerChooser is not enabled then execute this section
-	if(!cvar_KingPowerChooser)
+	if(!GetConVarBool(cvar_KingPowerChooser))
 	{
 		return;
 	}
@@ -5309,7 +5369,7 @@ public void PowerScoutNoScope(int client)
 public Action OnPreThink(int client)
 {
 	// If the cvar_KingPowerChooser is not enabled then execute this section
-	if(!cvar_KingPowerChooser)
+	if(!GetConVarBool(cvar_KingPowerChooser))
 	{
 		return Plugin_Continue;
 	}
@@ -5561,7 +5621,7 @@ public Action Timer_RemoveFlashBangEntity(Handle timer, int entity)
 public Action OnDamageTaken(int client, int &attacker, int &inflictor, float &damage, int &damagetype) 
 {
 	// If the cvar_KingPowerChooser is not enabled then execute this section
-	if(!cvar_KingPowerChooser)
+	if(!GetConVarBool(cvar_KingPowerChooser))
 	{
 		return Plugin_Continue;
 	}
@@ -5637,10 +5697,10 @@ public Action OnDamageTaken(int client, int &attacker, int &inflictor, float &da
 		int playerHealth = GetEntProp(attacker, Prop_Send, "m_iHealth") + RoundToFloor(leechedHealth);
 
 		// If the attacker's health plus the leeched amount is larger than (200 default) then execute this section
-		if(playerHealth > cvar_KingHealth)
+		if(playerHealth > GetConVarInt(cvar_KingHealth))
 		{
 			// Changes the health of the attacker to (200 default)
-			SetEntProp(attacker, Prop_Send, "m_iHealth", cvar_KingHealth, 1);
+			SetEntProp(attacker, Prop_Send, "m_iHealth", GetConVarInt(cvar_KingHealth), 1);
 		}
 
 		// If the attacker's health plus the lehced amount is not larger than (200 default) then execute this section
@@ -6144,7 +6204,7 @@ public Action WeaponFireNapalm(int client)
 public void PowerNapalmStartTimer()
 {
 	// If the cvar_KingPowerChooser is not enabled then execute this section
-	if(!cvar_KingPowerChooser)
+	if(!GetConVarBool(cvar_KingPowerChooser))
 	{
 		return;
 	}
@@ -6380,7 +6440,7 @@ public void PowerRiotChangePlayerHealth(int client)
 public void createHostageZone()
 {
 	// If the cvar_KingPowerChooser is enabled and the riot power is enabled then execute this section
-	if(cvar_KingPowerChooser && cvar_PowerRiot)
+	if(GetConVarBool(cvar_KingPowerChooser) && GetConVarBool(cvar_PowerRiot))
 	{
 		return;
 	}
@@ -7200,7 +7260,7 @@ public void PowerBabonicPlague(int client)
 public Action Timer_PowerBabonicPlagueLoop(Handle timer)
 {
 	// If thg king power chooser is enabled and the babonic plague power is enabled then execute this section
-	if(!cvar_KingPowerChooser && !cvar_PowerBabonicPlague)
+	if(!GetConVarBool(cvar_KingPowerChooser) && !GetConVarBool(cvar_PowerBabonicPlague))
 	{
 		return Plugin_Continue;
 	}
@@ -8262,7 +8322,7 @@ public Action Timer_PowerDoomChickenCanExplode(Handle Timer, int entity)
 public Action Timer_PowerDoomChickensLoop(Handle timer)
 {
 	// If thg king power chooser is enabled and the doom chickens power is enabled then execute this section
-	if(!cvar_KingPowerChooser && !cvar_PowerDoomChickens)
+	if(!GetConVarBool(cvar_KingPowerChooser) && !GetConVarBool(cvar_PowerDoomChickens))
 	{
 		return Plugin_Continue;
 	}

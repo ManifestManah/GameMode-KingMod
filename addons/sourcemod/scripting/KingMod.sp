@@ -8628,10 +8628,10 @@ public void DownloadAndPrecacheFiles()
 
 
 	// Power - Impregnable Armor
-	AddFileToDownloadsTable("materials/kingmod/overlays/power_assaultsuit.vtf");
-	AddFileToDownloadsTable("materials/kingmod/overlays/power_assaultsuit.vmt");
+	AddFileToDownloadsTable("materials/kingmod/overlays/power_impregnablearmor.vtf");
+	AddFileToDownloadsTable("materials/kingmod/overlays/power_impregnablearmor.vmt");
 	AddFileToDownloadsTable("sound/kingmod/power_impregnablearmor.mp3");
-	PrecacheModel("materials/kingmod/overlays/power_assaultsuit.vmt");
+	PrecacheModel("materials/kingmod/overlays/power_impregnablearmor.vmt");
 	PrecacheModel("materials/models/player/custom_player/legacy/tm_phoenix_heavy.mdl");
 	PrecacheModel("models/weapons/v_models/arms/phoenix_heavy/v_sleeve_phoenix_heavy.mdl");
 	PrecacheSound("kingmod/power_impregnablearmor.mp3");

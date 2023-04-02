@@ -7966,6 +7966,8 @@ public Action OnWeaponReloadPostDeagle(int weapon)
 // This happens when a king acquires the Laser Pointer power 
 public void PowerLaserPointer(int client)
 {
+	CPrintToChat(client, "%t", "Chat - Power Laser Pointer Usage");
+
 	// Turns on the Laser Pointer king power 
 	powerLaserPointer = true;
 

@@ -207,6 +207,11 @@
 		"en"			"{green}[King Mod]:{default} The king acquired the{lightgreen} Laser Pointer{default} power."
 	}
 
+	"Chat - Power Laser Pointer Usage"
+	{
+		"en"			"{green}[King Mod]:{default} Press your{lightgreen} +USE [E]{default} button to use your laser pointer."
+	}
+
 	"Chat - Power Hammer Time"
 	{
 		"en"			"{green}[King Mod]:{default} The king acquired the{lightgreen} Hammer Time{default} power."

@@ -173,6 +173,8 @@ public void OnPluginStart()
 	// Loads the translaltion file which we intend to use
 	LoadTranslations("manifest_kingmod.phrases");
 
+	CreateModSpecificConvars();
+
 	// Finds the sv_cheats convar and store it within our conVarCheats value
 	ConVar conVarCheats = FindConVar("sv_cheats");
 
@@ -236,8 +238,6 @@ public void OnPluginStart()
 
 	// Allows the modification to be loaded while the server is running, without causing gameplay issues
 	LateLoadSupport();
-
-	CreateModSpecificConvars();
 }
 
 
@@ -933,11 +933,46 @@ public Action OnWeaponEquip(int client, int weapon)
 		// If the entity's model scale is anything other than 1.0 then execute this section
 		if(modelScale != 1.0)
 		{
-			// Kills the weapon entity, removing it from the game
-			AcceptEntityInput(weapon, "Kill");
+			// Changes the size of the entity
+			SetEntPropFloat(weapon, Prop_Send, "m_flModelScale", 1.00);
 
-			// Gives the client the specified weapon
-			GivePlayerItem(client, "weapon_healthshot");
+			DispatchKeyValue(weapon, "rendercolor", "255 255 255");
+
+			// Creates a variable which we will use to store data within
+			char entityAssignedName[32];
+
+			// Formats the entityAssignedName to create a variable containing the name and weapon's index
+			Format(entityAssignedName, sizeof(entityAssignedName), "medshotLightEntity_%i", weapon);
+
+			// Creates a variable to store our data within 
+			int entity = INVALID_ENT_REFERENCE;
+
+			// Loops through the entities and execute this section if the entity has the classname weapon_healthshot
+			while ((entity = FindEntityByClassname(entity, "light_dynamic")) != INVALID_ENT_REFERENCE)
+			{
+				// If the entity does not meet our criteria validation then execute this section
+				if(!IsValidEntity(entity))
+				{
+					continue;
+				}
+
+				// Creates a variable which we will use to store our data within
+				char entityName[128];
+
+				// Obtains the name of the entity and store it within the our entityName variable
+				GetEntPropString(entity, Prop_Data, "m_iName", entityName, sizeof(entityName));
+
+				// If the name of the entity is not KingName then execute this section
+				if(!StrEqual(entityName, entityAssignedName, false))
+				{
+					continue;
+				}
+
+				// Removes the entity from the game
+				AcceptEntityInput(entity, "Kill");
+
+				break;
+			}
 		}
 	}
 
@@ -2325,15 +2360,16 @@ public Action InjectHealthshot(int client)
 public Action DropHealthShot(int client)
 {
 	// If the cvar_KingPowerChooser is enabled and either GetConVarBool(cvar_PowerRiot) or GetConVarBool(cvar_PowerZombieApocalypse) is enabled then execute this section
-	if(GetConVarBool(cvar_KingPowerChooser) && GetConVarBool(cvar_PowerRiot) | GetConVarBool(cvar_PowerZombieApocalypse))
+	if(GetConVarBool(cvar_KingPowerChooser))
 	{
-		return Plugin_Continue;
-	}
-
-	// If the currently active power is riot or zombie apocalypse then execute this section
-	if(powerRiot | powerZombieApocalypse)
-	{
-		return Plugin_Continue;
+		if(GetConVarBool(cvar_PowerRiot) | GetConVarBool(cvar_PowerZombieApocalypse))
+		{
+			// If the currently active power is riot or zombie apocalypse then execute this section
+			if(powerRiot | powerZombieApocalypse)
+			{
+				return Plugin_Continue;
+			}
+		}
 	}
 
 	// If the randomly chosen number is larger than the value of the cvar_DropChance then execute this section
@@ -2373,7 +2409,7 @@ public Action DropHealthShot(int client)
 	SetRandomColor(entity);
 
 	// Attaches a light_dynamic entity to the healthshot of a random predefined color
-	SetRandomLightColor(entity);
+	SetRandomLightColor(entity, 1);
 
 	// Spawns the entity
 	DispatchSpawn(entity);
@@ -2488,7 +2524,7 @@ public void SetRandomColor(int entity)
 
 
 // This happens when a player dies and drops a healthshot
-public Action SetRandomLightColor(int healthShotEntity)
+public Action SetRandomLightColor(int healthShotEntity, int entityType)
 {
 	// Creates a dynamic light and store it's index within our entity variable
 	int entity = CreateEntityByName("light_dynamic");
@@ -2497,6 +2533,18 @@ public Action SetRandomLightColor(int healthShotEntity)
 	if(!IsValidEntity(entity))
 	{
 		return Plugin_Continue;
+	}
+
+	if(entityType == 1)
+	{
+		// Creates a variable which we will use to store data within
+		char entityName[32];
+
+		// Formats the entityName to create a variable containing the name and healthShotEntity's index
+		Format(entityName, sizeof(entityName), "medshotLightEntity_%i", healthShotEntity);
+
+	 	// Sets the targetname for our light entity to be our formatted entityName
+		DispatchKeyValue(entity, "targetname", entityName);
 	}
 
 	// Formats the colorCombination to create a variable containing red, green and blue color values
@@ -8128,7 +8176,7 @@ public void SpawnDoomChicken(int client)
 	SetRandomColor(entity);
 
 	// Attaches a light_dynamic entity to the healthshot of a random predefined color
-	SetRandomLightColor(entity);
+	SetRandomLightColor(entity, 0);
 
 	// Adds a C4 explosive bomb model and attaches it on to the chicken
 	AttachC4Bomb(entity, entityScale);

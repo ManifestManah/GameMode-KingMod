@@ -294,7 +294,7 @@ public void CreateModSpecificConvars()
 	cvar_PowerDoomChickens = 			CreateConVar("KM_Power_DoomChickens", 				"1",	 	"Should the doom chickens power be available? - [Default = 1]");
 
 	// Automatically generates a config file that contains our variables
-	AutoExecConfig(true, "cfg/sourcemod/KingMod/kingmod_convars");
+	AutoExecConfig(true, "kingmod_convars", "sourcemod/KingMod");
 }
 
 

@@ -338,6 +338,9 @@ public void OnMapStart()
 	// Adds all of the game mode's required files to the download list and precaches content that needs precaching
 	DownloadAndPrecacheFiles();
 
+	// Creates a hostage rescue zone if the powerchooser and shield power is enabled, to let players use the shield
+	createHostageZone();
+
 	// Checks if the current map has been configured to have platform support included 
 	CheckForPlatformSupport();
 
@@ -6450,14 +6453,11 @@ public void PowerRiot(int client)
 	// Changes the content of the nameOfTier variable to reflect which tier of the power the king acquired
 	nameOfTier = "Tier A";
 
-	// Specifies which special weapon the king should be given
-	kingWeapon = "weapon_shield";
-
 	// Removes all the healthshots
 	PowerGenericRemoveHealthshots();
 
 	// Gives the king a unique weapon if the current power requires one
-	CreateTimer(0.25, Timer_GiveKingUniqueWeapon, client);
+	CreateTimer(0.25, Timer_GiveKingShield, client);
 
 	// Loops through all of the clients
 	for (int i = 1; i <= MaxClients; i++)
@@ -6479,6 +6479,23 @@ public void PowerRiot(int client)
 	}
 }
 
+
+// This happens 0.25 seconds after a king acquires the riot power
+public Action Timer_GiveKingShield(Handle timer, int client)
+{
+	// If the client does not meet our validation criteria then execute this section
+	if(!IsValidClient(client))
+	{
+		return Plugin_Continue;
+	}
+
+	// Gives the king a riot shield
+	GivePlayerItem(client, "weapon_shield");
+
+	return Plugin_Continue;
+}
+
+
 // This happens when a player spawns
 public void PowerRiotChangePlayerHealth(int client)
 {
@@ -6496,8 +6513,8 @@ public void PowerRiotChangePlayerHealth(int client)
 // This hapens when the round starts
 public void createHostageZone()
 {
-	// If the cvar_KingPowerChooser is enabled and the riot power is enabled then execute this section
-	if(GetConVarBool(cvar_KingPowerChooser) && GetConVarBool(cvar_PowerRiot))
+	// If the cvar_KingPowerChooser is not enabled or the riot power is not enabled then execute this section
+	if(!GetConVarBool(cvar_KingPowerChooser) | !GetConVarBool(cvar_PowerRiot))
 	{
 		return;
 	}

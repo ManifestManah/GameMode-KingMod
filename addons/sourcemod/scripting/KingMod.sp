@@ -345,7 +345,7 @@ public void OnMapStart()
 	HudElementMoney();
 
 	// Executes the configuration file containing the modification specific configurations
-	ServerCommand("exec cfg/sourcemod/KingMod/kingmod_settings.cfg");
+	ServerCommand("exec sourcemod/KingMod/kingmod_settings.cfg");
 }
 
 

@@ -1195,6 +1195,9 @@ public Action Event_PlayerDeath(Handle event, const char[] name, bool dontBroadc
 		// Removes all of the bumpmine projectile entities from the map
 		RemoveAllBumpMines();
 
+		// Removes all of the breachcharge projectile entities from the map
+		RemoveAllBreachcharges();
+
 		// Extinguishes the flames of all clients currently on fire if the current power is napalm 
 		RemoveNapalmFromVictims();
 
@@ -1266,6 +1269,9 @@ public Action Event_PlayerDeath(Handle event, const char[] name, bool dontBroadc
 
 			// Removes all of the bumpmine projectile entities from the map
 			RemoveAllBumpMines();
+
+			// Removes all of the breachcharge projectile entities from the map
+			RemoveAllBreachcharges();
 
 			// Extinguishes the flames of all clients currently on fire if the current power is napalm 
 			RemoveNapalmFromVictims();
@@ -1376,6 +1382,9 @@ public Action Event_PlayerDeath(Handle event, const char[] name, bool dontBroadc
 
 	// Removes all of the bumpmine projectile entities from the map
 	RemoveAllBumpMines();
+
+	// Removes all of the breachcharge projectile entities from the map
+	RemoveAllBreachcharges();
 
 	// Extinguishes the flames of all clients currently on fire if the current power is napalm 
 	RemoveNapalmFromVictims();
@@ -6707,6 +6716,33 @@ public void RemoveAllBumpMines()
 
 	// Loops through the entities and execute this section if the entity has the classname bumpmine_projectile
 	while ((entity = FindEntityByClassname(entity, "bumpmine_projectile")) != -1)
+	{
+		// If the entity does not meet our criteria of validation then execute this section
+		if(!IsValidEntity(entity))
+		{
+			return;
+		}
+
+		// Kills the weapon entity, removing it from the game
+		AcceptEntityInput(entity, "Kill");
+	}
+}
+
+
+// This happens when the king dies while the breachcharges power is active
+public void RemoveAllBreachcharges()
+{
+	// If the currently active power is not breachcharges then execute this section
+	if(!powerBreachCharges)
+	{
+		return;
+	}
+
+	// Creates a variable to store our data within 
+	int entity = INVALID_ENT_REFERENCE;
+
+	// Loops through the entities and execute this section if the entity has the classname bumpmine_projectile
+	while ((entity = FindEntityByClassname(entity, "breachcharge_projectile")) != -1)
 	{
 		// If the entity does not meet our criteria of validation then execute this section
 		if(!IsValidEntity(entity))

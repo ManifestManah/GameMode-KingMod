@@ -8115,6 +8115,18 @@ public void RemoveAllBuryCooldowns()
 		// If the powerHammerTimeBuried is not on cooldown then execute this section
 		if(powerHammerTimeBuried[client])
 		{
+			// Creates a variable called playerLocation which we will use to store data within
+			float playerLocation[3];
+
+			// Obtains the player's current location and store it within our playerLocation variable
+			GetEntPropVector(client, Prop_Send, "m_vecOrigin", playerLocation);
+
+			// Subtracts 35.0 from the player's current position on the z-axis
+			playerLocation[2] += 42.5;
+
+			// Teleports the prop to the location where the player died
+			TeleportEntity(client, playerLocation, NULL_VECTOR, NULL_VECTOR);
+
 			// Sets the powerHammerTimeBuried cooldown state to false
 			powerHammerTimeBuried[client] = false;
 		}

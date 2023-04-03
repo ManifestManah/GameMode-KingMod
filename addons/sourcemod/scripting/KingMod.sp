@@ -7488,11 +7488,16 @@ public void PowerBabonicPlague(int client)
 	// Turns on the babonic plague king power 
 	powerBabonicPlague = GetRandomInt(1, 3);
 
+	// Creates a variable which we will use to determine the value associated with the tier acquired
+	int valueOfTier = 4 + (powerBabonicPlague * 2);
+
 	// If the value stored within the powerBabonicPlague is 1 execute this section
 	if(powerBabonicPlague == 1)
 	{
 		// Changes the content of the nameOfTier variable to reflect which tier of the power the king acquired
 		nameOfTier = "Tier A";
+
+		CPrintToChat(client, "%t", "Chat - Power Babonic Plague King Tier A", valueOfTier);
 	}
 
 	// If the value stored within the powerBabonicPlague is 2 execute this section
@@ -7500,6 +7505,8 @@ public void PowerBabonicPlague(int client)
 	{
 		// Changes the content of the nameOfTier variable to reflect which tier of the power the king acquired
 		nameOfTier = "Tier B";
+
+		CPrintToChat(client, "%t", "Chat - Power Babonic Plague King Tier B", valueOfTier);
 	}
 
 	// If the value stored within the powerBabonicPlague is 3 execute this section
@@ -7507,6 +7514,8 @@ public void PowerBabonicPlague(int client)
 	{
 		// Changes the content of the nameOfTier variable to reflect which tier of the power the king acquired
 		nameOfTier = "Tier C";
+
+		CPrintToChat(client, "%t", "Chat - Power Babonic Plague King Tier C", valueOfTier);
 	}
 }
 

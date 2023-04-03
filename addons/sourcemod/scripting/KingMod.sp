@@ -6247,6 +6247,8 @@ public void PowerNapalm(int client)
 	// Specifies which special weapon the king should be given
 	kingWeapon = "weapon_molotov";
 
+	CPrintToChat(client, "%t", "Chat - Power Napalm King Tier", nameOfTier);
+
 	// Gives the king a unique weapon if the current power requires one
 	CreateTimer(0.25, Timer_GiveKingUniqueWeapon, client);
 }

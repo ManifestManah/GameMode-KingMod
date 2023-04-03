@@ -4048,7 +4048,7 @@ public Action ChooseKingPower(int client)
 		if(chosenPower == powersAvailable)
 		{
 			// Gives the client a the ability to leech a percentage of health from the enemy he attacks
-			PowerVampire();
+			PowerVampire(client);
 
 			// Changes the contents of our translationMessage variable
 			translationMessage = "Chat - Power Vampire";
@@ -6640,7 +6640,7 @@ public void PowerGenericRemoveHealthshots()
 
 
 // This happens when a king acquires the vampire power 
-public void PowerVampire()
+public void PowerVampire(int client)
 {
 	// Changes the name of the path for the sound that is will be played when the player acquires the specific power
 	powerSoundName = "kingmod/power_vampire.mp3";
@@ -6651,6 +6651,9 @@ public void PowerVampire()
 	// Changes the content of the nameOfPower variable to reflect which power the king acquired
 	nameOfPower = "Vampire";
 	
+	// Creates a variable which we will use to determine the value associated with the tier acquired
+	float valueOfTier = 0.0;
+
 	// Turns on the movement speed king power 
 	powerVampire = GetRandomInt(1, 3);
 
@@ -6659,6 +6662,9 @@ public void PowerVampire()
 	{
 		// Changes the content of the nameOfTier variable to reflect which tier of the power the king acquired
 		nameOfTier = "Tier A";
+
+		// Changes the value of the valueOfTier variable to reflct the power of the tier
+		valueOfTier = 50.0;
 	}
 
 	// If the value stored within the powerVampire is 2 execute this section
@@ -6666,6 +6672,9 @@ public void PowerVampire()
 	{
 		// Changes the content of the nameOfTier variable to reflect which tier of the power the king acquired
 		nameOfTier = "Tier B";
+
+		// Changes the value of the valueOfTier variable to reflct the power of the tier
+		valueOfTier = 42.50;
 	}
 
 	// If the value stored within the powerVampire is 3 execute this section
@@ -6673,7 +6682,12 @@ public void PowerVampire()
 	{
 		// Changes the content of the nameOfTier variable to reflect which tier of the power the king acquired
 		nameOfTier = "Tier C";
+
+		// Changes the value of the valueOfTier variable to reflct the power of the tier
+		valueOfTier = 35.0;
 	}
+
+	CPrintToChat(client, "%t", "Chat - Power Vampire King Tier", nameOfTier, RoundToFloor(valueOfTier));
 }
 
 

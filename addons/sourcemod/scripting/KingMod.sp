@@ -5545,6 +5545,9 @@ public void PowerCarpetBombingFlashbangs(int client)
 
 	// Changes the content of the nameOfPower variable to reflect which power the king acquired
 	nameOfPower = "Carpet Bombing Flashbangs";
+
+	// Creates a variable which we will use to determine the value associated with the tier acquired
+	int valueOfTier = 0;
 	
 	// Specifies which special weapon the king should be given
 	kingWeapon = "weapon_flashbang";
@@ -5560,6 +5563,9 @@ public void PowerCarpetBombingFlashbangs(int client)
 	{
 		// Changes the content of the nameOfTier variable to reflect which tier of the power the king acquired
 		nameOfTier = "Tier A";
+
+		// Changes the value of the valueOfTier variable to reflct the power of the tier
+		valueOfTier = 5;
 	}
 
 	// If the value stored within the powerCarpetBombingFlashbangs is 2 execute this section
@@ -5567,6 +5573,9 @@ public void PowerCarpetBombingFlashbangs(int client)
 	{
 		// Changes the content of the nameOfTier variable to reflect which tier of the power the king acquired
 		nameOfTier = "Tier B";
+
+		// Changes the value of the valueOfTier variable to reflct the power of the tier
+		valueOfTier = 4;
 	}
 
 	// If the value stored within the powerCarpetBombingFlashbangs is 3 execute this section
@@ -5574,7 +5583,12 @@ public void PowerCarpetBombingFlashbangs(int client)
 	{
 		// Changes the content of the nameOfTier variable to reflect which tier of the power the king acquired
 		nameOfTier = "Tier C";
+
+		// Changes the value of the valueOfTier variable to reflct the power of the tier
+		valueOfTier = 3;
 	}
+
+	CPrintToChat(client, "%t", "Chat - Power Carpet Bombing Flashbangs King Tier", nameOfTier, valueOfTier);
 }
 
 

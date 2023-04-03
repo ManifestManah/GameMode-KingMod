@@ -4985,14 +4985,20 @@ public void PowerImpregnableArmor(int client)
 	// Turns on the impregnable armor king power 
 	powerImpregnableArmor = GetRandomInt(1, 3);
 
+	// Creates a variable which we will use to determine the value associated with the tier acquired
+	int valueOfTier = 0;
+
 	// If the value stored within the powerImpregnableArmor is 1 execute this section
 	if(powerImpregnableArmor == 1)
 	{
 		// Changes the content of the nameOfTier variable to reflect which tier of the power the king acquired
 		nameOfTier = "Tier A";
 
+		// Changes the value of the valueOfTier variable to reflct the power of the tier
+		valueOfTier = 200;
+
 		// Changes the armor value of the client to 200
-		SetEntProp(client, Prop_Data, "m_ArmorValue", 200);
+		SetEntProp(client, Prop_Data, "m_ArmorValue", valueOfTier);
 	}
 
 	// If the value stored within the powerImpregnableArmor is 2 execute this section
@@ -5001,8 +5007,11 @@ public void PowerImpregnableArmor(int client)
 		// Changes the content of the nameOfTier variable to reflect which tier of the power the king acquired
 		nameOfTier = "Tier B";
 
+		// Changes the value of the valueOfTier variable to reflct the power of the tier
+		valueOfTier = 165;
+
 		// Changes the armor value of the client to 165
-		SetEntProp(client, Prop_Data, "m_ArmorValue", 165);
+		SetEntProp(client, Prop_Data, "m_ArmorValue", valueOfTier);
 	}
 
 	// If the value stored within the powerImpregnableArmor is 3 execute this section
@@ -5011,9 +5020,14 @@ public void PowerImpregnableArmor(int client)
 		// Changes the content of the nameOfTier variable to reflect which tier of the power the king acquired
 		nameOfTier = "Tier C";
 
+		// Changes the value of the valueOfTier variable to reflct the power of the tier
+		valueOfTier = 130;
+
 		// Changes the armor value of the client to 130
-		SetEntProp(client, Prop_Data, "m_ArmorValue", 130);
+		SetEntProp(client, Prop_Data, "m_ArmorValue", valueOfTier);
 	}
+
+	CPrintToChat(client, "%t", "Chat - Power Impregnable Armor Tier", nameOfTier, valueOfTier);
 }
 
 

@@ -5046,7 +5046,7 @@ public void RemoveScreenOverlay(int client)
 
 
 // This happens when a king acquires the movement speed power 
-public void PowerMovementSpeed()
+public void PowerMovementSpeed(int client)
 {
 	// Changes the name of the path for the sound that is will be played when the player acquires the specific power
 	powerSoundName = "kingmod/power_movementspeed.mp3";
@@ -5057,6 +5057,9 @@ public void PowerMovementSpeed()
 	// Changes the content of the nameOfPower variable to reflect which power the king acquired
 	nameOfPower = "Movement Speed";
 	
+	// Creates a variable which we will use to determine the value associated with the tier acquired
+	float valueOfTier = 0.0;
+
 	// Turns on the movement speed king power 
 	powerMovementSpeed = GetRandomInt(1, 3);
 
@@ -5065,6 +5068,9 @@ public void PowerMovementSpeed()
 	{
 		// Changes the content of the nameOfTier variable to reflect which tier of the power the king acquired
 		nameOfTier = "Tier A";
+
+		// Changes the value of the valueOfTier variable to reflct the power of the tier
+		valueOfTier = 1.80;
 	}
 
 	// If the value stored within the powerMovementSpeed is 2 execute this section
@@ -5072,6 +5078,9 @@ public void PowerMovementSpeed()
 	{
 		// Changes the content of the nameOfTier variable to reflect which tier of the power the king acquired
 		nameOfTier = "Tier B";
+
+		// Changes the value of the valueOfTier variable to reflct the power of the tier
+		valueOfTier = 1.60;
 	}
 
 	// If the value stored within the powerMovementSpeed is 3 execute this section
@@ -5079,13 +5088,18 @@ public void PowerMovementSpeed()
 	{
 		// Changes the content of the nameOfTier variable to reflect which tier of the power the king acquired
 		nameOfTier = "Tier C";
+
+		// Changes the value of the valueOfTier variable to reflct the power of the tier
+		valueOfTier = 1.40;
 	}
 
+	CPrintToChat(client, "%t", "Chat - Power Movement Speed King Tier", nameOfTier, RoundToFloor(valueOfTier * 100));
+
 	// Loops through all of the clients
-	for (int client = 1; client <= MaxClients; client++)
+	for (int i = 1; i <= MaxClients; i++)
 	{
 		// If the client does not meet our validation criteria then execute this section
-		if(!IsValidClient(client))
+		if(!IsValidClient(i))
 		{
 			continue;
 		}
@@ -5094,24 +5108,33 @@ public void PowerMovementSpeed()
 		if(powerMovementSpeed == 1)
 		{
 			// Changes the movement speed of the player to 200% of the normal movement speed
-			SetEntPropFloat(client, Prop_Data, "m_flLaggedMovementValue", 1.80);
+			SetEntPropFloat(i, Prop_Data, "m_flLaggedMovementValue", 1.80);
 		}
 
 		// If the value stored within the powerMovementSpeed is 2 execute this section
 		else if(powerMovementSpeed == 2)
 		{
 			// Changes the movement speed of the player to 175% of the normal movement speed
-			SetEntPropFloat(client, Prop_Data, "m_flLaggedMovementValue", 1.60);
+			SetEntPropFloat(i, Prop_Data, "m_flLaggedMovementValue", 1.60);
 		}
 
 		// If the value stored within the powerMovementSpeed is 3 execute this section
 		else if(powerMovementSpeed == 3)
 		{
 			// Changes the movement speed of the player to 150% of the normal movement speed
-			SetEntPropFloat(client, Prop_Data, "m_flLaggedMovementValue", 1.40);
+			SetEntPropFloat(i, Prop_Data, "m_flLaggedMovementValue", 1.40);
 		}
+
+		// If the client is not the king then execute this section
+		if(!isPlayerKing[i])
+		{
+			continue;
+		}
+
+		CPrintToChat(i, "%t", "Chat - Power Movement Speed All Tier", nameOfTier, RoundToFloor(valueOfTier * 100));
 	}
 }
+
 
 
 // This happens when the movement speed power is no longer active

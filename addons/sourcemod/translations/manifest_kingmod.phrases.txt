@@ -249,6 +249,11 @@
 		"en"			"{green}[King Mod]:{default} The king acquired the{lightgreen} Napalm{default} power."
 	}
 
+	"Chat - Power Napalm Victim"
+	{
+		"en"			"{green}[King Mod]:{default} You died from your{lightgreen} severe burns{default}."
+	}
+
 	"Chat - Power Napalm King Tier A"
 	{
 		"en"			"{green}[King Mod]:{default} You acquired {lightgreen} Tier A - Naplam{default} letting enemies catch on fire and burn to death."
@@ -281,6 +286,12 @@
 	"Chat - Power Vampire"
 	{
 		"en"			"{green}[King Mod]:{default} The king acquired the{lightgreen} Vampire{default} power."
+	}
+
+	"Chat - Power Vampire Attack"
+	{
+		"#format" 		"{1:i}"
+		"en"			"{green}[King Mod]:{default} You leeched{lightgreen} {1} health{default} from your enemy."
 	}
 
 	"Chat - Power Vampire King Tier A"
@@ -388,6 +399,12 @@
 		"en"			"{green}[King Mod]:{default} The king acquired the{lightgreen} Chuck Norris Fists{default} power."
 	}
 
+	"Chat - Power Chuck Norris Attack"
+	{
+		"#format" 		"{1:i}"
+		"en"			"{green}[King Mod]:{default} Chuck Norris' punch dealt{lightgreen} {1} damage{default} completely obliterating you."
+	}
+
 	"Chat - Power Chuck Norris Fists King Tier S"
 	{
 		"en"			"{green}[King Mod]:{default} You acquired {lightgreen} Tier S+ - Chuck Norris Fists{default} you've been bestowed by a God."
@@ -435,6 +452,18 @@
 	"Chat - Power Lucky Number Seven"
 	{
 		"en"			"{green}[King Mod]:{default} The king acquired the{lightgreen} Lucky Number Seven{default} power."
+	}
+
+	"Chat - Power Lucky Number Seven Attack One"
+	{
+		"#format" 		"{1:i},{2:i},{3:i}"
+		"en"			"{green}[King Mod]:{default} You rolled 7{lightgreen} {1} + {2}{default} dealing{lightgreen} {3}%%{default} bonus damage."
+	}
+
+	"Chat - Power Lucky Number Seven Attack Two"
+	{
+		"#format" 		"{1:i},{2:i},{3:i}"
+		"en"			"{green}[King Mod]:{default} You rolled {1}{lightgreen} {2} + {3}{default} dealing normal damage."
 	}
 
 	"Chat - Power Lucky Number Seven King Tier A"
@@ -485,6 +514,9 @@
 
 
 
+
+
+
 	"Chat - Power Zombie Apocalypse"
 	{
 		"en"			"{green}[King Mod]:{default} The king acquired the{lightgreen} Zombie Apocalypse{default} power."
@@ -518,35 +550,6 @@
 	"Chat - Power Doom Chickens"
 	{
 		"en"			"{green}[King Mod]:{default} The king acquired the{lightgreen} Doom Chickens{default} power."
-	}
-
-	"Chat - Power Vampire Attack"
-	{
-		"#format" 		"{1:i}"
-		"en"			"{green}[King Mod]:{default} You leeched{lightgreen} {1} health{default} from your enemy."
-	}
-
-	"Chat - Power Chuck Norris Attack"
-	{
-		"#format" 		"{1:i}"
-		"en"			"{green}[King Mod]:{default} Chuck Norris' punch dealt{lightgreen} {1} damage{default} completely obliterating you."
-	}
-
-	"Chat - Power Lucky Number Seven Attack One"
-	{
-		"#format" 		"{1:i},{2:i},{3:i}"
-		"en"			"{green}[King Mod]:{default} You rolled 7{lightgreen} {1} + {2}{default} dealing{lightgreen} {3}%%{default} bonus damage."
-	}
-
-	"Chat - Power Lucky Number Seven Attack Two"
-	{
-		"#format" 		"{1:i},{2:i},{3:i}"
-		"en"			"{green}[King Mod]:{default} You rolled {1}{lightgreen} {2} + {3}{default} dealing normal damage."
-	}
-
-	"Chat - Power Napalm Victim"
-	{
-		"en"			"{green}[King Mod]:{default} You died from your{lightgreen} severe burns{default}."
 	}
 
 

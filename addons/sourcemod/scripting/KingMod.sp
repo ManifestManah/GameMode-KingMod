@@ -3946,7 +3946,7 @@ public Action ChooseKingPower(int client)
 		if(chosenPower == powersAvailable)
 		{
 			// INcreases the movement speed of all the players
-			PowerMovementSpeed();
+			PowerMovementSpeed(client);
 
 			// Changes the contents of our translationMessage variable
 			translationMessage = "Chat - Power Movement Speed";
@@ -4982,11 +4982,11 @@ public void PowerImpregnableArmor(int client)
 	// Changes the content of the nameOfPower variable to reflect which power the king acquired
 	nameOfPower = "Impregnable Armor";
 
-	// Turns on the impregnable armor king power 
-	powerImpregnableArmor = GetRandomInt(1, 3);
-
 	// Creates a variable which we will use to determine the value associated with the tier acquired
 	int valueOfTier = 0;
+
+	// Turns on the impregnable armor king power 
+	powerImpregnableArmor = GetRandomInt(1, 3);
 
 	// If the value stored within the powerImpregnableArmor is 1 execute this section
 	if(powerImpregnableArmor == 1)
@@ -5027,7 +5027,7 @@ public void PowerImpregnableArmor(int client)
 		SetEntProp(client, Prop_Data, "m_ArmorValue", valueOfTier);
 	}
 
-	CPrintToChat(client, "%t", "Chat - Power Impregnable Armor Tier", nameOfTier, valueOfTier);
+	CPrintToChat(client, "%t", "Chat - Power Impregnable Armor King Tier", nameOfTier, valueOfTier);
 }
 
 
@@ -5134,7 +5134,6 @@ public void PowerMovementSpeed(int client)
 		CPrintToChat(i, "%t", "Chat - Power Movement Speed All Tier", nameOfTier, RoundToFloor(valueOfTier * 100));
 	}
 }
-
 
 
 // This happens when the movement speed power is no longer active
@@ -5458,6 +5457,8 @@ public void PowerScoutNoScope(int client)
 	
 	// Specifies which special weapon the king should be given
 	kingWeapon = "weapon_ssg08";
+
+	CPrintToChat(client, "%t", "Chat - Power Scout No Scope King Tier", nameOfTier);
 
 	// Gives the king a unique weapon if the current power requires one
 	CreateTimer(0.25, Timer_GiveKingUniqueWeapon, client);

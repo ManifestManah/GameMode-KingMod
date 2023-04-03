@@ -112,10 +112,22 @@
 		"en"			"{green}[King Mod]:{default} The king acquired the{lightgreen} Impregnable Armor{default} power."
 	}
 
-	"Chat - Power Impregnable Armor King Tier"
+	"Chat - Power Impregnable Armor King Tier A"
 	{
 		"#format" 		"{1:i}"
-		"en"			"{green}[King Mod]:{default} You acquired {lightgreen} Tier A - Impregnable Armor{default} and gained {2} armor."
+		"en"			"{green}[King Mod]:{default} You acquired {lightgreen} Tier A - Impregnable Armor{default} and gained {1} armor."
+	}
+
+	"Chat - Power Impregnable Armor King Tier B"
+	{
+		"#format" 		"{1:i}"
+		"en"			"{green}[King Mod]:{default} You acquired {lightgreen} Tier B - Impregnable Armor{default} and gained {1} armor."
+	}
+
+	"Chat - Power Impregnable Armor King Tier C"
+	{
+		"#format" 		"{1:i}"
+		"en"			"{green}[King Mod]:{default} You acquired {lightgreen} Tier C - Impregnable Armor{default} and gained {1} armor."
 	}
 
 
@@ -128,37 +140,37 @@
 	"Chat - Power Movement Speed All Tier A"
 	{
 		"#format" 		"{1:i}"
-		"en"			"{green}[King Mod]:{default} The king granted you {lightgreen} Tier A - Movement Speed{default} giving you {2}% speed."
+		"en"			"{green}[King Mod]:{default} The king granted you {lightgreen} Tier A - Movement Speed{default} giving you {1}% speed."
 	}
 
 	"Chat - Power Movement Speed All Tier B"
 	{
 		"#format" 		"{1:i}"
-		"en"			"{green}[King Mod]:{default} The king granted you {lightgreen} Tier B - Movement Speed{default} giving you {2}% speed."
+		"en"			"{green}[King Mod]:{default} The king granted you {lightgreen} Tier B - Movement Speed{default} giving you {1}% speed."
 	}
 
 	"Chat - Power Movement Speed All Tier C"
 	{
 		"#format" 		"{1:i}"
-		"en"			"{green}[King Mod]:{default} The king granted you {lightgreen} Tier C - Movement Speed{default} giving you {2}% speed."
+		"en"			"{green}[King Mod]:{default} The king granted you {lightgreen} Tier C - Movement Speed{default} giving you {1}% speed."
 	}
 
 	"Chat - Power Movement Speed King Tier A"
 	{
 		"#format" 		"{1:i}"
-		"en"			"{green}[King Mod]:{default} You acquired {lightgreen} Tier A - Movement Speed{default} and granted everybody {2}% speed."
+		"en"			"{green}[King Mod]:{default} You acquired {lightgreen} Tier A - Movement Speed{default} and granted everybody {1}% speed."
 	}
 
 	"Chat - Power Movement Speed King Tier C"
 	{
 		"#format" 		"{1:i}"
-		"en"			"{green}[King Mod]:{default} You acquired {lightgreen} Tier B - Movement Speed{default} and granted everybody {2}% speed."
+		"en"			"{green}[King Mod]:{default} You acquired {lightgreen} Tier B - Movement Speed{default} and granted everybody {1}% speed."
 	}
 
 	"Chat - Power Movement Speed King Tier C"
 	{
 		"#format" 		"{1:i}"
-		"en"			"{green}[King Mod]:{default} You acquired {lightgreen} Tier C - Movement Speed{default} and granted everybody {2}% speed."
+		"en"			"{green}[King Mod]:{default} You acquired {lightgreen} Tier C - Movement Speed{default} and granted everybody {1}% speed."
 	}
 
 

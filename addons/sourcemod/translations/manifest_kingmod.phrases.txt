@@ -112,55 +112,172 @@
 		"en"			"{green}[King Mod]:{default} The king acquired the{lightgreen} Impregnable Armor{default} power."
 	}
 
+	"Chat - Power Impregnable Armor King Tier"
+	{
+		"#format" 		"{1:s},{2:i}"
+		"en"			"{green}[King Mod]:{default} You acquired {lightgreen} {1} - Impregnable Armor{default} and gained {2} armor."
+	}
+
+
+
 	"Chat - Power Movement Speed"
 	{
 		"en"			"{green}[King Mod]:{default} The king acquired the{lightgreen} Movement Speed{default} power."
 	}
+
+	"Chat - Power Movement Speed King Tier"
+	{
+		"#format" 		"{1:s},{2:i}"
+		"en"			"{green}[King Mod]:{default} You acquired {lightgreen} {1} - Movement Speed{default} and granted everybody {2}% speed."
+	}
+
+	"Chat - Power Movement Speed All Tier"
+	{
+		"#format" 		"{1:s},{2:i}"
+		"en"			"{green}[King Mod]:{default} The king granted you {lightgreen} {1} - Movement Speed{default} giving you {2}% speed."
+	}
+
+
 
 	"Chat - Power Sticky Grenades"
 	{
 		"en"			"{green}[King Mod]:{default} The king acquired the{lightgreen} Sticky Grenades{default} power."
 	}
 
+	"Chat - Power Sticky Grenades King Tier"
+	{
+		"#format" 		"{1:s}"
+		"en"			"{green}[King Mod]:{default} You acquired {lightgreen} {1} - Sticky Grenades{default} making your grenades stick to what they touch."
+	}
+
+
+
+
 	"Chat - Power Scout No Scope"
 	{
 		"en"			"{green}[King Mod]:{default} The king acquired the{lightgreen} Scout No Scope{default} power."
 	}
+
+	"Chat - Power Scout No Scope King Tier"
+	{
+		"#format" 		"{1:s}"
+		"en"			"{green}[King Mod]:{default} You acquired {lightgreen} {1} - Scout No Scope{default} providing you with a scout with a broken scope."
+	}
+
+
+
+
+
+
 
 	"Chat - Power Carpet Bombing Flashbangs"
 	{
 		"en"			"{green}[King Mod]:{default} The king acquired the{lightgreen} Carpet Bombing Flashbangs{default} power."
 	}
 
+	"Chat - Power Carpet Bombing Flashbangs King Tier"
+	{
+		"#format" 		"{1:s},{2:i}"
+		"en"			"{green}[King Mod]:{default} You acquired {lightgreen} {1} - Carpet Bombing Flashbangs{default} letting you to throw {2} flashbangs at a time."
+	}
+
+
+
+
+
+
+
 	"Chat - Power Napalm"
 	{
 		"en"			"{green}[King Mod]:{default} The king acquired the{lightgreen} Napalm{default} power."
 	}
+
+	"Chat - Power Napalm King Tier"
+	{
+		"#format" 		"{1:s}"
+		"en"			"{green}[King Mod]:{default} You acquired {lightgreen} {1} - Naplam{default} letting enemies catch on fire and burn to death."
+	}
+
+
+
+
+
 
 	"Chat - Power Riot"
 	{
 		"en"			"{green}[King Mod]:{default} The king acquired the{lightgreen} Riot{default} power."
 	}
 
+	"Chat - Power Riot King Tier"
+	{
+		"#format" 		"{1:s}"
+		"en"			"{green}[King Mod]:{default} You acquired {lightgreen} {1} - Naplam{default} letting enemies catch on fire and burn to death."
+	}
+
+
+
+
 	"Chat - Power Vampire"
 	{
 		"en"			"{green}[King Mod]:{default} The king acquired the{lightgreen} Vampire{default} power."
 	}
+
+	"Chat - Power Vampire King Tier"
+	{
+		"#format" 		"{1:s},{2:i}"
+		"en"			"{green}[King Mod]:{default} You acquired {lightgreen} {1} - Vampire{default} making your attacks heal you for {2}% of the damage you deal."
+	}
+
+
+
 
 	"Chat - Power Breachcharges"
 	{
 		"en"			"{green}[King Mod]:{default} The king acquired the{lightgreen} Power Breachcharges{default} power."
 	}
 
+	"Chat - Power Breachcharges King Tier"
+	{
+		"#format" 		"{1:s},{2:i}"
+		"en"			"{green}[King Mod]:{default} You acquired {lightgreen} {1} - Breachcharges{default} giving you a stack of {2} breachcharges."
+	}
+
+
+
+
+
+
 	"Chat - Power Leg Crushing Bumpmines"
 	{
 		"en"			"{green}[King Mod]:{default} The king acquired the{lightgreen} Leg Crushing Bumpmines{default} power."
 	}
 
+	"Chat - Power Leg Crushing Bumpmines King Tier"
+	{
+		"#format" 		"{1:s},{2:i}"
+		"en"			"{green}[King Mod]:{default} You acquired {lightgreen} {1} - Leg Crushing Bumpmines{default} giving you a stack of {2} bumpmines."
+	}
+
+
+
+
+
 	"Chat - Power Hatchet Massacre"
 	{
 		"en"			"{green}[King Mod]:{default} The king acquired the{lightgreen} Hatchet Massacre{default} power."
 	}
+
+	"Chat - Power Hatchet Massacre King Tier"
+	{
+		"#format" 		"{1:s}"
+		"en"			"{green}[King Mod]:{default} You acquired {lightgreen} {1} - Hatchet Massacre{default} receiving an axe that deals high damage."
+	}
+
+
+
+
+
+
 
 	"Chat - Power Chuck Norris Fists"
 	{

@@ -388,10 +388,22 @@
 		"en"			"{green}[King Mod]:{default} The king acquired the{lightgreen} Chuck Norris Fists{default} power."
 	}
 
+	"Chat - Power Chuck Norris Fists King Tier S"
+	{
+		"en"			"{green}[King Mod]:{default} You acquired {lightgreen} Tier S+ - Chuck Norris Fists{default} you've been bestowed by a God."
+	}
+
+
+
+
 	"Chat - Power Laser Gun"
 	{
 		"en"			"{green}[King Mod]:{default} The king acquired the{lightgreen} Laser Gun{default} power."
 	}
+
+
+
+
 
 	"Chat - Power Lucky Number Seven"
 	{

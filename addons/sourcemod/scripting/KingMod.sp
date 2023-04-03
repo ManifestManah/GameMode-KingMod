@@ -4999,6 +4999,8 @@ public void PowerImpregnableArmor(int client)
 
 		// Changes the armor value of the client to 200
 		SetEntProp(client, Prop_Data, "m_ArmorValue", valueOfTier);
+
+		CPrintToChat(client, "%t", "Chat - Power Impregnable Armor King Tier A", valueOfTier);
 	}
 
 	// If the value stored within the powerImpregnableArmor is 2 execute this section
@@ -5012,6 +5014,8 @@ public void PowerImpregnableArmor(int client)
 
 		// Changes the armor value of the client to 165
 		SetEntProp(client, Prop_Data, "m_ArmorValue", valueOfTier);
+
+		CPrintToChat(client, "%t", "Chat - Power Impregnable Armor King Tier B", valueOfTier);
 	}
 
 	// If the value stored within the powerImpregnableArmor is 3 execute this section
@@ -5025,9 +5029,9 @@ public void PowerImpregnableArmor(int client)
 
 		// Changes the armor value of the client to 130
 		SetEntProp(client, Prop_Data, "m_ArmorValue", valueOfTier);
-	}
 
-	CPrintToChat(client, "%t", "Chat - Power Impregnable Armor King Tier", nameOfTier, valueOfTier);
+		CPrintToChat(client, "%t", "Chat - Power Impregnable Armor King Tier C", valueOfTier);
+	}
 }
 
 
@@ -5071,6 +5075,8 @@ public void PowerMovementSpeed(int client)
 
 		// Changes the value of the valueOfTier variable to reflct the power of the tier
 		valueOfTier = 1.80;
+
+		CPrintToChat(client, "%t", "Chat - Power Movement Speed King Tier A", RoundToFloor(valueOfTier * 100));
 	}
 
 	// If the value stored within the powerMovementSpeed is 2 execute this section
@@ -5081,6 +5087,8 @@ public void PowerMovementSpeed(int client)
 
 		// Changes the value of the valueOfTier variable to reflct the power of the tier
 		valueOfTier = 1.60;
+
+		CPrintToChat(client, "%t", "Chat - Power Movement Speed King Tier B", RoundToFloor(valueOfTier * 100));
 	}
 
 	// If the value stored within the powerMovementSpeed is 3 execute this section
@@ -5091,9 +5099,9 @@ public void PowerMovementSpeed(int client)
 
 		// Changes the value of the valueOfTier variable to reflct the power of the tier
 		valueOfTier = 1.40;
-	}
 
-	CPrintToChat(client, "%t", "Chat - Power Movement Speed King Tier", nameOfTier, RoundToFloor(valueOfTier * 100));
+		CPrintToChat(client, "%t", "Chat - Power Movement Speed King Tier C", RoundToFloor(valueOfTier * 100));
+	}
 
 	// Loops through all of the clients
 	for (int i = 1; i <= MaxClients; i++)
@@ -5109,6 +5117,8 @@ public void PowerMovementSpeed(int client)
 		{
 			// Changes the movement speed of the player to 200% of the normal movement speed
 			SetEntPropFloat(i, Prop_Data, "m_flLaggedMovementValue", 1.80);
+
+			CPrintToChat(i, "%t", "Chat - Power Movement Speed All Tier A", RoundToFloor(valueOfTier * 100));
 		}
 
 		// If the value stored within the powerMovementSpeed is 2 execute this section
@@ -5116,6 +5126,8 @@ public void PowerMovementSpeed(int client)
 		{
 			// Changes the movement speed of the player to 175% of the normal movement speed
 			SetEntPropFloat(i, Prop_Data, "m_flLaggedMovementValue", 1.60);
+
+			CPrintToChat(i, "%t", "Chat - Power Movement Speed All Tier B", RoundToFloor(valueOfTier * 100));
 		}
 
 		// If the value stored within the powerMovementSpeed is 3 execute this section
@@ -5123,6 +5135,8 @@ public void PowerMovementSpeed(int client)
 		{
 			// Changes the movement speed of the player to 150% of the normal movement speed
 			SetEntPropFloat(i, Prop_Data, "m_flLaggedMovementValue", 1.40);
+
+			CPrintToChat(i, "%t", "Chat - Power Movement Speed All Tier C", RoundToFloor(valueOfTier * 100));
 		}
 
 		// If the client is not the king then execute this section
@@ -5130,8 +5144,6 @@ public void PowerMovementSpeed(int client)
 		{
 			continue;
 		}
-
-		CPrintToChat(i, "%t", "Chat - Power Movement Speed All Tier", nameOfTier, RoundToFloor(valueOfTier * 100));
 	}
 }
 
@@ -5211,7 +5223,7 @@ public void PowerStickyGrenades(int client)
 	// Specifies which special weapon the king should be given
 	kingWeapon = "weapon_hegrenade";
 
-	CPrintToChat(client, "%t", "Chat - Power Sticky Grenades King Tier", nameOfTier);
+	CPrintToChat(client, "%t", "Chat - Power Sticky Grenades King Tier A");
 
 	// Gives the king a unique weapon if the current power requires one
 	CreateTimer(0.25, Timer_GiveKingUniqueWeapon, client);
@@ -5458,7 +5470,7 @@ public void PowerScoutNoScope(int client)
 	// Specifies which special weapon the king should be given
 	kingWeapon = "weapon_ssg08";
 
-	CPrintToChat(client, "%t", "Chat - Power Scout No Scope King Tier", nameOfTier);
+	CPrintToChat(client, "%t", "Chat - Power Scout No Scope King Tier A");
 
 	// Gives the king a unique weapon if the current power requires one
 	CreateTimer(0.25, Timer_GiveKingUniqueWeapon, client);
@@ -5566,6 +5578,8 @@ public void PowerCarpetBombingFlashbangs(int client)
 
 		// Changes the value of the valueOfTier variable to reflct the power of the tier
 		valueOfTier = 5;
+
+		CPrintToChat(client, "%t", "Chat - Power Carpet Bombing Flashbangs King Tier A", valueOfTier);
 	}
 
 	// If the value stored within the powerCarpetBombingFlashbangs is 2 execute this section
@@ -5576,6 +5590,8 @@ public void PowerCarpetBombingFlashbangs(int client)
 
 		// Changes the value of the valueOfTier variable to reflct the power of the tier
 		valueOfTier = 4;
+
+		CPrintToChat(client, "%t", "Chat - Power Carpet Bombing Flashbangs King Tier B", valueOfTier);
 	}
 
 	// If the value stored within the powerCarpetBombingFlashbangs is 3 execute this section
@@ -5586,9 +5602,9 @@ public void PowerCarpetBombingFlashbangs(int client)
 
 		// Changes the value of the valueOfTier variable to reflct the power of the tier
 		valueOfTier = 3;
-	}
 
-	CPrintToChat(client, "%t", "Chat - Power Carpet Bombing Flashbangs King Tier", nameOfTier, valueOfTier);
+		CPrintToChat(client, "%t", "Chat - Power Carpet Bombing Flashbangs King Tier C", valueOfTier);
+	}
 }
 
 
@@ -6247,7 +6263,7 @@ public void PowerNapalm(int client)
 	// Specifies which special weapon the king should be given
 	kingWeapon = "weapon_molotov";
 
-	CPrintToChat(client, "%t", "Chat - Power Napalm King Tier", nameOfTier);
+	CPrintToChat(client, "%t", "Chat - Power Napalm King Tier A");
 
 	// Gives the king a unique weapon if the current power requires one
 	CreateTimer(0.25, Timer_GiveKingUniqueWeapon, client);
@@ -6509,7 +6525,7 @@ public void PowerRiot(int client)
 	// Changes the content of the nameOfTier variable to reflect which tier of the power the king acquired
 	nameOfTier = "Tier A";
 
-	CPrintToChat(client, "%t", "Chat - Power Riot King Tier", nameOfTier);
+	CPrintToChat(client, "%t", "Chat - Power Riot King Tier A");
 
 	// Removes all the healthshots
 	PowerGenericRemoveHealthshots();
@@ -6665,6 +6681,8 @@ public void PowerVampire(int client)
 
 		// Changes the value of the valueOfTier variable to reflct the power of the tier
 		valueOfTier = 50.0;
+
+		CPrintToChat(client, "%t", "Chat - Power Vampire King Tier A", RoundToFloor(valueOfTier));
 	}
 
 	// If the value stored within the powerVampire is 2 execute this section
@@ -6675,6 +6693,8 @@ public void PowerVampire(int client)
 
 		// Changes the value of the valueOfTier variable to reflct the power of the tier
 		valueOfTier = 42.50;
+
+		CPrintToChat(client, "%t", "Chat - Power Vampire King Tier B", RoundToFloor(valueOfTier));
 	}
 
 	// If the value stored within the powerVampire is 3 execute this section
@@ -6685,9 +6705,9 @@ public void PowerVampire(int client)
 
 		// Changes the value of the valueOfTier variable to reflct the power of the tier
 		valueOfTier = 35.0;
-	}
 
-	CPrintToChat(client, "%t", "Chat - Power Vampire King Tier", nameOfTier, RoundToFloor(valueOfTier));
+		CPrintToChat(client, "%t", "Chat - Power Vampire King Tier C", RoundToFloor(valueOfTier));
+	}
 }
 
 
@@ -6729,6 +6749,8 @@ public void PowerBreachCharges(int client)
 
 		// Changes the value of the valueOfTier variable to reflct the power of the tier
 		valueOfTier = 18;
+
+		CPrintToChat(client, "%t", "Chat - Power Breachcharges King Tier A", valueOfTier);
 	}
 
 	// If the value stored within the powerBreachCharges is 2 execute this section
@@ -6739,6 +6761,8 @@ public void PowerBreachCharges(int client)
 
 		// Changes the value of the valueOfTier variable to reflct the power of the tier
 		valueOfTier = 15;
+
+		CPrintToChat(client, "%t", "Chat - Power Breachcharges King Tier B", valueOfTier);
 	}
 
 	// If the value stored within the powerBreachCharges is 3 execute this section
@@ -6749,9 +6773,9 @@ public void PowerBreachCharges(int client)
 
 		// Changes the value of the valueOfTier variable to reflct the power of the tier
 		valueOfTier = 12;
-	}
 
-	CPrintToChat(client, "%t", "Chat - Power Breachcharges King Tier", nameOfTier, valueOfTier);
+		CPrintToChat(client, "%t", "Chat - Power Breachcharges King Tier C", valueOfTier);
+	}
 }
 
 
@@ -6793,6 +6817,8 @@ public void PowerLegCrushingBumpmines(int client)
 
 		// Changes the value of the valueOfTier variable to reflct the power of the tier
 		valueOfTier = 18;
+
+		CPrintToChat(client, "%t", "Chat - Power Leg Crushing Bumpmines King Tier A", valueOfTier);
 	}
 
 	// If the value stored within the powerLegCrushingBumpmines is 2 execute this section
@@ -6803,6 +6829,8 @@ public void PowerLegCrushingBumpmines(int client)
 
 		// Changes the value of the valueOfTier variable to reflct the power of the tier
 		valueOfTier = 15;
+
+		CPrintToChat(client, "%t", "Chat - Power Leg Crushing Bumpmines King Tier B", valueOfTier);
 	}
 
 	// If the value stored within the powerLegCrushingBumpmines is 3 execute this section
@@ -6813,9 +6841,9 @@ public void PowerLegCrushingBumpmines(int client)
 
 		// Changes the value of the valueOfTier variable to reflct the power of the tier
 		valueOfTier = 12;
-	}
 
-	CPrintToChat(client, "%t", "Chat - Power Leg Crushing Bumpmines King Tier", nameOfTier, valueOfTier);
+		CPrintToChat(client, "%t", "Chat - Power Leg Crushing Bumpmines King Tier C", valueOfTier);
+	}
 }
 
 
@@ -6900,7 +6928,7 @@ public void PowerHatchetMassacre(int client)
 	// Specifies which special weapon the king should be given
 	kingWeapon = "weapon_axe";
 
-	CPrintToChat(client, "%t", "Chat - Power Hatchet Massacre King Tier", nameOfTier);
+	CPrintToChat(client, "%t", "Chat - Power Hatchet Massacre King Tier A");
 
 	// Gives the king a unique weapon if the current power requires one
 	CreateTimer(0.25, Timer_GiveKingUniqueWeapon, client);
@@ -7003,6 +7031,8 @@ public void PowerChuckNorrisFists(int client)
 
 	// Specifies which special weapon the king should be given
 	kingWeapon = "weapon_fists";
+
+	CPrintToChat(client, "%t", "Chat - Power Chuck Norris Fists King Tier S");
 
 	// Picks one of many random chuck norris jokes and posts it in the chat presenting it as if it was a fact
 	SelectChuckNorirsJoke();

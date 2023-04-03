@@ -6509,6 +6509,8 @@ public void PowerRiot(int client)
 	// Changes the content of the nameOfTier variable to reflect which tier of the power the king acquired
 	nameOfTier = "Tier A";
 
+	CPrintToChat(client, "%t", "Chat - Power Riot King Tier", nameOfTier);
+
 	// Removes all the healthshots
 	PowerGenericRemoveHealthshots();
 

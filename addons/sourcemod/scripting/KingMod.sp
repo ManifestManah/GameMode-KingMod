@@ -7096,6 +7096,9 @@ public void PowerLaserGun(int client)
 	// Specifies which special weapon the king should be given
 	kingWeapon = "weapon_cz75a";
 
+	// Creates a variable which we will use to determine the value associated with the tier acquired
+	int valueOfTier = 0;
+
 	// Disables recoil and spread
 	PowerLaserGunDisableRecoil();
 
@@ -7107,6 +7110,11 @@ public void PowerLaserGun(int client)
 	{
 		// Changes the content of the nameOfTier variable to reflect which tier of the power the king acquired
 		nameOfTier = "Tier A";
+
+		// Changes the value of the valueOfTier variable to reflct the power of the tier
+		valueOfTier = 5;
+
+		CPrintToChat(client, "%t", "Chat - Power Laser Gun King Tier A", valueOfTier);
 	}
 
 	// If the value stored within the powerLaserGun is 2 execute this section
@@ -7114,6 +7122,11 @@ public void PowerLaserGun(int client)
 	{
 		// Changes the content of the nameOfTier variable to reflect which tier of the power the king acquired
 		nameOfTier = "Tier B";
+
+		// Changes the value of the valueOfTier variable to reflct the power of the tier
+		valueOfTier = 4;
+
+		CPrintToChat(client, "%t", "Chat - Power Laser Gun King Tier B", valueOfTier);
 	}
 
 	// If the value stored within the powerLaserGun is 3 execute this section
@@ -7121,6 +7134,11 @@ public void PowerLaserGun(int client)
 	{
 		// Changes the content of the nameOfTier variable to reflect which tier of the power the king acquired
 		nameOfTier = "Tier C";
+
+		// Changes the value of the valueOfTier variable to reflct the power of the tier
+		valueOfTier = 3;
+
+		CPrintToChat(client, "%t", "Chat - Power Laser Gun King Tier C", valueOfTier);
 	}
 
 	// Gives the king a unique weapon if the current power requires one

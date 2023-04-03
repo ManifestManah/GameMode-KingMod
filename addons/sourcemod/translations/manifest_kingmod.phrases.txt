@@ -401,8 +401,35 @@
 		"en"			"{green}[King Mod]:{default} The king acquired the{lightgreen} Laser Gun{default} power."
 	}
 
+	"Chat - Power Laser Gun King Tier A"
+	{
+		"#format" 		"{1:i}"
+		"en"			"{green}[King Mod]:{default} You acquired {lightgreen} Tier A - Laser Gun{default} that deals {1} damage per laser bullet."
+	}
+
+	"Chat - Power Laser Gun King Tier B"
+	{
+		"#format" 		"{1:i}"
+		"en"			"{green}[King Mod]:{default} You acquired {lightgreen} Tier B - Laser Gun{default} that deals {1} damage per laser bullet."
+	}
+
+	"Chat - Power Laser Gun King Tier C"
+	{
+		"#format" 		"{1:i}"
+		"en"			"{green}[King Mod]:{default} You acquired {lightgreen} Tier C - Laser Gun{default} that deals {1} damage per laser bullet."
+	}
 
 
+
+
+
+	// Creates a variable which we will use to determine the value associated with the tier acquired
+	int valueOfTier = 0;
+
+	// Changes the value of the valueOfTier variable to reflct the power of the tier
+	valueOfTier = 18;
+
+	CPrintToChat(client, "%t", "Chat - Power Something King Tier A", valueOfTier);
 
 
 	"Chat - Power Lucky Number Seven"
@@ -410,15 +437,53 @@
 		"en"			"{green}[King Mod]:{default} The king acquired the{lightgreen} Lucky Number Seven{default} power."
 	}
 
+	"Chat - Power Lucky Number Seven King Tier A"
+	{
+		"en"			"{green}[King Mod]:{default} You acquired {lightgreen} Tier A - Lucky Number Seven{default} when the dices lands on 7 your damage given is increased."
+	}
+
+
+
+
+
 	"Chat - Power Western Shootout"
 	{
 		"en"			"{green}[King Mod]:{default} The king acquired the{lightgreen} Western Shootout{default} power."
 	}
 
+	"Chat - Power Western Shootout King Tier A"
+	{
+		"en"			"{green}[King Mod]:{default} You acquired {lightgreen} Tier A - Western Shootout{default} receiving a revolver that always inflicts 50 damage."
+	}
+
+
+
+
 	"Chat - Power Babonic Plague"
 	{
 		"en"			"{green}[King Mod]:{default} The king acquired the{lightgreen} Babonic Plague{default} power."
 	}
+
+	"Chat - Power Babonic Plague King Tier A"
+	{
+		"#format" 		"{1:i}"
+		"en"			"{green}[King Mod]:{default} You acquired {lightgreen} Tier A - Babonic Plague{default} your attacks spreads the disease dealing {1} damage to the victim every 1.5 seconds."
+	}
+
+	"Chat - Power Babonic Plague King Tier B"
+	{
+		"#format" 		"{1:i}"
+		"en"			"{green}[King Mod]:{default} You acquired {lightgreen} Tier C - Babonic Plague{default} your attacks spreads the disease dealing {1} damage to the victim every 1.5 seconds."
+	}
+
+	"Chat - Power Babonic Plague King Tier C"
+	{
+		"#format" 		"{1:i}"
+		"en"			"{green}[King Mod]:{default} You acquired {lightgreen} Tier B - Babonic Plague{default} your attacks spreads the disease dealing {1} damage to the victim every 1.5 seconds."
+	}
+
+
+
 
 	"Chat - Power Zombie Apocalypse"
 	{

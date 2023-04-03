@@ -6708,6 +6708,9 @@ public void PowerBreachCharges(int client)
 
 	// Changes the content of the nameOfPower variable to reflect which power the king acquired
 	nameOfPower = "Breachcharges";
+
+	// Creates a variable which we will use to determine the value associated with the tier acquired
+	int valueOfTier = 0;
 	
 	// Specifies which special weapon the king should be given
 	kingWeapon = "weapon_breachcharge";
@@ -6723,6 +6726,9 @@ public void PowerBreachCharges(int client)
 	{
 		// Changes the content of the nameOfTier variable to reflect which tier of the power the king acquired
 		nameOfTier = "Tier A";
+
+		// Changes the value of the valueOfTier variable to reflct the power of the tier
+		valueOfTier = 18;
 	}
 
 	// If the value stored within the powerBreachCharges is 2 execute this section
@@ -6730,6 +6736,9 @@ public void PowerBreachCharges(int client)
 	{
 		// Changes the content of the nameOfTier variable to reflect which tier of the power the king acquired
 		nameOfTier = "Tier B";
+
+		// Changes the value of the valueOfTier variable to reflct the power of the tier
+		valueOfTier = 15;
 	}
 
 	// If the value stored within the powerBreachCharges is 3 execute this section
@@ -6737,7 +6746,12 @@ public void PowerBreachCharges(int client)
 	{
 		// Changes the content of the nameOfTier variable to reflect which tier of the power the king acquired
 		nameOfTier = "Tier C";
+
+		// Changes the value of the valueOfTier variable to reflct the power of the tier
+		valueOfTier = 12;
 	}
+
+	CPrintToChat(client, "%t", "Chat - Power Breachcharges King Tier", nameOfTier, valueOfTier);
 }
 
 

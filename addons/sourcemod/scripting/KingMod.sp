@@ -7703,6 +7703,8 @@ public void PowerZombieApocalypse(int client)
 	// Changes the content of the nameOfTier variable to reflect which tier of the power the king acquired
 	nameOfTier = "Tier A";
 
+	CPrintToChat(client, "%t", "Chat - Power Zombie Apocalypse King Tier A");
+
 	// Plays the ambient sound that will be running while the zombie apocalypse power is active
 	CreateTimer(0.0, Timer_PowerZombieApocalypseAmbience, _, TIMER_FLAG_NO_MAPCHANGE);
 

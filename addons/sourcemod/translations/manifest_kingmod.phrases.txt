@@ -522,10 +522,27 @@
 		"en"			"{green}[King Mod]:{default} The king acquired the{lightgreen} Zombie Apocalypse{default} power."
 	}
 
+	"Chat - Power Zombie Apocalypse King Tier A"
+	{
+		"en"			"{green}[King Mod]:{default} You acquired {lightgreen} Tier A - Zombie Apocalypse{default} you caused the zombie outbreak to occur."
+	}
+
+
+
+
 	"Chat - Power Blast Cannon"
 	{
 		"en"			"{green}[King Mod]:{default} The king acquired the{lightgreen} Blast Cannon{default} power."
 	}
+
+	"Chat - Power Blast Cannon King Tier A"
+	{
+		"en"			"{green}[King Mod]:{default} You acquired {lightgreen} Tier A - Blast Cannon{default} your attacks knock enemies back but deals reduced damage."
+	}
+
+
+
+
 
 	"Chat - Power Deagle Headshot"
 	{

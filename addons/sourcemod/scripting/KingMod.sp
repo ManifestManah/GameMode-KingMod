@@ -8070,6 +8070,8 @@ public void PowerDeagleHeadshot(int client)
 	// Specifies which special weapon the king should be given
 	kingWeapon = "weapon_deagle";
 
+	CPrintToChat(client, "%t", "Chat - Power Deagle Headshot King Tier A");
+
 	// Gives the king a unique weapon if the current power requires one
 	CreateTimer(0.25, Timer_GiveKingUniqueWeapon, client);
 }

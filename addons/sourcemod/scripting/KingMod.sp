@@ -8033,6 +8033,8 @@ public void PowerBlastCannon(int client)
 	// Specifies which special weapon the king should be given
 	kingWeapon = "weapon_sawedoff";
 
+	CPrintToChat(client, "%t", "Chat - Power Blast Cannon King Tier A");
+
 	// Gives the king a unique weapon if the current power requires one
 	CreateTimer(0.25, Timer_GiveKingUniqueWeapon, client);
 }

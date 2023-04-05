@@ -130,8 +130,6 @@
 		"en"			"{green}[King Mod]:{default} You acquired {lightgreen} Tier C - Impregnable Armor{default} and gained {1} armor."
 	}
 
-
-
 	"Chat - Power Movement Speed"
 	{
 		"en"			"{green}[King Mod]:{default} The king acquired the{lightgreen} Movement Speed{default} power."
@@ -173,12 +171,6 @@
 		"en"			"{green}[King Mod]:{default} You acquired {lightgreen} Tier C - Movement Speed{default} and granted everybody {1}% speed."
 	}
 
-
-
-
-
-
-
 	"Chat - Power Sticky Grenades"
 	{
 		"en"			"{green}[King Mod]:{default} The king acquired the{lightgreen} Sticky Grenades{default} power."
@@ -189,12 +181,6 @@
 		"en"			"{green}[King Mod]:{default} You acquired {lightgreen} Tier A - Sticky Grenades{default} making your grenades stick to what they touch."
 	}
 
-
-
-
-
-
-
 	"Chat - Power Scout No Scope"
 	{
 		"en"			"{green}[King Mod]:{default} The king acquired the{lightgreen} Scout No Scope{default} power."
@@ -204,12 +190,6 @@
 	{
 		"en"			"{green}[King Mod]:{default} You acquired {lightgreen} Tier A - Scout No Scope{default} providing you with a scout with a broken scope."
 	}
-
-
-
-
-
-
 
 	"Chat - Power Carpet Bombing Flashbangs"
 	{
@@ -222,27 +202,17 @@
 		"en"			"{green}[King Mod]:{default} You acquired {lightgreen} Tier A - Carpet Bombing Flashbangs{default} letting you to throw {1} flashbangs at a time."
 	}
 
-
 	"Chat - Power Carpet Bombing Flashbangs King Tier B"
 	{
 		"#format" 		"{1:i}"
 		"en"			"{green}[King Mod]:{default} You acquired {lightgreen} Tier B - Carpet Bombing Flashbangs{default} letting you to throw {1} flashbangs at a time."
 	}
 
-
 	"Chat - Power Carpet Bombing Flashbangs King Tier C"
 	{
 		"#format" 		"{1:i}"
 		"en"			"{green}[King Mod]:{default} You acquired {lightgreen} Tier C - Carpet Bombing Flashbangs{default} letting you to throw {1} flashbangs at a time."
 	}
-
-
-
-
-
-
-
-
 
 	"Chat - Power Napalm"
 	{
@@ -259,13 +229,6 @@
 		"en"			"{green}[King Mod]:{default} You acquired {lightgreen} Tier A - Naplam{default} letting enemies catch on fire and burn to death."
 	}
 
-
-
-
-
-
-
-
 	"Chat - Power Riot"
 	{
 		"en"			"{green}[King Mod]:{default} The king acquired the{lightgreen} Riot{default} power."
@@ -275,13 +238,6 @@
 	{
 		"en"			"{green}[King Mod]:{default} You acquired {lightgreen} Tier A - Riot{default} letting enemies catch on fire and burn to death."
 	}
-
-
-
-
-
-
-
 
 	"Chat - Power Vampire"
 	{
@@ -312,13 +268,6 @@
 		"en"			"{green}[King Mod]:{default} You acquired {lightgreen} Tier C - Vampire{default} making your attacks heal you for {1}% of the damage you deal."
 	}
 
-
-
-
-
-
-
-
 	"Chat - Power Breachcharges"
 	{
 		"en"			"{green}[King Mod]:{default} The king acquired the{lightgreen} Power Breachcharges{default} power."
@@ -341,13 +290,6 @@
 		"#format" 		"{1:i}"
 		"en"			"{green}[King Mod]:{default} You acquired {lightgreen} Tier C - Breachcharges{default} giving you a stack of {1} breachcharges."
 	}
-
-
-
-
-
-
-
 
 	"Chat - Power Leg Crushing Bumpmines"
 	{
@@ -372,12 +314,6 @@
 		"en"			"{green}[King Mod]:{default} You acquired {lightgreen} Tier C - Leg Crushing Bumpmines{default} giving you a stack of {1} bumpmines."
 	}
 
-
-
-
-
-
-
 	"Chat - Power Hatchet Massacre"
 	{
 		"en"			"{green}[King Mod]:{default} The king acquired the{lightgreen} Hatchet Massacre{default} power."
@@ -387,12 +323,6 @@
 	{
 		"en"			"{green}[King Mod]:{default} You acquired {lightgreen} Tier A - Hatchet Massacre{default} receiving an axe that deals high damage."
 	}
-
-
-
-
-
-
 
 	"Chat - Power Chuck Norris Fists"
 	{
@@ -409,9 +339,6 @@
 	{
 		"en"			"{green}[King Mod]:{default} You acquired {lightgreen} Tier S+ - Chuck Norris Fists{default} you've been bestowed by a God."
 	}
-
-
-
 
 	"Chat - Power Laser Gun"
 	{
@@ -436,19 +363,6 @@
 		"en"			"{green}[King Mod]:{default} You acquired {lightgreen} Tier C - Laser Gun{default} that deals {1} damage per laser bullet."
 	}
 
-
-
-
-
-	// Creates a variable which we will use to determine the value associated with the tier acquired
-	int valueOfTier = 0;
-
-	// Changes the value of the valueOfTier variable to reflct the power of the tier
-	valueOfTier = 18;
-
-	CPrintToChat(client, "%t", "Chat - Power Something King Tier A", valueOfTier);
-
-
 	"Chat - Power Lucky Number Seven"
 	{
 		"en"			"{green}[King Mod]:{default} The king acquired the{lightgreen} Lucky Number Seven{default} power."
@@ -471,10 +385,6 @@
 		"en"			"{green}[King Mod]:{default} You acquired {lightgreen} Tier A - Lucky Number Seven{default} when the dices lands on 7 your damage given is increased."
 	}
 
-
-
-
-
 	"Chat - Power Western Shootout"
 	{
 		"en"			"{green}[King Mod]:{default} The king acquired the{lightgreen} Western Shootout{default} power."
@@ -484,9 +394,6 @@
 	{
 		"en"			"{green}[King Mod]:{default} You acquired {lightgreen} Tier A - Western Shootout{default} receiving a revolver that always inflicts 50 damage."
 	}
-
-
-
 
 	"Chat - Power Babonic Plague"
 	{
@@ -511,12 +418,6 @@
 		"en"			"{green}[King Mod]:{default} You acquired {lightgreen} Tier B - Babonic Plague{default} your attacks spreads the disease dealing {1} damage to the victim every 1.5 seconds."
 	}
 
-
-
-
-
-
-
 	"Chat - Power Zombie Apocalypse"
 	{
 		"en"			"{green}[King Mod]:{default} The king acquired the{lightgreen} Zombie Apocalypse{default} power."
@@ -526,9 +427,6 @@
 	{
 		"en"			"{green}[King Mod]:{default} You acquired {lightgreen} Tier A - Zombie Apocalypse{default} you caused the zombie outbreak to occur."
 	}
-
-
-
 
 	"Chat - Power Blast Cannon"
 	{
@@ -540,10 +438,6 @@
 		"en"			"{green}[King Mod]:{default} You acquired {lightgreen} Tier A - Blast Cannon{default} your attacks knock enemies back but deals reduced damage."
 	}
 
-
-
-
-
 	"Chat - Power Deagle Headshot"
 	{
 		"en"			"{green}[King Mod]:{default} The king acquired the{lightgreen} Deagle Headshot{default} power."
@@ -553,9 +447,6 @@
 	{
 		"en"			"{green}[King Mod]:{default} You acquired {lightgreen} Tier A - Deagle Headshot{default} receiving a deagle that can only deal deadshot damage."
 	}
-
-
-
 
 	"Chat - Power Laser Pointer"
 	{
@@ -572,9 +463,6 @@
 		"en"			"{green}[King Mod]:{default} You acquired {lightgreen} Tier A - Laser Pointer{default} inflicting 4 laser damage to the enemy you point it at."
 	}
 
-
-
-
 	"Chat - Power Hammer Time"
 	{
 		"en"			"{green}[King Mod]:{default} The king acquired the{lightgreen} Hammer Time{default} power."
@@ -584,8 +472,6 @@
 	{
 		"en"			"{green}[King Mod]:{default} You acquired {lightgreen} Tier A - Hammer Time{default} letting you knock people down in to the ground."
 	}
-
-
 
 	"Chat - Power Doom Chickens"
 	{

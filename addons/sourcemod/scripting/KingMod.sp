@@ -8171,6 +8171,8 @@ public void PowerLaserPointer(int client)
 	
 	// Changes the content of the nameOfTier variable to reflect which tier of the power the king acquired
 	nameOfTier = "Tier A";
+
+	CPrintToChat(client, "%t", "Chat - Power Laser Pointer King Tier A");
 }
 
 

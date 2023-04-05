@@ -549,6 +549,14 @@
 		"en"			"{green}[King Mod]:{default} The king acquired the{lightgreen} Deagle Headshot{default} power."
 	}
 
+	"Chat - Power Deagle Headshot King Tier A"
+	{
+		"en"			"{green}[King Mod]:{default} You acquired {lightgreen} Tier A - Deagle Headshot{default} receiving a deagle that can only deal deadshot damage."
+	}
+
+
+
+
 	"Chat - Power Laser Pointer"
 	{
 		"en"			"{green}[King Mod]:{default} The king acquired the{lightgreen} Laser Pointer{default} power."
@@ -559,16 +567,35 @@
 		"en"			"{green}[King Mod]:{default} Press your{lightgreen} +USE [E]{default} button to use your laser pointer."
 	}
 
+	"Chat - Power Laser Pointer King Tier A"
+	{
+		"en"			"{green}[King Mod]:{default} You acquired {lightgreen} Tier A - Laser Pointer{default} inflicting 4 laser damage to the enemy you point it at."
+	}
+
+
+
+
 	"Chat - Power Hammer Time"
 	{
 		"en"			"{green}[King Mod]:{default} The king acquired the{lightgreen} Hammer Time{default} power."
 	}
+
+	"Chat - Power Hammer Time King Tier A"
+	{
+		"en"			"{green}[King Mod]:{default} You acquired {lightgreen} Tier A - Hammer Time{default} letting you knock people down in to the ground."
+	}
+
+
 
 	"Chat - Power Doom Chickens"
 	{
 		"en"			"{green}[King Mod]:{default} The king acquired the{lightgreen} Doom Chickens{default} power."
 	}
 
+	"Chat - Power Doom Chickens King Tier A"
+	{
+		"en"			"{green}[King Mod]:{default} You acquired {lightgreen} Tier A - Doom Chickens{default} summons chickens of doom when somebody dies."
+	}
 
 
 	///////////////////////////////////

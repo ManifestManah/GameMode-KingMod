@@ -6529,8 +6529,8 @@ public void PowerRiot(int client)
 	powerSoundName = "kingmod/power_riot.mp3";
 
 	// Changes the content of the dottedLine variable to match the length of the name of power and tier
-	dottedLine = "--------------------";
-
+	dottedLine = "----------------";
+ 
 	// Changes the content of the nameOfPower variable to reflect which power the king acquired
 	nameOfPower = "Riot";
 
@@ -8967,6 +8967,12 @@ public void DownloadAndPrecacheFiles()
 	// Weapon Restriction
 	AddFileToDownloadsTable("sound/kingmod/sfx_restrictedweapon.mp3");
 	PrecacheSound("kingmod/sfx_restrictedweapon.mp3");
+
+
+	// Doom Chicken Explosion Sounds
+	PrecacheSound("weapons/hegrenade/explode1.wav");
+	PrecacheSound("weapons/hegrenade/explode2.wav");
+	PrecacheSound("weapons/hegrenade/explode3.wav");
 
 
 	// Crown Model

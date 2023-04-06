@@ -1673,6 +1673,18 @@ public Action Event_PlayerHurt(Handle event, const char[] name, bool dontBroadca
 		return Plugin_Continue;
 	}
 
+	// Creates a variable which we will use to store data within
+	char attackerWeapon[64];
+
+	// Obtains the name of the attacker's weapon and store it within the variable attackerWeapon
+	GetEventString(event, "weapon", attackerWeapon, sizeof(attackerWeapon));
+
+	// If the attacker's weapon is the same as what droneguns deal then execute this section
+	if(StrEqual(attackerWeapon, "envgunfire"))
+	{
+		return Plugin_Continue;
+	}
+
 	// Makes the king recover óver a few seconds if the king is brought below 75 health
 	KingRecovery(client);
 

@@ -159,7 +159,7 @@
 		"en"			"{green}[King Mod]:{default} You acquired {lightgreen} Tier A - Movement Speed{default} and granted everybody {1}% speed."
 	}
 
-	"Chat - Power Movement Speed King Tier C"
+	"Chat - Power Movement Speed King Tier B"
 	{
 		"#format" 		"{1:i}"
 		"en"			"{green}[King Mod]:{default} You acquired {lightgreen} Tier B - Movement Speed{default} and granted everybody {1}% speed."

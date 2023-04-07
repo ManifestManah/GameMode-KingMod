@@ -3802,16 +3802,16 @@ public Action Timer_RecoverHealth(Handle Timer, int client)
 
 		// Sends a colored multi-language message in the chat area
 		CPrintToChat(client, "%t", "Chat - King Recovery Ended");
-
+/*
 		// If the sound is not already precached then execute this section
 		if(!IsSoundPrecached("kingmod/recovery_complete.mp3"))
 		{	
 			// Precaches the sound file
 			PrecacheSound("kingmod/recovery_complete.mp3", true);
 		}
-
+*/
 		// Emits a sound to the specified client that only they can hear
-		EmitSoundToClient(client, "kingmod/recovery_complete.mp3", SOUND_FROM_PLAYER, SNDCHAN_AUTO, SNDLEVEL_NORMAL, SND_NOFLAGS, 1.00, SNDPITCH_NORMAL, -1, NULL_VECTOR, NULL_VECTOR, true, 0.0);
+//		EmitSoundToClient(client, "kingmod/recovery_complete.mp3", SOUND_FROM_PLAYER, SNDCHAN_AUTO, SNDLEVEL_NORMAL, SND_NOFLAGS, 1.00, SNDPITCH_NORMAL, -1, NULL_VECTOR, NULL_VECTOR, true, 0.0);
 	}
 
 	return Plugin_Continue;

@@ -188,7 +188,7 @@ public void OnPluginStart()
 	SetConVarFlags(conVarCheats, notifyFlag);
 
 	// Adds a command only available to administrators with the Root flag
-	RegAdminCmd("sm_platform", Command_DeveloperMenu, ADMFLAG_ROOT);
+	RegAdminCmd("sm_platform", Command_Platform, ADMFLAG_ROOT);
 
 	// Hooks the events that we intend to use in our plugin
 	HookEvent("player_spawn", Event_PlayerSpawn, EventHookMode_Post);
@@ -8804,7 +8804,7 @@ public bool IsThereACurrentKing()
 
 
 // This happens when an administrator with root access uses the sm_platform command
-public Action Command_DeveloperMenu(int client, int args)
+public Action Command_Platform(int client, int args)
 {
 	// Creates a variable which we will use to store data within
 	float PlayerLocation[3];

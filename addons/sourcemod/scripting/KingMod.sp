@@ -590,7 +590,7 @@ public Action OnPlayerRunCmd(int client, int &buttons, int &impulse, float unuse
 					TE_SetupBeamPoints(eyeLocation, endLocation, effectLaser, effectLaser, 0, 0, 0.25, 0.3, 0.3, 1, 0.0, {255, 0, 220, 205}, 0);
 
 					// Sends the visual effect temp entity to the relevant players
-					ShowVisualEffectToPlayers();
+					TE_SendToAll(0.0);
 
 					// If the victimPlayer does not meet our validation criteria then execute this section
 					if(!IsValidClient(victimPlayer))
@@ -2755,7 +2755,7 @@ public Action DisplayVisualEffects(int attacker)
 		TE_SetupBeamRingPoint(playerLocation, 40.0, 2000.0, effectRing, effectRing, 0, 20, 1.5, 90.0, 2.0, effectColor, 1, 1);
 
 		// Sends the visual effect temp entity to the relevant players
-		ShowVisualEffectToPlayers();
+		TE_SendToAll(0.0);
 	}
 
 	// If tesla effects are enabled then execute this section
@@ -2855,30 +2855,6 @@ public Action DisplayVisualEffects(int attacker)
 	CreateTimer(1.0, Timer_TeslaEffectKill, point_tesla);
 
 	return Plugin_Continue;
-}
-
-
-// This happens when a ring effect is to be created which happens when a new king is chosen
-public void ShowVisualEffectToPlayers()
-{
-	// Loops through all of the clients
-	for (int client = 1; client <= MaxClients; client++)
-	{
-		// If the client does not meet our validation criteria then execute this section
-		if(!IsValidClient(client))
-		{
-			continue;
-		}
-
-		// If the client is a bot then execute this section
-		if(IsFakeClient(client))
-		{
-			continue;
-		}
-
-		// Sends the temp entity visual effects only to those with the headshot kill visual effects enabled
-		TE_SendToClient(client, 0.0);
-	}
 }
 
 
@@ -3209,7 +3185,7 @@ public Action Timer_CleanFloor(Handle timer)
 		// If the entity has an ownership relation then execute this section
 		if(GetEntPropEnt(entity, Prop_Data, "m_hOwnerEntity") != -1)
 		{
-			return Plugin_Continue;
+			continue;
 		}
 
 		// Removes the entity from the map 
@@ -6105,13 +6081,13 @@ public Action OnDamageTaken(int client, int &attacker, int &inflictor, float &da
 				TE_SetupExplosion(victimLocation, effectExplosion, 5.0, 1, 0, 20, 40, victimLocation);
 		
 				// Sends the visual effect temp entity to the relevant players
-				ShowVisualEffectToPlayers();
+				TE_SendToAll(0.0);
 
 				// Creates a smoke effect at the victim's location
 				TE_SetupSmoke(victimLocation, effectSmoke, 4.0, 3);
 
 				// Sends the visual effect temp entity to the relevant players
-				ShowVisualEffectToPlayers();
+				TE_SendToAll(0.0);
 
 				// Calculates teh force multiplier of our knockback and store it within the pushPower variable
 				float pushPower = ((500 - distance) * 0.01) + 1.0;
@@ -7252,7 +7228,7 @@ public Action WeaponFireCz75a(int client)
 	}
 
 	// Sends the visual effect temp entity to the relevant players
-	ShowVisualEffectToPlayers();
+	TE_SendToAll(0.0);
 
 	return Plugin_Continue;
 }
@@ -8699,7 +8675,7 @@ public Action Timer_PowerDoomChickensLoop(Handle timer)
 				TE_SetupExplosion(chickenLocation, effectExplosion, 5.0, 1, 0, 20, 40, chickenLocation);
 
 				// Sends the visual effect temp entity to the relevant players
-				ShowVisualEffectToPlayers();
+				TE_SendToAll(0.0);
 
 				// Inflicts 150.0 to 180 explosion damage to the client as if it was damage dealt from the king 
 				DealDamageToClient(client, kingIndex, GetRandomInt(150, 180), "weapon_c4");

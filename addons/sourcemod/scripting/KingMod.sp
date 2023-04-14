@@ -250,8 +250,8 @@ public void CreateModSpecificConvars()
 	// - Configuration Convars - //
 	///////////////////////////////
 
-	cvar_PointsNormalKill = 			CreateConVar("KM_PointsForNormalKills", 			"1", 		"How many points should a team receive for killing an enemy player? - [Default = 1]");
-	cvar_PointsKingKill = 				CreateConVar("KM_PointsForKingKills", 				"3", 		"How many points should a team receive for killing the enemy king? - [Default = 3]");
+	cvar_PointsNormalKill = 			CreateConVar("KM_PointsForNormalKills", 			"1", 		"How many points should a team receive for killing a normal enemy player? - [Default = 1]");
+	cvar_PointsKingKill = 				CreateConVar("KM_PointsForKingKills", 				"3", 		"How many points should a team receive for killing the enemy team's king? - [Default = 3]");
 	cvar_KingHealth = 					CreateConVar("KM_KingHealth", 						"200", 		"How much health should the king have? - [Default = 200]");
 
 	cvar_HideMoneyHud = 				CreateConVar("KM_HideMoneyHud", 					"1",	 	"Should the money hud be hidden? - [Default = 1]");
@@ -260,10 +260,10 @@ public void CreateModSpecificConvars()
 	cvar_BhopRounds = 					CreateConVar("KM_BhopRounds", 						"3", 		"How many normal rounds should pass before a round with bhop settings enabled occurs? (-1 means disabled) - [Default = 3]");
 
 	cvar_SentryGunHealth =				CreateConVar("KM_SentryGunHealth",					"999", 		"How much health should a sentry gun have? (999 means immortal) - [Default = 999]");
-	cvar_SentryGunVolumePercentage = 	CreateConVar("KM_SentryGunVolume",					"12",		"How loud volume should a sentry gun's firing sound be at in percentage? - [Default = 12]");
+	cvar_SentryGunVolumePercentage = 	CreateConVar("KM_SentryGunVolume",					"6",		"How loud volume should a sentry gun's firing sound be at in percentage? - [Default = 12]");
 
 	cvar_RespawnTime = 					CreateConVar("KM_RespawnTime", 						"1.50",	 	"How many seconds should it take before a player is respawned? - [Default = 1.50]");
-	cvar_ImmobilityTime = 				CreateConVar("KM_ImmobilityTime", 					"3.00", 	"When a new king is chosen, for how many seconds should the new king be immobilized for? - [Default = 3.00]");
+	cvar_ImmobilityTime = 				CreateConVar("KM_ImmobilityTime", 					"3.00", 	"When a new king is chosen, for how many seconds should the new king be immobilized for if the current map has platform support? - [Default = 3.00]");
 	cvar_SpawnProtectionDuration = 		CreateConVar("KM_SpawnProtectionTime", 				"3.00", 	"How many seconds should a player be protected for after spawning? - [Default = 3.00]");
 	cvar_RecoveryCooldownDuration = 	CreateConVar("KM_RecoveryCooldownTime", 			"10.0",		"How many seconds should it take before the king's regeneration is off cooldown? - [Default = 10.00]");
 	cvar_HealthshotExpirationTime = 	CreateConVar("KM_HealshotExpirationTime", 			"10.0", 	"How many seconds should a healthshot stay on the ground for before it is removed? - [Default = 10.00]");
@@ -271,7 +271,7 @@ public void CreateModSpecificConvars()
 	cvar_EffectRing = 					CreateConVar("KM_EffectRing", 						"1",	 	"Should a visual effect ring be displayed when a new king is chosen? - [Default = 1]");
 	cvar_EffectTesla = 					CreateConVar("KM_EffectTesla", 						"1",	 	"Should a visual effect tesla coil be displayed when a new king is chosen? - [Default = 1]");
 
-	cvar_KingPowerChooser = 			CreateConVar("KM_PowerChooserModule", 				"1",	 	"Should the power chooser module be available? - [Default = 1]");
+	cvar_KingPowerChooser = 			CreateConVar("KM_PowerChooserModule", 				"1",	 	"Should the power chooser module be active? - [Default = 1]");
 
 	cvar_PowerImpregnableArmor = 		CreateConVar("KM_Power_ImpregnableArmor", 			"1",	 	"Should the impregnable armor power be available? - [Default = 1]");
 	cvar_PowerMovementSpeed = 			CreateConVar("KM_Power_MovementSpeed", 				"1",	 	"Should the movement speed power be available? - [Default = 1]");

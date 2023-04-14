@@ -43,7 +43,7 @@
 	"Chat - Round End CT Won"
 	{
 		"#format" 		"{1:i},{2:i}"
-		"en"			"{green}[King Mod]:{default} The{lightgreen} cpunter-terrorists won{default} with a score of {lightgreen}{2} (CT){default} - {lightgreen}{1} (T){default} points."
+		"en"			"{green}[King Mod]:{default} The{lightgreen} counter-terrorists won{default} with a score of {lightgreen}{2} (CT){default} - {lightgreen}{1} (T){default} points."
 	}
 
 	"Chat - Round End Draw"
@@ -236,7 +236,7 @@
 
 	"Chat - Power Napalm King Tier A"
 	{
-		"en"			"{green}[King Mod]:{default} You acquired {lightgreen} Tier A - Naplam{default} letting enemies catch on fire and burn to death."
+		"en"			"{green}[King Mod]:{default} You acquired {lightgreen} Tier A - Napalm{default} letting enemies catch on fire and burn to death."
 	}
 
 	"Chat - Power Riot"

@@ -70,6 +70,7 @@ ConVar cvar_ImmobilityTime;
 ConVar cvar_SpawnProtectionDuration;
 ConVar cvar_RecoveryCooldownDuration;
 ConVar cvar_HealthshotExpirationTime;
+ConVar cvar_BhopRounds;
 
 
 ////////////////////////////////
@@ -99,6 +100,7 @@ int powerBreachCharges = 0;
 int powerLegCrushingBumpmines = 0;
 int powerLaserGun = 0;
 int powerBabonicPlague = 0;
+int roundCounterBhop = 1;
 
 
 //////////////////////////
@@ -255,6 +257,7 @@ public void CreateModSpecificConvars()
 	cvar_HideMoneyHud = 				CreateConVar("KM_HideMoneyHud", 					"1",	 	"Should the money hud be hidden? - [Default = 1]");
 
 	cvar_DropChance = 					CreateConVar("KM_HealthshotDropChance", 			"33", 		"How likely, in percentage, is it that a player should drop a healthshot upon their death? - [Default = 33]");
+	cvar_BhopRounds = 					CreateConVar("KM_BhopRounds", 						"3", 		"How many normal rounds should pass before a round with bhop settings enabled occurs? (-1 means disabled) - [Default = 3]");
 
 	cvar_SentryGunHealth =				CreateConVar("KM_SentryGunHealth",					"999", 		"How much health should a sentry gun have? (999 means immortal) - [Default = 999]");
 	cvar_SentryGunVolumePercentage = 	CreateConVar("KM_SentryGunVolume",					"12",		"How loud volume should a sentry gun's firing sound be at in percentage? - [Default = 12]");
@@ -1452,6 +1455,9 @@ public Action Event_RoundStart(Handle event, const char[] name, bool dontBroadca
 {
 	// Changes the gameInProgress state to true
 	gameInProgress = true;
+
+	// Picks whether the current round should have bunny jumping or normal jump settings enabled
+	PickRoundHoppingType();
 
 	// Creates a hostage rescue zone if the powerchooser and shield power is enabled, to let players use the shield
 	createHostageZone();
@@ -6569,6 +6575,71 @@ public void PowerRiotChangePlayerHealth(int client)
 
 	// Changes the health of the client to 1
 	SetEntProp(client, Prop_Send, "m_iHealth", 1, 1);
+}
+
+
+// This hapens when the round starts
+public void PickRoundHoppingType()
+{
+	// If random bhop and normal hopping rounds are enabled then execute this section
+	if(GetConVarInt(cvar_BhopRounds) != -1)
+	{
+		// If the roundCounterBhop variable is (3 default) then execute this section
+		if(roundCounterBhop == GetConVarInt(cvar_BhopRounds))
+		{
+			// Executes the configuration file containing the modification's bhop specific configurations
+			ServerCommand("exec sourcemod/KingMod/kingmod_settings_bunnyjumping.cfg");
+
+			// Resets the value of roundCounterBhop back to 0
+			roundCounterBhop = 0;
+
+			// Loops through all of the clients
+			for (int client = 1; client <= MaxClients; client++)
+			{
+				// If the client does not meet our validation criteria then execute this section
+				if(!IsValidClient(client))
+				{
+					continue;
+				}
+
+				// If the client is a bot then execute this section
+				if(IsFakeClient(client))
+				{
+					continue;
+				}
+
+				CPrintToChat(client, "%t", "Chat - Round Type Bunny Jumping");
+			}
+		}
+
+		// If the roundCounterBhop variable is anything else than (3 default) then execute this section
+		else
+		{
+			// Executes the configuration file containing the modification's normal hop specific configurations
+			ServerCommand("exec sourcemod/KingMod/kingmod_settings_normaljumping.cfg");
+
+			// Adds one to the current value of our roundCounterBhop variable
+			roundCounterBhop++;
+
+			// Loops through all of the clients
+			for (int client = 1; client <= MaxClients; client++)
+			{
+				// If the client does not meet our validation criteria then execute this section
+				if(!IsValidClient(client))
+				{
+					continue;
+				}
+
+				// If the client is a bot then execute this section
+				if(IsFakeClient(client))
+				{
+					continue;
+				}
+
+				CPrintToChat(client, "%t", "Chat - Round Type Normal Jumping");
+			}
+		}
+	}
 }
 
 

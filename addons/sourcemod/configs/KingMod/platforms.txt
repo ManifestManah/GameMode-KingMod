@@ -13,12 +13,102 @@
 		"location_z"		"64.0"			// The location on the Z-axiz at which the medic kit will be located
 	}
 
-	"Platform One"
-	{
-		"map"				"de_exampletwo"
+    "dm_king_divide_classic platform"
+    {
+        "map"                      "dm_king_divide_classic"
 
-		"location_x"		"250.0"
-		"location_y"		"-500.0"
-		"location_z"		"128.0"
-	}
+        "location_x"               "0.00"
+        "location_y"               "0.00"
+        "location_z"               "864.00"
+
+        "hide_minimap"             "1"
+    }
+
+    "dm_king_engage_classic platform"
+    {
+        "map"                      "dm_king_engage_classic"
+
+        "location_x"               "0.00"
+        "location_y"               "0.00"
+        "location_z"               "1116.0"
+
+        "hide_minimap"             "1"
+    }
+
+    "dm_king_initiate_classic platform"
+    {
+        "map"                      "dm_king_initiate_classic"
+
+        "location_x"               "0.00"
+        "location_y"               "-220.0"
+        "location_z"               "904.0"
+
+        "hide_minimap"             "1"
+    }
+
+    "dm_king_origin_classic platform"
+    {
+        "map"                      "dm_king_origin_classic"
+
+        "location_x"               "0.00"
+        "location_y"               "0.00"
+        "location_z"               "712.00"
+
+        "hide_minimap"             "1"
+    }
+
+    "dm_king_pinnacle_classic platform"
+    {
+        "map"                      "dm_king_pinnacle_classic"
+
+        "location_x"               "-512.00"
+        "location_y"               "512.00"
+        "location_z"               "1432.00"
+
+        "hide_minimap"             "1"
+    }
+
+    "dm_king_pit_classic platform"
+    {
+        "map"                      "dm_king_pit_classic"
+
+        "location_x"               "0.00"
+        "location_y"               "-32.00"
+        "location_z"               "1160.00"
+
+        "hide_minimap"             "1"
+    }
+
+    "dm_king_progress_classic platform"
+    {
+        "map"                      "dm_king_progress_classic"
+
+        "location_x"               "-2.69"
+        "location_y"               "-0.40"
+        "location_z"               "391.53"
+
+        "hide_minimap"             "1"
+    }
+
+    "dm_king_skyfire_classic platform"
+    {
+        "map"                      "dm_king_skyfire_classic"
+
+        "location_x"               "1312.00"
+        "location_y"               "-1432.00"
+        "location_z"               "520.0"
+
+        "hide_minimap"             "1"
+    }
+
+    "dm_king_star_classic platform"
+    {
+        "map"                      "dm_king_star_classic"
+
+        "location_x"               "0.0"
+        "location_y"               "0.00"
+        "location_z"               "844.0"
+
+        "hide_minimap"             "1"
+    }
 }

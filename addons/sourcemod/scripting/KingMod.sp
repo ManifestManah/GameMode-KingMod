@@ -341,7 +341,7 @@ public void OnMapStart()
 	DownloadAndPrecacheFiles();
 
 	// Creates a hostage rescue zone if the powerchooser and shield power is enabled, to let players use the shield
-	createHostageZone();
+	CreateHostageZone();
 
 	// Checks if the current map has been configured to have platform support included 
 	CheckForPlatformSupport();
@@ -1299,6 +1299,12 @@ public Action Event_PlayerDeath(Handle event, const char[] name, bool dontBroadc
 			// If the map has been configured to have platform support then execute this section
 			if(mapHasPlatformSupport)
 			{
+				// Enables the platform in the map / level if a platform exists
+				TogglePlatform(1);
+
+				// Disables the platform in the map / level if a platform exists after (3.0 default) seconds
+				CreateTimer(GetConVarFloat(cvar_ImmobilityTime) + 0.50, Timer_TogglePlatform, 0, TIMER_FLAG_NO_MAPCHANGE);
+
 				// Teleports the client to the specified location of the map's platform
 				TeleportEntity(attacker, platformLocation, NULL_VECTOR, NULL_VECTOR);
 
@@ -1412,6 +1418,12 @@ public Action Event_PlayerDeath(Handle event, const char[] name, bool dontBroadc
 	// If the map has been configured to have platform support then execute this section
 	if(mapHasPlatformSupport)
 	{
+		// Enables the platform in the map / level if a platform exists
+		TogglePlatform(1);
+
+		// Disables the platform in the map / level if a platform exists after (3.0 default) seconds
+		CreateTimer(GetConVarFloat(cvar_ImmobilityTime) + 0.50, Timer_TogglePlatform, 0, TIMER_FLAG_NO_MAPCHANGE);
+
 		// Teleports the client to the specified location of the map's platform
 		TeleportEntity(attacker, platformLocation, NULL_VECTOR, NULL_VECTOR);
 
@@ -1458,8 +1470,11 @@ public Action Event_RoundStart(Handle event, const char[] name, bool dontBroadca
 	// Picks whether the current round should have bunny jumping or normal jump settings enabled
 	PickRoundHoppingType();
 
+	// Disables the platform in the map / level if a platform exists after 0.1 seconds
+	CreateTimer(0.25, Timer_TogglePlatform, 0, TIMER_FLAG_NO_MAPCHANGE);
+
 	// Creates a hostage rescue zone if the powerchooser and shield power is enabled, to let players use the shield
-	createHostageZone();
+	CreateHostageZone();
 
 	// Removes any power related effects that may elsewise be able to transfer over from the previous round
 	RemoveKingPowerEffects();
@@ -1870,6 +1885,50 @@ public void RestartGameConvarChanged(Handle cvar, const char[] oldVal, const cha
 			}
 
 			CPrintToChat(client, "%t", "Chat - Restart Game Disabled");
+		}
+	}
+}
+
+
+// This hapens when the round starts
+public void TogglePlatform(int toggleStatus)
+{
+	// Creates a variable which we will store data within
+	int entity = -1;
+
+	// Loops through all of the entities and if no func_brush zone exists then execute this section
+	if((entity = FindEntityByClassname(entity, "func_brush")) != -1)
+	{
+		// If the entity does not meet our criteria of validation then execute this section
+		if(!IsValidEntity(entity))
+		{
+			return;
+		}
+
+		// Creates a variable which we will use to store our data within
+		char entityName[128];
+
+		// Obtains the name of the entity and store it within the our entityName variable
+		GetEntPropString(entity, Prop_Data, "m_iName", entityName, sizeof(entityName));
+
+		// If the name of the entity is not "KKE Platform" then execute this section
+		if(!StrEqual(entityName, "KM_Platform", false))
+		{
+			return;
+		}
+
+		// If the toggleStatus variable is 0 then execute this section
+		if(!toggleStatus)
+		{
+			// Changes the entity's state to disabled
+			AcceptEntityInput(entity, "Disable");
+		}
+		
+		// If the toggleStatus variable anything oter than 0 then execute this section
+		else
+		{
+			// Changes the entity's state to enabled
+			AcceptEntityInput(entity, "Enable");
 		}
 	}
 }
@@ -3622,6 +3681,14 @@ public Action Timer_RemoveHealthShot(Handle Timer, int entity)
 	AcceptEntityInput(entity, "Kill");
 
 	return Plugin_Continue;
+}
+
+
+// This happens when a new round starts and when a king is chosen
+public Action Timer_TogglePlatform(Handle timer, int toggleStatus)
+{
+	// Disables the platform in the map / level if a platform exists
+	TogglePlatform(toggleStatus);
 }
 
 
@@ -6629,7 +6696,7 @@ public void PickRoundHoppingType()
 
 
 // This hapens when the round starts
-public void createHostageZone()
+public void CreateHostageZone()
 {
 	// If the cvar_KingPowerChooser is not enabled or the riot power is not enabled then execute this section
 	if(!GetConVarBool(cvar_KingPowerChooser) | !GetConVarBool(cvar_PowerRiot))

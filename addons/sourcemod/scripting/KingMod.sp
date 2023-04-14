@@ -8409,7 +8409,7 @@ public void SpawnDoomChicken(int client)
 	SetRandomLightColor(entity, 0);
 
 	// Adds a C4 explosive bomb model and attaches it on to the chicken
-	AttachC4Bomb(entity, entityScale);
+//	AttachC4Bomb(entity, entityScale);
 
 	// Spawns the entity
 	DispatchSpawn(entity);
@@ -8418,6 +8418,10 @@ public void SpawnDoomChicken(int client)
 	TeleportEntity(entity, playerLocation, NULL_VECTOR, NULL_VECTOR);
 }
 
+/* - This was a nice little detail, but it did not make it in to the final version of the modification
+	 due to the model used not being able to be displayed without a fair bit of additional materials
+	 being added to the download tables. An amount which was deemed too much compared to the detailing
+	 it would provide, albeit with a different model the solution below works perfectly.
 
 // This happens when a player dies and drops a healthshot
 public Action AttachC4Bomb(int entityChicken, float entityScale)
@@ -8432,10 +8436,10 @@ public Action AttachC4Bomb(int entityChicken, float entityScale)
 	}
 
 	// If the model is not precached then execute this section
-	if(!IsModelPrecached("models/weapons/w_c4_planted.mdl"))
+	if(!IsModelPrecached("models/weapons/w_c4.mdl"))
 	{
 		// Precaches the model
-		PrecacheModel("models/weapons/w_c4_planted.mdl");
+		PrecacheModel("models/weapons/w_c4.mdl");
 	}
 
 	// Changes the color of the SoulPrism to standard color
@@ -8529,6 +8533,8 @@ public Action AttachC4Bomb(int entityChicken, float entityScale)
 	// Teleports the light_dynamic to the specified coordinate location
 	TeleportEntity(entity, entityLocation, entityRotation, NULL_VECTOR);
 }
+*/
+
 
 
 // This happens when round starts or when the king dies while the doom chicken power is active

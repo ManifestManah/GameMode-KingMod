@@ -24,6 +24,16 @@
 		"en"			"{green}[King Mod]:{default} Please try not to use{lightgreen} mp_restartgame{default}, change the map instead."
 	}
 
+	"Chat - Round Type Bunny Jumping"
+	{
+		"en"			"{green}[King Mod]:{default} This round is a{lightgreen} bunny jumping{default} round."
+	}
+
+	"Chat - Round Type Normal Jumping"
+	{
+		"en"			"{green}[King Mod]:{default} This round is a{lightgreen} normal jumping{default} round."
+	}
+
 	"Chat - Round End T Won"
 	{
 		"#format" 		"{1:i},{2:i}"

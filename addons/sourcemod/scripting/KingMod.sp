@@ -7,7 +7,6 @@
 #include <sdktools>
 #include <sdkhooks>
 #include <cstrike>
-// #include <clientprefs>
 #include <multicolors>
 
 // The code formatting rules we wish to follow
@@ -2689,17 +2688,6 @@ public Action KingRecovery(int client)
 	// Sends a colored multi-language message in the chat area
 	CPrintToChat(client, "%t", "Chat - King Recovery Started");
 
-// TO DO TODO 
-//	// If the sound is not already precached then execute this section
-//	if(!IsSoundPrecached("kingmod/recovery_initiated.mp3"))
-//	{	
-//		// Precaches the sound file
-//		PrecacheSound("kingmod/recovery_initiated.mp3", true);
-//	}
-//
-//	// Emits a sound to the specified client that only they can hear
-//	EmitSoundToClient(client, "kingmod/recovery_initiated.mp3", SOUND_FROM_PLAYER, SNDCHAN_AUTO, SNDLEVEL_NORMAL, SND_NOFLAGS, 1.00, SNDPITCH_NORMAL, -1, NULL_VECTOR, NULL_VECTOR, true, 0.0);
-
 	// Changes the king's color to green while recovery is active
 	SetEntityRenderColor(client, 35, 230, 5, 255);
 
@@ -3901,9 +3889,6 @@ public Action ChooseKingPower(int client)
 
 	// Picks a value between 1 to the value stored within our powersAvailable variable
 	int chosenPower = GetRandomInt(1, powersAvailable);
-
-
-	/* TO DO: Translations for powers */
 
 	// Resets the value of powersAvailable back to 0
 	powersAvailable = 0;
@@ -8479,133 +8464,12 @@ public void SpawnDoomChicken(int client)
 	// Attaches a light_dynamic entity to the healthshot of a random predefined color
 	SetRandomLightColor(entity, 0);
 
-	// Adds a C4 explosive bomb model and attaches it on to the chicken
-//	AttachC4Bomb(entity, entityScale);
-
 	// Spawns the entity
 	DispatchSpawn(entity);
 
 	// Teleports the entity to the specified coordinates relative to the player and rotate it
 	TeleportEntity(entity, playerLocation, NULL_VECTOR, NULL_VECTOR);
 }
-
-/* - This was a nice little detail, but it did not make it in to the final version of the modification
-	 due to the model used not being able to be displayed without a fair bit of additional materials
-	 being added to the download tables. An amount which was deemed too much compared to the detailing
-	 it would provide, albeit with a different model the solution below works perfectly.
-
-// This happens when a player dies and drops a healthshot
-public Action AttachC4Bomb(int entityChicken, float entityScale)
-{
-	// Creates a prop_dynamic and store the it within the entity variable
-	int entity = CreateEntityByName("prop_dynamic");
-
-	// If the entity does not meet our criteria validation then execute this section
-	if(!IsValidEntity(entity))
-	{
-		return;
-	}
-
-	// If the model is not precached then execute this section
-	if(!IsModelPrecached("models/weapons/w_c4.mdl"))
-	{
-		// Precaches the model
-		PrecacheModel("models/weapons/w_c4.mdl");
-	}
-
-	// Changes the color of the SoulPrism to standard color
-	DispatchKeyValue(entity, "rendercolor", "255 255 255");
-
-	// Changes the model of the prop to a crown
-	DispatchKeyValue(entity, "model", "models/weapons/w_c4.mdl");
-
-	// Turns off receiving shadows for the model
-	DispatchKeyValue(entity, "disablereceiveshadows", "1");
-
-	// Turns off the model's own shadows 
-	DispatchKeyValue(entity, "disableshadows", "1");
-	
-	// Changes the solidity of the model to be unsolid
-	DispatchKeyValue(entity, "solid", "0");
-	
-	// Changes the spawn flags of the model
-	DispatchKeyValue(entity, "spawnflags", "256");
-
-	// Changes the collisiongroup to that of the ones used by weapons in CS:GO as well
-	SetEntProp(entity, Prop_Send, "m_CollisionGroup", 11);
-	
-	// Spawns the crown model in to the world
-	DispatchSpawn(entity);
-
-	// Creates a variable which we will use to store our data within
-	float entityLocation[3];
-
-	// Creates a variable which we will use to store our data within
-	float entityRotation[3];
-
-	// Modifies the placement of the light_dynamic's z-coordinate position
-	if(entityScale == 2.05)
-	{
-		// + Front / - Back
-		entityLocation[0] -= 11.0;
-
-		// + Left / - Right
-		entityLocation[1] += 10.5;
-
-		// + Up / - Down
-		entityLocation[2] += 26.0;
-
-		// Sets rotation of the entity's X, Y and Z axises
-		entityRotation[0] = 26.89;
-		entityRotation[1] = 260.28;
-		entityRotation[2] = 0.57;
-	}
-
-	if(entityScale == 2.45)
-	{
-		// + Front / - Back
-		entityLocation[0] -= 15.0;
-
-		// + Left / - Right
-		entityLocation[1] += 12.5;
-
-		// + Up / - Down
-		entityLocation[2] += 29.5;
-
-		// Sets rotation of the entity's X, Y and Z axises
-		entityRotation[0] = 26.89;
-		entityRotation[1] = 260.28;
-		entityRotation[2] = 0.57;
-	}
-
-	if(entityScale == 2.85)
-	{
-		// + Front / - Back
-		entityLocation[0] -= 14.35;
-
-		// + Left / - Right
-		entityLocation[1] += 13.05;
-
-		// + Up / - Down
-		entityLocation[2] += 33.5;
-
-		// Sets rotation of the entity's X, Y and Z axises
-		entityRotation[0] = 26.89;
-		entityRotation[1] = 260.28;
-		entityRotation[2] = 0.57;
-	}
-
-	// Changes the variantstring to !activator
-	SetVariantString("!activator");
-	
-	// Changes the parent of the light_dynamic to be the spawned healthshot
-	AcceptEntityInput(entity, "SetParent", entityChicken, entity, 0);
-	
-	// Teleports the light_dynamic to the specified coordinate location
-	TeleportEntity(entity, entityLocation, entityRotation, NULL_VECTOR);
-}
-*/
-
 
 
 // This happens when round starts or when the king dies while the doom chicken power is active
@@ -9058,10 +8922,6 @@ public void DownloadAndPrecacheFiles()
 	PrecacheSound("kingmod/power_impregnablearmor.mp3");
 	PrecacheSound("items/nvg_on.wav");
 
-// TO DO
-//	// King Recovery Sound
-//	AddFileToDownloadsTable("sound/kingmod/recovery_initiated.mp3");
-//	PrecacheSound("kingmod/recovery_initiated.mp3");
 
 	// Power - Movement Speed
 	AddFileToDownloadsTable("sound/kingmod/power_movementspeed.mp3");

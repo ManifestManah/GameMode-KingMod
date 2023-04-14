@@ -8401,7 +8401,7 @@ public void PowerDoomChickens(int client)
 	powerZombieAffectedTeam = GetClientTeam(client);
 
 	// Changes the name of the path for the sound that is will be played when the player acquires the specific power
-	powerSoundName = "kingmod/power_placeholder.mp3";
+	powerSoundName = "kingmod/power_doomchickens.mp3";
 
 	// Changes the content of the dottedLine variable to match the length of the name of power and tier
 	dottedLine = "------------------------------";
@@ -9170,7 +9170,6 @@ public void DownloadAndPrecacheFiles()
 	AddFileToDownloadsTable("sound/kingmod/sfx_zombiescream.mp3");
 	AddFileToDownloadsTable("sound/kingmod/power_zombieapocalypse.mp3");
 	AddFileToDownloadsTable("sound/kingmod/power_zombieapocalypseambience.mp3");
-
 	PrecacheModel("materials/kingmod/overlays/power_zombieapocalypsezombie.vmt");
 	PrecacheModel("materials/kingmod/overlays/power_zombieapocalypsehuman.vmt");
 	PrecacheModel("models/player/zombie.mdl");
@@ -9179,6 +9178,12 @@ public void DownloadAndPrecacheFiles()
 	PrecacheSound("kingmod/sfx_zombiescream.mp3");
 	PrecacheSound("kingmod/power_zombieapocalypse.mp3");
 	PrecacheSound("kingmod/power_zombieapocalypseambience.mp3");
+
+
+	// Power - Doom Chickens
+	AddFileToDownloadsTable("sound/kingmod/power_doomchickens.mp3");
+	PrecacheSound("kingmod/power_doomchickens.mp3");
+
 
 	effectSmoke = PrecacheModel("sprites/steam2.vmt");
 	effectExplosion = PrecacheModel("sprites/blueglow2.vmt");

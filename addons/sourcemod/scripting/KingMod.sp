@@ -8078,7 +8078,7 @@ public void PowerBlastCannon(int client)
 	powerZombieAffectedTeam = GetClientTeam(client);
 
 	// Changes the name of the path for the sound that is will be played when the player acquires the specific power
-	powerSoundName = "kingmod/power_placeholder.mp3";
+	powerSoundName = "kingmod/power_blastcannon.mp3";
 
 	// Changes the content of the dottedLine variable to match the length of the name of power and tier
 	dottedLine = "---------------------------";
@@ -9178,6 +9178,11 @@ public void DownloadAndPrecacheFiles()
 	PrecacheSound("kingmod/sfx_zombiescream.mp3");
 	PrecacheSound("kingmod/power_zombieapocalypse.mp3");
 	PrecacheSound("kingmod/power_zombieapocalypseambience.mp3");
+
+
+	// Power - Blast Cannon
+	AddFileToDownloadsTable("sound/kingmod/power_blastcannon.mp3");
+	PrecacheSound("kingmod/power_blastcannon.mp3");
 
 
 	// Power - Hammertime

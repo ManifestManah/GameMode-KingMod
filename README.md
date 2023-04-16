@@ -20,15 +20,15 @@ The objective for each team is to accumulate as many points as possible. The tea
 This game mode comes with a total of 9 unique maps, specifically designed for the King Mod game mode.
 By default these maps will all be included in the maplist.txt and mapcycle.txt files. If you intend to use the King Mod game mode with another map pool, then make sure to make a backup of your maplist.txt and mapcycle.txt prior to installing this modification.
 The names of the maps can be found in the list below:
-- mapname1
-- mapname2
-- mapname3
-- mapname4
-- mapname5
-- mapname6
-- mapname7
-- mapname8
-- mapname9
+- dm_king_divide_original
+- dm_king_engage_original
+- dm_king_initiate_original
+- dm_king_origin_original
+- dm_king_pinnacle_original
+- dm_king_pit_original
+- dm_king_progress_original
+- dm_king_skyfire_original
+- dm_king_star_original
 
 
 ## Requirements

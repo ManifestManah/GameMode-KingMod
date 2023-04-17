@@ -5,7 +5,7 @@ King Mod provides your game server with a unique, and interesting new type of ga
 When King Mod is installed, the gameplay on the server changes dramatically.
 The premise of the game mode is that two teams play against each other.
 Everybody starts with nothing but a knife available to them.
-The first person to kill an enemy, will become the new "King", increasing their health, and granting them one of a total of 26 different and very powers.
+The first person to kill an enemy, will become the new "King", increasing their health, and granting them one of a total of 22 different and very powers.
 
 It is now up to the King's team to try and protect him, while also attempting to kill any enemies. When a regular enemy is slain while the King is on your team, your team is awarded 1 point. Killing opposing team's King awards 3 points, and turns the killer in to the new King, granting a new unique power.
 The objective for each team is to accumulate as many points as possible. The team with the most points at the end of the round, wins the round.
@@ -13,7 +13,30 @@ The objective for each team is to accumulate as many points as possible. The tea
 
 
 ## Power Information
-
+There are a total of 22 completely different powers, and some of these powers have multiple tiers of potency ranging from C to S+ tier.
+Most of the powers only benefit the King, whereas a few powers benefit the King's team, or even everybody in the game.
+- Babonic Plague
+- Blast Cannon
+- Breach charges
+- Carpet Bombing Flashbangs
+- Chuck Norris Fists
+- Deagle Headshot
+- Doom Chickens
+- Hammer Time
+- Hatchet Massacre
+- Impregnable Armor
+- Laser Gun
+- Laser Pointer
+- Leg Crushing Bumpmines
+- Lucky Number Seven
+- Movement Speed
+- Napalm
+- No-Scope Scout
+- Riot
+- Sticky Grenades
+- Vampire
+- Western Shootout
+- Zombie Apocalypse
 
 
 ## About Game Levels / Maps

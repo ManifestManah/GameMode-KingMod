@@ -6257,6 +6257,17 @@ public Action OnDamageTaken(int client, int &attacker, int &inflictor, float &da
 				// Emits a sound to the specified client that only they can hear
 				EmitSoundToClient(client, soundName, SOUND_FROM_PLAYER, SNDCHAN_AUTO, SNDLEVEL_NORMAL, SND_NOFLAGS, 1.00, SNDPITCH_NORMAL, -1, NULL_VECTOR, NULL_VECTOR, true, 0.0);
 
+				// If the sound is not already precached then execute this section
+				if(!IsSoundPrecached("kingmod/sfx_boomheadshot.mp3"))
+				{	
+					// Precaches the sound file
+					PrecacheSound("kingmod/sfx_boomheadshot.mp3", true);
+				}
+
+				// Emits a sound to the specified client that only they can hear
+				EmitSoundToClient(client, "kingmod/sfx_boomheadshot.mp3", SOUND_FROM_PLAYER, SNDCHAN_AUTO, SNDLEVEL_NORMAL, SND_NOFLAGS, 1.00, SNDPITCH_NORMAL, -1, NULL_VECTOR, NULL_VECTOR, true, 0.0);
+				EmitSoundToClient(attacker, "kingmod/sfx_boomheadshot.mp3", SOUND_FROM_PLAYER, SNDCHAN_AUTO, SNDLEVEL_NORMAL, SND_NOFLAGS, 1.00, SNDPITCH_NORMAL, -1, NULL_VECTOR, NULL_VECTOR, true, 0.0);
+
 				return Plugin_Continue;
 			}
 
@@ -8203,7 +8214,7 @@ public void PowerDeagleHeadshot(int client)
 	powerZombieAffectedTeam = GetClientTeam(client);
 
 	// Changes the name of the path for the sound that is will be played when the player acquires the specific power
-	powerSoundName = "kingmod/power_placeholder.mp3";
+	powerSoundName = "kingmod/power_deagleheadshot.mp3";
 
 	// Changes the content of the dottedLine variable to match the length of the name of power and tier
 	dottedLine = "--------------------------------";
@@ -9146,6 +9157,11 @@ public void DownloadAndPrecacheFiles()
 	// Power - Blast Cannon
 	AddFileToDownloadsTable("sound/kingmod/power_blastcannon.mp3");
 	PrecacheSound("kingmod/power_blastcannon.mp3");
+
+
+	// Power - Deagle Headshot
+	AddFileToDownloadsTable("sound/kingmod/power_deagleheadshot.mp3");
+	PrecacheSound("kingmod/power_deagleheadshot.mp3");
 
 
 	// Power - Laser Pointer

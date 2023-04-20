@@ -9161,8 +9161,10 @@ public void DownloadAndPrecacheFiles()
 
 	// Power - Deagle Headshot
 	AddFileToDownloadsTable("sound/kingmod/power_deagleheadshot.mp3");
+	AddFileToDownloadsTable("sound/kingmod/sfx_boomheadshot.mp3");
 	PrecacheSound("kingmod/power_deagleheadshot.mp3");
-
+	PrecacheSound("kingmod/sfx_boomheadshot.mp3");
+	
 
 	// Power - Laser Pointer
 	AddFileToDownloadsTable("sound/kingmod/power_laserpointer.mp3");

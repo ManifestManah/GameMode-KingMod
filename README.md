@@ -11,6 +11,9 @@ It is now up to the King's team to try and protect him, while also attempting to
 The objective for each team is to accumulate as many points as possible. The team with the most points at the end of the round, wins the round.
 
 
+## Settings & Configuration Information
+In the csgo/cfg/sourcemod/KingMod/ directory you will find a file called "kingmod_convars" which contains all of the convar settings the game mode provides. Below is a list of convar settings and what they do.
+
 
 ## Power Information
 There are a total of 22 completely different powers, and some of these powers have multiple tiers of potency ranging from C to S+ tier.

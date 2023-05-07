@@ -1,4 +1,4 @@
-# [King Mod]
+# [Game Mode: King Mod]
 ## About
 King Mod provides your game server with a unique, and interesting new type of game mode, previously unavailable to the public. This plugin used to be a private plugin, only available to one Scandinvaian community, but after seeing how many people had fun and enjoyed the gaming experience I eventually decided on releasing it to the public, in the hopes that more people will come to have enjoyable experiences playing this game mode.
 

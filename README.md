@@ -66,7 +66,7 @@ In order for the plugin to work, you must have the following installed:
 1) Download the contents and open the downloaded zip file.
 2) Drag the files in to your server's csgo/ directory.
 3) Edit the files in cfg/sourcemod/KingMod/ to match your preferences
-4) Compress and add the contents of the maps, materials, models, sounds folder to your fast download server.
+4) Add the contents of the _For The Fast Download Server.rar to your fast download server.
 5) Restart your server.
 
 
